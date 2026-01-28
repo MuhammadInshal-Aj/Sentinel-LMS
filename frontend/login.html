@@ -8,197 +8,90 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --bg: #050505;
-            --card-bg: rgba(13, 13, 13, 0.9);
-            --accent: #00f2ff;
-            --accent-glow: rgba(0, 242, 255, 0.3);
-            --text: #e0e0e0;
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #050505; --accent: #00f2ff; --text: #e0e0e0; --border: rgba(255, 255, 255, 0.08);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; height: 100vh; overflow: hidden; }
 
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Space Grotesk', sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
+        /* --- GLOBAL NAV --- */
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.2rem 4rem; border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px); z-index: 100; position: relative;
         }
-
-        /* --- DYNAMIC ANIMATED BACKGROUND --- */
-        .bg-glow {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 80% 70%, rgba(157, 80, 187, 0.05) 0%, transparent 40%);
-            animation: breathe 15s infinite alternate ease-in-out;
-        }
-
-        @keyframes breathe {
-            0% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(1.2); opacity: 1; }
-        }
-
-        /* --- LOGIN CARD --- */
-        .login-card {
-            width: 420px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2.5rem;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-
-        .logo { font-weight: 700; font-size: 1.5rem; letter-spacing: 3px; color: #fff; margin-bottom: 2rem; }
+        .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: 2px; cursor: pointer; }
         .logo span { color: var(--accent); }
 
-        /* --- TOGGLE BUTTONS --- */
-        .toggle-group {
-            display: flex;
-            background: #1a1a1a;
-            padding: 4px;
-            border-radius: 8px;
-            margin-bottom: 2rem;
+        /* --- ADVANCED BACKGROUND --- */
+        .cyber-bg { position: fixed; inset: 0; background: #020202; z-index: -1; }
+        .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.2; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.1; animation: drift 15s infinite alternate; }
+        .blob-1 { width: 400px; height: 400px; background: var(--accent); top: 10%; left: 10%; }
+        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(50px, 50px); } }
+
+        /* --- AUTH CARD --- */
+        .container { display: flex; justify-content: center; align-items: center; height: calc(100vh - 75px); }
+        .auth-card {
+            width: 420px; background: rgba(10, 10, 10, 0.8); border: 1px solid var(--border);
+            border-radius: 12px; padding: 3rem 2.5rem 2.5rem; position: relative; backdrop-filter: blur(20px);
         }
 
-        .toggle-btn {
-            flex: 1;
-            padding: 0.6rem;
-            border: none;
-            background: transparent;
-            color: #666;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: 0.3s;
+        /* FIXED NAVIGATION PLACEMENT (Integrated into Card) */
+        .card-nav {
+            position: absolute; top: 15px; left: 15px; display: flex; gap: 10px;
         }
-
-        .toggle-btn.active {
-            background: #2a2a2a;
-            color: var(--accent);
+        .nav-dot {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.03); color: #555; cursor: pointer; transition: 0.3s;
         }
+        .nav-dot:hover { border-color: var(--accent); color: var(--accent); background: rgba(0, 242, 255, 0.05); }
 
-        /* --- INPUTS --- */
-        .input-group { text-align: left; margin-bottom: 1.5rem; }
-        .input-group label { 
-            display: block; 
-            font-size: 0.7rem; 
-            text-transform: uppercase; 
-            letter-spacing: 1.5px; 
-            color: #888; 
-            margin-bottom: 0.5rem;
-        }
+        /* --- FORM ELEMENTS --- */
+        .input-group { margin-bottom: 1.5rem; text-align: left; }
+        .input-group label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 0.5rem; }
+        .field { display: flex; align-items: center; background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 0 1rem; }
+        input { background: transparent; border: none; padding: 0.9rem; color: #fff; width: 100%; font-family: 'JetBrains Mono'; font-size: 0.85rem; }
+        input:focus { outline: none; }
+        
+        .btn-main { width: 100%; padding: 1rem; background: #fff; color: #000; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 1rem; }
+        .btn-main:hover { background: var(--accent); box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
 
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-wrapper i {
-            position: absolute;
-            left: 1rem;
-            color: #555;
-            width: 18px;
-        }
-
-        input {
-            width: 100%;
-            background: #111;
-            border: 1px solid var(--border);
-            padding: 1rem 1rem 1rem 3rem;
-            border-radius: 8px;
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            transition: 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        /* --- SUBMIT BUTTON --- */
-        .btn-submit {
-            width: 100%;
-            padding: 1rem;
-            background: #fff;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: 0.3s;
-        }
-
-        .btn-submit:hover {
-            background: var(--accent);
-            box-shadow: 0 0 25px var(--accent-glow);
-            transform: translateY(-2px);
-        }
-
-        .footer-text {
-            margin-top: 2rem;
-            font-size: 0.8rem;
-            color: #555;
-        }
-
-        .footer-text a { color: var(--accent); text-decoration: none; }
+        .switch-link { margin-top: 1.5rem; font-size: 0.8rem; color: #444; text-align: center; }
+        .switch-link a { color: var(--accent); text-decoration: none; }
     </style>
 </head>
 <body>
+    <div class="cyber-bg"><div class="grid"></div><div class="blob blob-1"></div></div>
 
-    <div class="bg-glow"></div>
+    <nav>
+        <div class="logo" onclick="location.href='index.html'">SENTINEL<span>LMS</span></div>
+        <button class="nav-dot" title="Home" onclick="location.href='index.html'"><i data-lucide="home" size="16"></i></button>
+    </nav>
 
-    <div class="login-card">
-        <div class="logo">SENTINEL<span>LMS</span></div>
-        
-        <div class="toggle-group">
-            <button class="toggle-btn active">LOGIN</button>
-            <button class="toggle-btn">REGISTER</button>
+    <div class="container">
+        <div class="auth-card">
+            <div class="card-nav">
+                <div class="nav-dot" onclick="window.history.back()" title="Go Back"><i data-lucide="chevron-left" size="18"></i></div>
+                <div class="nav-dot" onclick="window.history.forward()" title="Go Forward"><i data-lucide="chevron-right" size="18"></i></div>
+            </div>
+
+            <h2 style="margin-bottom: 2rem; font-size: 1.2rem; letter-spacing: 1px; text-align: center;">SYSTEM ACCESS</h2>
+            
+            <form action="#">
+                <div class="input-group">
+                    <label>Identifier</label>
+                    <div class="field"><i data-lucide="user" size="16"></i><input type="text" placeholder="Username or Email" required></div>
+                </div>
+                <div class="input-group">
+                    <label>Security Key</label>
+                    <div class="field"><i data-lucide="lock" size="16"></i><input type="password" placeholder="••••••••" required></div>
+                </div>
+                <button type="submit" class="btn-main">AUTHORIZE</button>
+            </form>
+            <p class="switch-link">Need clearance? <a href="register.html">Create an account</a></p>
         </div>
-
-        <form>
-            <div class="input-group">
-                <label>Access Identifier</label>
-                <div class="input-wrapper">
-                    <i data-lucide="user"></i>
-                    <input type="text" placeholder="Username or Secure Email" required>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Access Key</label>
-                <div class="input-wrapper">
-                    <i data-lucide="lock"></i>
-                    <input type="password" placeholder="••••••••••••" required>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-submit">Initialize Session</button>
-        </form>
-
-        <p class="footer-text">
-            By accessing, you agree to the <a href="#">Operating Protocols</a>
-        </p>
     </div>
-
-    <script>
-        lucide.createIcons();
-    </script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>

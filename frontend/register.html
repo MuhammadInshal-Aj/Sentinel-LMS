@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel-LMS | Enlistment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #020202;
+            --card-bg: rgba(10, 10, 10, 0.9);
+            --accent: #00f2ff;
+            --accent-dim: rgba(0, 242, 255, 0.15);
+            --text: #e0e0e0;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LIVELY BACKGROUND SYSTEM --- */
+        .cyber-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+        .grid { 
+            position: absolute; inset: 0; 
+            background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); 
+            background-size: 50px 50px; opacity: 0.2; 
+        }
+        .blob { 
+            position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.1; 
+            animation: drift 20s infinite alternate ease-in-out; 
+        }
+        .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -10%; left: -10%; }
+        .blob-2 { width: 400px; height: 400px; background: #9d50bb; bottom: -10%; right: -5%; animation-delay: -5s; }
+        @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(100px, 60px) scale(1.1); } }
+
+        /* --- GLOBAL NAVIGATION --- */
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.2rem 4rem; border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(15px); background: rgba(2, 2, 2, 0.7);
+        }
+        .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: 2px; color: #fff; text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: #777; font-size: 0.85rem; transition: 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        /* --- PAGE LAYOUT --- */
+        .main-content {
+            flex: 1; display: flex; justify-content: center; align-items: center; position: relative;
+        }
+
+        /* --- AUTH CARD --- */
+        .auth-card {
+            width: 440px; background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 3.5rem 2.5rem 2.5rem; 
+            backdrop-filter: blur(25px); position: relative;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        }
+
+        /* INTEGRATED NAV CONTROLS (Corner Dots) */
+        .card-controls {
+            position: absolute; top: 18px; left: 18px; display: flex; gap: 8px;
+        }
+        .control-dot {
+            width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.02); color: #444; cursor: pointer; transition: 0.2s;
+        }
+        .control-dot:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+        /* --- FORM STYLING --- */
+        .header-area { text-align: center; margin-bottom: 2rem; }
+        .header-area h2 { font-size: 1.4rem; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
+        .header-area p { font-size: 0.8rem; color: #555; margin-top: 0.4rem; }
+
+        .input-group { margin-bottom: 1.5rem; }
+        .input-group label { 
+            display: block; font-size: 0.65rem; color: #666; 
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.6rem; 
+        }
+        .field-wrapper {
+            display: flex; align-items: center; background: #000;
+            border: 1px solid var(--border); border-radius: 8px; padding: 0 1rem;
+            transition: 0.3s;
+        }
+        .field-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-dim); }
+        
+        .field-wrapper i { color: #333; transition: 0.3s; }
+        .field-wrapper:focus-within i { color: var(--accent); }
+
+        input {
+            width: 100%; background: transparent; border: none; padding: 1rem;
+            color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+        }
+        input:focus { outline: none; }
+
+        .btn-enlist {
+            width: 100%; padding: 1.1rem; background: #fff; color: #000;
+            border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+            margin-top: 1rem;
+        }
+        .btn-enlist:hover { background: var(--accent); box-shadow: 0 0 25px var(--accent-dim); transform: translateY(-2px); }
+
+        .footer-nav {
+            margin-top: 2rem; text-align: center; font-size: 0.85rem; color: #555;
+        }
+        .footer-nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+        .footer-nav a:hover { text-decoration: underline; }
+
+    </style>
+</head>
+<body>
+
+    <div class="cyber-bg">
+        <div class="grid"></div>
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <nav>
+        <a href="index.html" class="logo">SENTINEL<span>LMS</span></a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="#">Tracks</a></li>
+            <li><a href="#">Support</a></li>
+        </ul>
+        <button class="btn-enlist" style="margin: 0; width: auto; padding: 0.6rem 1.5rem; font-size: 0.75rem;" onclick="location.href='login.html'">LOGIN</button>
+    </nav>
+
+    <div class="main-content">
+        <div class="auth-card">
+            
+            <div class="card-controls">
+                <div class="control-dot" onclick="window.history.back()" title="Go Back">
+                    <i data-lucide="chevron-left" size="18"></i>
+                </div>
+                <div class="control-dot" onclick="window.history.forward()" title="Go Forward">
+                    <i data-lucide="chevron-right" size="18"></i>
+                </div>
+            </div>
+
+            <div class="header-area">
+                <h2>New Enlistment</h2>
+                <p>Create your secure profile to begin training</p>
+            </div>
+
+            <form action="#">
+                <div class="input-group">
+                    <label>Designation Name</label>
+                    <div class="field-wrapper">
+                        <i data-lucide="user-check" size="18"></i>
+                        <input type="text" placeholder="Enter your full name" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Terminal Email</label>
+                    <div class="field-wrapper">
+                        <i data-lucide="mail" size="18"></i>
+                        <input type="email" placeholder="agent@sentinel-lms.io" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Establish Access Key</label>
+                    <div class="field-wrapper">
+                        <i data-lucide="shield-check" size="18"></i>
+                        <input type="password" placeholder="Min. 8 characters" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-enlist">Request Clearance</button>
+            </form>
+
+            <div class="footer-nav">
+                Already have access? <a href="login.html">Sign in here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Lead's Note: Form Submission Logic
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // This is where Haider will connect his backend logic
+            console.log("Enlistment Request Initiated...");
+        });
+    </script>
+</body>
+</html>

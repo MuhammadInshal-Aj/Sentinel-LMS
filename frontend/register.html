@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel-LMS | Enlistment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --accent: #00f2ff;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- CONTINUOUS LIGHT ANIMATION --- */
+        .animated-bg {
+            position: absolute;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 50%);
+            animation: drift 20s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(-25%, -25%) rotate(0deg); }
+            100% { transform: translate(-25%, -25%) rotate(360deg); }
+        }
+
+        .register-card {
+            width: 440px;
+            background: rgba(13, 13, 13, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+            backdrop-filter: blur(15px);
+            text-align: center;
+        }
+
+        /* --- SCHEMA-ALIGNED INPUTS --- */
+        .input-group { text-align: left; margin-bottom: 1.5rem; }
+        .input-group label { color: #666; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .field {
+            display: flex; align-items: center;
+            background: #111; border: 1px solid var(--border);
+            border-radius: 8px; margin-top: 0.5rem; padding: 0 1rem;
+        }
+
+        input {
+            background: transparent; border: none; padding: 1rem;
+            color: #fff; width: 100%; font-family: 'JetBrains Mono', monospace;
+        }
+
+        input:focus { outline: none; }
+
+        .btn-join {
+            width: 100%; padding: 1rem; background: #fff; color: #000;
+            border-radius: 8px; font-weight: 700; cursor: pointer;
+            margin-top: 2rem; transition: 0.3s;
+        }
+
+        .btn-join:hover { background: var(--accent); box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
+
+        .footer-link { margin-top: 1.5rem; font-size: 0.8rem; color: #444; }
+        .footer-link a { color: var(--accent); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    <div class="register-card">
+        <h2 style="margin-bottom: 2rem; letter-spacing: 2px;">SENTINEL<span>LMS</span></h2>
+        
+        <form>
+            <div class="input-group">
+                <label>Full Designation</label>
+                <div class="field"><i data-lucide="user" size="18"></i><input type="text" placeholder="e.g. Mustashna Sajjad" required></div>
+            </div>
+            <div class="input-group">
+                <label>Secure Email</label>
+                <div class="field"><i data-lucide="mail" size="18"></i><input type="email" placeholder="agent@sentinel.io" required></div>
+            </div>
+            <div class="input-group">
+                <label>Create Access Key</label>
+                <div class="field"><i data-lucide="shield" size="18"></i><input type="password" placeholder="••••••••••••" required></div>
+            </div>
+            <button class="btn-join">JOIN SENTINEL</button>
+        </form>
+        <p class="footer-link">By joining, you agree to the <a href="#">Operating Protocols</a></p>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

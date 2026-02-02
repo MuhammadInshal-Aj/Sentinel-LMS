@@ -78,20 +78,107 @@
 
             <h2 style="margin-bottom: 2rem; font-size: 1.2rem; letter-spacing: 1px; text-align: center;">SYSTEM ACCESS</h2>
             
-            <form action="#">
+            <form id="loginForm">
                 <div class="input-group">
                     <label>Identifier</label>
-                    <div class="field"><i data-lucide="user" size="16"></i><input type="text" placeholder="Username or Email" required></div>
+                    <div class="field">
+                        <i data-lucide="user" size="16"></i>
+                        <input type="text" name="identifier" id="loginIdentifier" placeholder="Username or Email" required>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>Security Key</label>
-                    <div class="field"><i data-lucide="lock" size="16"></i><input type="password" placeholder="••••••••" required></div>
+                    <div class="field">
+                        <i data-lucide="lock" size="16"></i>
+                        <input type="password" name="password" id="loginPassword" placeholder="••••••••" required>
+                    </div>
                 </div>
+                <div id="statusMessage" class="status-box hidden"></div>
+
+<style>
+  .status-box {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+  }
+  .status-box.success {
+    background: rgba(0, 255, 170, 0.1);
+    border-color: #00ffaa;
+    color: #00ffaa;
+    box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
+  }
+  .status-box.error {
+    background: rgba(255, 0, 60, 0.1);
+    border-color: #ff003c;
+    color: #ff003c;
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
+  }
+  .hidden { display: none; }
+</style>
                 <button type="submit" class="btn-main">AUTHORIZE</button>
             </form>
             <p class="switch-link">Need clearance? <a href="register.html">Create an account</a></p>
         </div>
     </div>
-    <script>lucide.createIcons();</script>
+<script>
+    lucide.createIcons();
+
+    const loginForm = document.getElementById('loginForm');
+    const statusBox = document.getElementById('statusMessage');
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+
+    function updateSystemStatus(message, isSuccess) {
+        statusBox.textContent = `> ${message}`;
+        statusBox.className = `status-box ${isSuccess ? 'success' : 'error'}`;
+        statusBox.classList.remove('hidden');
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. UI Feedback
+        submitBtn.disabled = true;
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = "AUTHENTICATING...";
+
+        // 2. Collect Data
+        const email = document.getElementById('loginIdentifier').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await fetch('http://localhost:3000/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Save session for future clearance
+                localStorage.setItem('sentinel_token', result.session.access_token);
+                
+                updateSystemStatus("ACCESS GRANTED. WELCOME BACK, AGENT.", true);
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } else {
+                updateSystemStatus(`AUTHORIZATION FAILED: ${result.error}`, false);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "RETRY ACCESS";
+            }
+        } catch (err) {
+            updateSystemStatus("CRITICAL: CONNECTION TO SENTINEL LOST", false);
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+</script>
 </body>
 </html>

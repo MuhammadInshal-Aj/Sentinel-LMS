@@ -156,12 +156,12 @@
                 <p>Create your secure profile to begin training</p>
             </div>
 
-            <form action="#">
+            <form id="registerForm">
                 <div class="input-group">
                     <label>Designation Name</label>
                     <div class="field-wrapper">
                         <i data-lucide="user-check" size="18"></i>
-                        <input type="text" placeholder="Enter your full name" required>
+                        <input type="text" name="username" id="regUsername" placeholder="Enter your full name" required>
                     </div>
                 </div>
 
@@ -169,7 +169,7 @@
                     <label>Terminal Email</label>
                     <div class="field-wrapper">
                         <i data-lucide="mail" size="18"></i>
-                        <input type="email" placeholder="agent@sentinel-lms.io" required>
+                        <input type="email" name="email" id="regEmail" placeholder="agent@sentinel-lms.io" required>
                     </div>
                 </div>
 
@@ -177,10 +177,38 @@
                     <label>Establish Access Key</label>
                     <div class="field-wrapper">
                         <i data-lucide="shield-check" size="18"></i>
-                        <input type="password" placeholder="Min. 8 characters" required>
+                        <input type="password" name="password" id="regPassword" placeholder="Min. 8 characters" required>
                     </div>
                 </div>
+                        <div id="statusMessage" class="status-box hidden"></div>
 
+<style>
+  /* Cyberpunk Status Box Styling */
+  .status-box {
+    padding: 12px;
+    margin: 15px 0;
+    border-radius: 2px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    border: 1px solid;
+    animation: blink 2s infinite;
+  }
+  .status-box.success {
+    background: rgba(0, 255, 170, 0.05);
+    color: #00ffaa;
+    border-color: #00ffaa;
+    box-shadow: inset 0 0 10px rgba(0, 255, 170, 0.2);
+  }
+  .status-box.error {
+    background: rgba(255, 0, 60, 0.05);
+    color: #ff003c;
+    border-color: #ff003c;
+    box-shadow: inset 0 0 10px rgba(255, 0, 60, 0.2);
+  }
+  .hidden { display: none; }
+  @keyframes blink { 50% { opacity: 0.8; } }
+</style>
                 <button type="submit" class="btn-enlist">Request Clearance</button>
             </form>
 
@@ -190,16 +218,57 @@
         </div>
     </div>
 
-    <script>
-        // Initialize Icons
-        lucide.createIcons();
+<script>
+    lucide.createIcons();
 
-        // Lead's Note: Form Submission Logic
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // This is where Haider will connect his backend logic
-            console.log("Enlistment Request Initiated...");
-        });
-    </script>
+    const registerForm = document.getElementById('registerForm');
+    const statusBox = document.getElementById('statusMessage');
+    const submitBtn = registerForm.querySelector('button[type="submit"]');
+
+    function updateSystemStatus(message, isSuccess) {
+        statusBox.textContent = `> ${message}`;
+        statusBox.className = `status-box ${isSuccess ? 'success' : 'error'}`;
+        statusBox.classList.remove('hidden');
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. UI Feedback: Disable button to prevent spam
+        submitBtn.disabled = true;
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = "VERIFYING IDENTITY...";
+
+        // 2. Collect Data
+        const username = document.getElementById('regUsername').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+
+        try {
+            const response = await fetch('http://localhost:3000/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                updateSystemStatus("ENLISTMENT SUCCESSFUL. INITIALIZING CLEARANCE...", true);
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                updateSystemStatus(`ACCESS DENIED: ${result.error}`, false);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "RETRY ENLISTMENT";
+            }
+        } catch (err) {
+            updateSystemStatus("CRITICAL: SENTINEL SERVER OFFLINE", false);
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+</script>
 </body>
 </html>

@@ -1,0 +1,7 @@
+{
+  "id": "infosec-m01-checkpoint",
+  "type": "quiz",
+  "passing_score": 70,
+  "attempts_allowed": 3,
+  "unlocks": ["module-02-risk-management"]
+}

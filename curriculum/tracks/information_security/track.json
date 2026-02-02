@@ -1,0 +1,12 @@
+{
+  "id": "infosec",
+  "title": "Information Security",
+  "level": "foundation",
+  "description": "Core principles of information security and defensive thinking",
+  "prerequisites": [],
+  "modules": [
+    "module-01-security-mindset",
+    "module-02-risk-management",
+    "module-03-access-control"
+  ]
+}

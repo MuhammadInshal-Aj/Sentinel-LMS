@@ -1,0 +1,13 @@
+{
+  "id": "infosec-m01-l02",
+  "title": "The CIA Triad",
+  "order": 2,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 10,
+  "objectives": [
+    "Explain confidentiality, integrity, and availability",
+    "Map CIA to real-world systems"
+  ],
+  "tags": ["CIA", "fundamentals"]
+}

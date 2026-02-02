@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m01-l01",
+  "title": "What Is Information Security?",
+  "order": 1,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 10,
+  "objectives": [
+    "Define information security",
+    "Explain the purpose of security controls",
+    "Understand the attacker vs defender mindset"
+  ],
+  "tags": ["basics", "mindset"]
+}

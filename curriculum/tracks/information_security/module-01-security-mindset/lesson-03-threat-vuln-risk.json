@@ -1,0 +1,13 @@
+{
+  "id": "infosec-m01-l03",
+  "title": "Threats, Vulnerabilities, and Risk",
+  "order": 3,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 15,
+  "objectives": [
+    "Differentiate threats and vulnerabilities",
+    "Understand risk as a function of likelihood and impact"
+  ],
+  "tags": ["risk", "threat-modeling"]
+}

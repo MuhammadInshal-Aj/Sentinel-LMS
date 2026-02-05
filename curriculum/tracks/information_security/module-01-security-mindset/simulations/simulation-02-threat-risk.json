@@ -1,0 +1,35 @@
+{
+  "id": "infosec-m01-sim02",
+  "type": "simulation",
+  "title": "Threat vs Vulnerability vs Risk",
+  "module": "infosec-m01",
+  "order": 2,
+
+  "difficulty": "beginner",
+  "estimated_time": 7,
+
+  "description": "Classify scenarios correctly as threats, vulnerabilities, or risks.",
+
+  "objectives": [
+    "Differentiate threat, vulnerability, and risk",
+    "Avoid common conceptual mistakes",
+    "Build correct security vocabulary"
+  ],
+
+  "prerequisites": ["infosec-m01-l03"],
+
+  "interaction": {
+    "mode": "classification",
+    "attempts_allowed": 2,
+    "feedback": true
+  },
+
+  "completion_criteria": {
+    "type": "all-classifications-attempted"
+  },
+
+  "rewards": {
+    "tokens": 5,
+    "badge": "Risk Aware"
+  }
+}

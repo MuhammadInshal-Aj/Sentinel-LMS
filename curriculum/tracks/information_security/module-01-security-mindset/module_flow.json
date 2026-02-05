@@ -1,0 +1,54 @@
+{
+  "module": "infosec-m01",
+
+  "flow": [
+    {
+      "type": "lesson",
+      "id": "infosec-m01-l01",
+      "required": true,
+      "unlocks": ["infosec-m01-l02", "infosec-m01-sim01"]
+    },
+    {
+      "type": "simulation",
+      "id": "infosec-m01-sim01",
+      "required": false
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m01-l02",
+      "required": true,
+      "unlocks": ["infosec-m01-l03"]
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m01-l03",
+      "required": true,
+      "unlocks": ["infosec-m01-sim02", "infosec-m01-l04"]
+    },
+    {
+      "type": "simulation",
+      "id": "infosec-m01-sim02",
+      "required": true
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m01-l04",
+      "required": true,
+      "unlocks": ["infosec-m01-l05"]
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m01-l05",
+      "required": true
+    },
+    {
+      "type": "checkpoint",
+      "id": "infosec-m01-checkpoint",
+      "required": true,
+      "unlock_condition": {
+        "lessons_completed": "all",
+        "simulations_completed": ["infosec-m01-sim02"]
+      }
+    }
+  ]
+}

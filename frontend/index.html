@@ -963,6 +963,119 @@
             color: #000;
         }
 
+        /* LOGOUT MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 2.5rem;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 68, 68, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal h2 {
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .modal p {
+            color: #aaa;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 0.9rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem;
+            border: none;
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid var(--border);
+        }
+
+        .modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
+        }
+
+        .modal-btn-confirm {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #ff6666;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @media (max-width: 1200px) {
             .hero h1 { font-size: 3.5rem; }
             .grid-cards { grid-template-columns: repeat(2, 1fr); }
@@ -989,13 +1102,7 @@
         
         <ul class="nav-menu">
             <li class="nav-item">
-                <a class="nav-link active" data-section="home">
-                    <i data-lucide="home" size="20"></i>
-                    <span>Home</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-section="dashboard">
+                <a class="nav-link active" data-section="dashboard">
                     <i data-lucide="layout-dashboard" size="20"></i>
                     <span>Dashboard</span>
                 </a>
@@ -1036,10 +1143,6 @@
             <div class="user-status">Logged In</div>
             
             <div class="profile-popup" id="profilePopup">
-                <div class="popup-item" onclick="viewProfile()">
-                    <i data-lucide="user" size="18"></i>
-                    <span>View Profile</span>
-                </div>
                 <div class="popup-item" onclick="goToSettings()">
                     <i data-lucide="settings" size="18"></i>
                     <span>Account Settings</span>
@@ -1063,110 +1166,8 @@
 
     <main class="main-content">
         
-        <!-- HOME SECTION -->
-        <section id="home" class="content-section active">
-            <section class="hero">
-                <div class="status-pill">System Online • Security Status: Optimal</div>
-                
-                <h1>TRAIN. EXPLOIT.<br>DEFEND.</h1>
-                
-                <p>Master the art of cybersecurity. Access offensive and defensive labs directly in your browser with our state-of-the-art Pwnbox integration.</p>
-                <div class="hero-actions">
-                    <button class="btn btn-primary" style="width: auto; padding: 1rem 2.5rem;">START PATH</button>
-                    <button class="btn btn-outline" style="width: auto; padding: 1rem 2.5rem;">EXPLORE LABS</button>
-                </div>
-            </section>
-
-            <div class="container">
-                <div class="section-header">
-                    <div>
-                        <p style="color: var(--accent); font-size: 0.8rem; letter-spacing: 2px;">TRAINING MODULES</p>
-                        <h2>Featured Tracks</h2>
-                    </div>
-                    <a href="#" style="color: #666; font-size: 0.9rem; text-decoration: none;">VIEW ALL TRACKS &rarr;</a>
-                </div>
-
-                <div class="grid-cards">
-                    <div class="card">
-                        <span class="difficulty" style="color: #ff4444;">Hard</span>
-                        <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400" alt="Hacking">
-                        <h3>OSCP Prep Track</h3>
-                        <p>Advanced penetration testing techniques, buffer overflows, and privilege escalation methodologies.</p>
-                        <div class="card-footer">
-                            <span style="font-size: 0.9rem; color: #777;">Modules: 12</span>
-                            <button class="deploy-btn" onclick="enrollCourse('OSCP Prep Track', 'offensive')">ENROLL</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <span class="difficulty" style="color: #44ff44;">Medium</span>
-                        <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400" alt="Server">
-                        <h3>SOC Analyst Level 1</h3>
-                        <p>Master the core concepts of security operations, threat hunting, and incident response.</p>
-                        <div class="card-footer">
-                            <span style="font-size: 0.9rem; color: #777;">Modules: 8</span>
-                            <button class="deploy-btn" onclick="enrollCourse('SOC Analyst Level 1', 'defensive')">ENROLL</button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <span class="difficulty" style="color: #ffaa00;">Expert</span>
-                        <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=400" alt="Code">
-                        <h3>Malware Reverse Engineering</h3>
-                        <p>Deconstruct sophisticated threats and learn to reverse engineer malicious binaries safely.</p>
-                        <div class="card-footer">
-                            <span style="font-size: 0.9rem; color: #777;">Modules: 15</span>
-                            <button class="deploy-btn" onclick="enrollCourse('Malware Reverse Engineering', 'general')">ENROLL</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <section class="practice-section">
-                <div class="practice-content">
-                    <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2;">HANDS-ON<br>ENVIRONMENT</h2>
-                    <p style="color: #aaa; font-size: 1.1rem; margin-bottom: 2rem;">Don't just watch videos. Connect to our secure VPN and launch attacks against real machines in a sandboxed environment.</p>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="padding: 1.2rem; background: #111; border-radius: 8px; border-left: 3px solid var(--accent); display: flex; align-items: center; gap: 1rem;">
-                            <i data-lucide="search" style="color: var(--accent);"></i>
-                            <span>1. Information Gathering & Enum</span>
-                        </div>
-                        <div style="padding: 1.2rem; background: #111; border-radius: 8px; display: flex; align-items: center; gap: 1rem; opacity: 0.7;">
-                            <i data-lucide="zap" style="color: #fff;"></i>
-                            <span>2. Vulnerability Assessment</span>
-                        </div>
-                        <div style="padding: 1.2rem; background: #111; border-radius: 8px; display: flex; align-items: center; gap: 1rem; opacity: 0.7;">
-                            <i data-lucide="flag" style="color: #fff;"></i>
-                            <span>3. Exploitation & Post-Exploitation</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="terminal">
-                    <div class="terminal-header">
-                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-                        <span style="margin-left: 1rem; color: #555; font-size: 0.7rem;">root@sentinel-pwnbox:~</span>
-                    </div>
-                    <div class="terminal-body">
-                        <p><span class="command">root@sentinel:~$</span> nmap -sC -sV 10.10.11.23</p>
-                        <p style="color: #555;">Starting Nmap 7.92...</p>
-                        <p>Host is up (0.043s latency).</p>
-                        <p>PORT   STATE SERVICE VERSION</p>
-                        <p>22/tcp open  ssh     OpenSSH 8.2p1</p>
-                        <p>80/tcp open  http    Apache httpd 2.4.41</p>
-                        <br>
-                        <p><span class="command">root@sentinel:~$</span> python3 exploit.py -t 10.10.11.23</p>
-                        <p style="color: var(--accent);">[+] Target appears vulnerable!</p>
-                        <p style="color: var(--accent);">[+] Sending payload...</p>
-                        <p style="color: #fff; font-weight: bold;">$ whoami</p>
-                        <p>root</p>
-                        <p><span class="command" style="animation: blink 1s infinite;">_</span></p>
-                    </div>
-                </div>
-            </section>
-        </section>
-
         <!-- DASHBOARD SECTION -->
-        <section id="dashboard" class="content-section">
+        <section id="dashboard" class="content-section active">
             <div class="dashboard-header">
                 <h1>DASHBOARD</h1>
                 <div class="breadcrumb">Pages / Dashboard</div>
@@ -1233,7 +1234,7 @@
                         </div>
                         <h3>No Courses Enrolled</h3>
                         <p>Start your cybersecurity journey by enrolling in a course from our featured tracks.</p>
-                        <button class="btn-continue" onclick="goToHome()">Browse Courses</button>
+                        <button class="btn-continue" onclick="window.location.href='landing.html'">Browse Courses</button>
                     </div>
                     <div class="path-content" id="courseContent" style="display: none;">
                         <div class="path-image">
@@ -1509,6 +1510,23 @@
 
     </main>
 
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i data-lucide="log-out" size="24" style="color: #ff4444;"></i>
+                </div>
+                <h2>Confirm Logout</h2>
+            </div>
+            <p>Are you sure you want to logout? Your progress has been saved and you can continue where you left off when you return.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
         
@@ -1598,18 +1616,6 @@
         });
 
         // Functions
-        function enrollCourse(courseName, courseType) {
-            userData.enrolledCourse = courseName;
-            userData.courseType = courseType;
-            userData.progress[courseType] = 5; // Start with 5% progress
-            saveUserData();
-            
-            alert(`Successfully enrolled in ${courseName}!`);
-            
-            // Navigate to dashboard
-            document.querySelector('[data-section="dashboard"]').click();
-        }
-
         function simulateProgress() {
             if (!userData.enrolledCourse) return;
             
@@ -1717,27 +1723,27 @@
             localStorage.setItem('sentinelUserData', JSON.stringify(userData));
         }
 
-        function goToHome() {
-            document.querySelector('[data-section="home"]').click();
-        }
-
-        function viewProfile() {
-            document.querySelector('[data-section="settings"]').click();
-            profilePopup.classList.remove('active');
-        }
-
         function goToSettings() {
             document.querySelector('[data-section="settings"]').click();
             profilePopup.classList.remove('active');
         }
 
         function handleLogout() {
-            if (confirm('Are you sure you want to logout?')) {
-                // Clear user data
-                localStorage.removeItem('sentinelUserData');
-                alert('Logged out successfully!');
-                location.reload();
-            }
+            document.getElementById('logoutModal').classList.add('active');
+            profilePopup.classList.remove('active');
+            // Re-render icons in modal
+            lucide.createIcons();
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').classList.remove('active');
+        }
+
+        function confirmLogout() {
+            // Clear user data
+            localStorage.removeItem('sentinelUserData');
+            // Redirect to landing page
+            window.location.href = 'landing.html';
         }
 
         function toggleSwitch(element) {

@@ -208,8 +208,34 @@
   }
   .hidden { display: none; }
   @keyframes blink { 50% { opacity: 0.8; } }
+  /* ===== REGISTER LOADING SPINNER ===== */
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid rgba(0, 0, 0, 0.3);
+    border-top: 3px solid #000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-enlist.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
 </style>
-                <button type="submit" class="btn-enlist">Request Clearance</button>
+                <button type="submit" class="btn-enlist" id="registerBtn">
+    <span id="btnText">Request Clearance</span>
+    <div class="spinner" id="spinner"></div>
+</button>
+
             </form>
 
             <div class="footer-nav">
@@ -217,13 +243,20 @@
             </div>
         </div>
     </div>
+<script src="config.js"></script>
 
 <script>
     lucide.createIcons();
 
     const registerForm = document.getElementById('registerForm');
     const statusBox = document.getElementById('statusMessage');
-    const submitBtn = registerForm.querySelector('button[type="submit"]');
+    const submitBtn = document.getElementById('registerBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+
+    const usernameInput = document.getElementById('regUsername');
+    const emailInput = document.getElementById('regEmail');
+    const passwordInput = document.getElementById('regPassword');
 
     function updateSystemStatus(message, isSuccess) {
         statusBox.textContent = `> ${message}`;
@@ -231,21 +264,35 @@
         statusBox.classList.remove('hidden');
     }
 
+    function setLoadingState(isLoading) {
+        submitBtn.disabled = isLoading;
+        usernameInput.disabled = isLoading;
+        emailInput.disabled = isLoading;
+        passwordInput.disabled = isLoading;
+
+        if (isLoading) {
+            btnText.textContent = "VERIFYING IDENTITY";
+            spinner.style.display = 'block';
+            submitBtn.classList.add('loading');
+        } else {
+            btnText.textContent = "Request Clearance";
+            spinner.style.display = 'none';
+            submitBtn.classList.remove('loading');
+        }
+    }
+
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        statusBox.classList.add('hidden');
 
-        // 1. UI Feedback: Disable button to prevent spam
-        submitBtn.disabled = true;
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = "VERIFYING IDENTITY...";
+        setLoadingState(true);
 
-        // 2. Collect Data
-        const username = document.getElementById('regUsername').value;
-        const email = document.getElementById('regEmail').value;
-        const password = document.getElementById('regPassword').value;
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
 
         try {
-            const response = await fetch('http://localhost:3000/api/register', {
+            const response = await fetch(`${API_URL}/api/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
@@ -259,16 +306,16 @@
                     window.location.href = 'login.html';
                 }, 2000);
             } else {
+                setLoadingState(false);
                 updateSystemStatus(`ACCESS DENIED: ${result.error}`, false);
-                submitBtn.disabled = false;
-                submitBtn.textContent = "RETRY ENLISTMENT";
+                btnText.textContent = "RETRY ENLISTMENT";
             }
         } catch (err) {
+            setLoadingState(false);
             updateSystemStatus("CRITICAL: SENTINEL SERVER OFFLINE", false);
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
         }
     });
 </script>
+
 </body>
 </html>

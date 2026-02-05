@@ -1,0 +1,35 @@
+{
+  "id": "infosec-m01-sim01",
+  "type": "simulation",
+  "title": "Attacker vs Defender Mindset",
+  "module": "infosec-m01",
+  "order": 1,
+
+  "difficulty": "beginner",
+  "estimated_time": 5,
+
+  "description": "Experience the asymmetry between attackers and defenders by making constrained security decisions.",
+
+  "objectives": [
+    "Understand attacker advantage",
+    "Experience defensive limitations",
+    "Apply threat-based prioritization"
+  ],
+
+  "prerequisites": ["infosec-m01-l01"],
+
+  "interaction": {
+    "mode": "decision",
+    "attempts_allowed": 3,
+    "feedback": true
+  },
+
+  "completion_criteria": {
+    "type": "decision-made"
+  },
+
+  "rewards": {
+    "tokens": 5,
+    "badge": "Threat Thinker"
+  }
+}

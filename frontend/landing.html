@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel-LMS | Digital Fortress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --sidebar-bg: #0a0a0a;
+            --card: #0d0d0d;
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.4);
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: rgba(255, 255, 255, 0.08);
+            
+            /* High Visibility Grid Variables */
+            --grid-color: rgba(0, 242, 255, 0.15); 
+            --grid-hover-glow: rgba(0, 242, 255, 0.25);
+            
+            --sidebar-width: 280px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* --- BACKGROUND LAYERS --- */
+        .grid-background {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+            pointer-events: none;
+        }
+
+        .grid-cursor-follower {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(
+                600px circle at var(--mouse-x) var(--mouse-y),
+                var(--grid-hover-glow),
+                transparent 50%
+            );
+            pointer-events: none;
+        }
+
+        /* --- SIDEBAR NAVIGATION --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            z-index: 1000;
+            box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .logo { 
+            font-weight: 700; 
+            font-size: 1.5rem; 
+            letter-spacing: 1px; 
+            color: #fff; 
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo span { color: var(--accent); }
+        .logo svg { stroke: var(--accent); }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+        }
+
+        .nav-link:hover i, .nav-link.active i {
+            color: var(--accent);
+            filter: drop-shadow(0 0 5px var(--accent-glow));
+        }
+
+        /* Active Indicator Line */
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 20px;
+            width: 4px;
+            background: var(--accent);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Auth Buttons Area */
+        .sidebar-footer {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-status {
+            font-size: 0.75rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- BUTTON STYLES --- */
+        .btn { 
+            width: 100%;
+            padding: 0.8rem; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: 0.3s; 
+            font-family: 'Space Grotesk', sans-serif;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .btn-outline { 
+            border: 1px solid var(--border); 
+            background: transparent; 
+            color: #fff; 
+        }
+        .btn-outline:hover {
+            border-color: var(--text);
+            background: rgba(255,255,255,0.05);
+        }
+        .btn-primary { 
+            background: var(--accent); 
+            color: #000; 
+            border: none; 
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+        .btn-primary:hover { 
+            background: #fff; 
+            box-shadow: 0 0 25px rgba(255,255,255,0.5); 
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Hide all sections by default except home */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* --- HERO --- */
+        .hero {
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding: 0 2rem;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            color: var(--accent);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            max-width: 600px;
+            font-size: 1.15rem;
+            color: #999;
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* --- GRID LAYOUT --- */
+        .container { 
+            padding: 4rem 6rem; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            border-color: rgba(0, 242, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 30px var(--accent-glow);
+            transform: translateY(-5px);
+        }
+
+        .card img { 
+            width: 100%; 
+            height: 200px; 
+            object-fit: cover; 
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover img {
+            transform: scale(1.05);
+        }
+
+        .difficulty {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.3rem 1rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .card h3 {
+            padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .card > p {
+            padding: 0 1.5rem;
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .card-footer {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Course Dropdown Info */
+        .course-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.98);
+            border: 1px solid var(--accent);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            padding: 1.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+
+        .card:hover .course-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .course-dropdown h4 {
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .course-dropdown ul {
+            list-style: none;
+            margin-bottom: 1rem;
+        }
+
+        .course-dropdown li {
+            padding: 0.5rem 0;
+            color: #aaa;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .course-dropdown li:before {
+            content: '▸';
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .course-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .course-info-label {
+            color: #666;
+        }
+
+        .course-info-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* --- PRACTICE SECTION --- */
+        .practice-section { 
+            background: rgba(8, 8, 8, 0.6); 
+            display: flex; 
+            gap: 4rem; 
+            padding: 6rem; 
+            border-top: 1px solid var(--border); 
+        }
+        .practice-content { flex: 1; }
+        
+        .terminal {
+            flex: 1;
+            background: #090909;
+            border: 1px solid #222;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .terminal-header { 
+            display: flex; 
+            gap: 6px; 
+            margin-bottom: 1rem; 
+            align-items: center; 
+        }
+        .dot { 
+            width: 10px; 
+            height: 10px; 
+            border-radius: 50%; 
+        }
+        .red { background: #ff5f56; } 
+        .yellow { background: #ffbd2e; } 
+        .green { background: #27c93f; }
+        .terminal-body { 
+            color: #00ff00; 
+            font-size: 0.85rem; 
+            line-height: 1.5; 
+        }
+        .command { color: #fff; }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* --- ABOUT US SECTION --- */
+        .about-section {
+            padding: 6rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-bottom: 4rem;
+        }
+
+        .about-text {
+            color: #aaa;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .about-text p {
+            margin-bottom: 1.5rem;
+        }
+
+        .about-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mission-values {
+            margin-top: 4rem;
+        }
+
+        .mission-values h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .value-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .value-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .value-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 242, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .value-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .value-card p {
+            color: #888;
+            line-height: 1.6;
+        }
+
+        /* --- CONTACT US SECTION --- */
+        .contact-section {
+            padding: 6rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .contact-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .contact-section > p {
+            color: #888;
+            font-size: 1.1rem;
+            margin-bottom: 4rem;
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .contact-form {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+        }
+
+        .contact-form h2 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: #fff;
+            box-shadow: 0 0 25px rgba(255,255,255,0.5);
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .info-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            border-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .info-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 242, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .info-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card p {
+            color: #888;
+            line-height: 1.6;
+        }
+
+        .info-card a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .info-card a:hover {
+            color: #fff;
+        }
+
+        @media (max-width: 1200px) {
+            .hero h1 { font-size: 3.5rem; }
+            .grid-cards { grid-template-columns: repeat(2, 1fr); }
+            .about-content { grid-template-columns: 1fr; }
+            .contact-container { grid-template-columns: 1fr; }
+            .values-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            .grid-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="grid-background"></div>
+    <div class="grid-cursor-follower" id="grid-glow"></div>
+
+    <nav class="sidebar">
+        <div class="logo">
+            <i data-lucide="shield-check" style="color: var(--accent);"></i>
+            SENTINEL<span>LMS</span>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#home" class="nav-link active" data-section="home">
+                    <i data-lucide="home" size="20"></i>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#about" class="nav-link" data-section="about">
+                    <i data-lucide="info" size="20"></i>
+                    <span>About Us</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#contact" class="nav-link" data-section="contact">
+                    <i data-lucide="mail" size="20"></i>
+                    <span>Contact Us</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="user-status">System Access</div>
+            <button class="btn btn-primary" onclick="location.href='login.html'">LOGIN</button>
+            <button class="btn btn-outline" onclick="location.href='register.html'">JOIN NOW</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        
+        <!-- HOME SECTION -->
+        <section id="home" class="content-section active">
+            <section class="hero">
+                <div class="status-pill">System Online • Security Status: Optimal</div>
+                
+                <h1>TRAIN. EXPLOIT.<br>DEFEND.</h1>
+                
+                <p>Master the art of cybersecurity. Access offensive and defensive labs directly in your browser with our state-of-the-art Pwnbox integration.</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" style="width: auto; padding: 1rem 2.5rem;">START PATH</button>
+                    <button class="btn btn-outline" style="width: auto; padding: 1rem 2.5rem;">EXPLORE LABS</button>
+                </div>
+            </section>
+
+            <div class="container">
+                <div class="section-header">
+                    <div>
+                        <p style="color: var(--accent); font-size: 0.8rem; letter-spacing: 2px;">TRAINING MODULES</p>
+                        <h2>Featured Tracks</h2>
+                    </div>
+                    <a href="#" style="color: #666; font-size: 0.9rem; text-decoration: none;">VIEW ALL TRACKS &rarr;</a>
+                </div>
+
+                <div class="grid-cards">
+                    <div class="card">
+                        <span class="difficulty" style="color: #ff4444;">Hard</span>
+                        <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400" alt="Hacking">
+                        <h3>OSCP Prep Track</h3>
+                        <p>Advanced penetration testing techniques, buffer overflows, and privilege escalation methodologies.</p>
+                        <div class="card-footer">
+                            <span style="font-size: 0.9rem; color: #777;">Modules: 12</span>
+                        </div>
+                        <div class="course-dropdown">
+                            <h4>Course Overview</h4>
+                            <ul>
+                                <li>Advanced Network Exploitation</li>
+                                <li>Windows & Linux Privilege Escalation</li>
+                                <li>Buffer Overflow Techniques</li>
+                                <li>Active Directory Attacks</li>
+                                <li>Post-Exploitation Frameworks</li>
+                            </ul>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Duration:</span>
+                                <span class="course-info-value">120 Hours</span>
+                            </div>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Difficulty:</span>
+                                <span class="course-info-value">Advanced</span>
+                            </div>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Prerequisites:</span>
+                                <span class="course-info-value">Network+ & Security+</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <span class="difficulty" style="color: #44ff44;">Medium</span>
+                        <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400" alt="Server">
+                        <h3>SOC Analyst Level 1</h3>
+                        <p>Master the core concepts of security operations, threat hunting, and incident response.</p>
+                        <div class="card-footer">
+                            <span style="font-size: 0.9rem; color: #777;">Modules: 8</span>
+                        </div>
+                        <div class="course-dropdown">
+                            <h4>Course Overview</h4>
+                            <ul>
+                                <li>Security Information & Event Management (SIEM)</li>
+                                <li>Network Traffic Analysis</li>
+                                <li>Threat Intelligence & IOCs</li>
+                                <li>Incident Response Procedures</li>
+                                <li>Malware Analysis Basics</li>
+                            </ul>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Duration:</span>
+                                <span class="course-info-value">80 Hours</span>
+                            </div>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Difficulty:</span>
+                                <span class="course-info-value">Intermediate</span>
+                            </div>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Prerequisites:</span>
+                                <span class="course-info-value">Basic Networking Knowledge</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <span class="difficulty" style="color: #ffaa00;">Expert</span>
+                        <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=400" alt="Code">
+                        <h3>Malware Reverse Engineering</h3>
+                        <p>Deconstruct sophisticated threats and learn to reverse engineer malicious binaries safely.</p>
+                        <div class="card-footer">
+                            <span style="font-size: 0.9rem; color: #777;">Modules: 15</span>
+                        </div>
+                        <div class="course-dropdown">
+                            <h4>Course Overview</h4>
+                            <ul>
+                                <li>x86/x64 Assembly Language</li>
+                                <li>IDA Pro & Ghidra Debugging</li>
+                                <li>Obfuscation & Anti-Analysis Techniques</li>
+                                <li>Unpacking & Decryption Methods</li>
+                                <li>Advanced Malware Families Analysis</li>
+                            </ul>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Duration:</span>
+                                <span class="course-info-value">150 Hours</span>
+                            </div>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Difficulty:</span>
+                                <span class="course-info-value">Expert</span>
+                            </div>
+                            <div class="course-info-row">
+                                <span class="course-info-label">Prerequisites:</span>
+                                <span class="course-info-value">Programming & Assembly</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="practice-section">
+                <div class="practice-content">
+                    <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2;">HANDS-ON<br>ENVIRONMENT</h2>
+                    <p style="color: #aaa; font-size: 1.1rem; margin-bottom: 2rem;">Don't just watch videos. Connect to our secure VPN and launch attacks against real machines in a sandboxed environment.</p>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="padding: 1.2rem; background: #111; border-radius: 8px; border-left: 3px solid var(--accent); display: flex; align-items: center; gap: 1rem;">
+                            <i data-lucide="search" style="color: var(--accent);"></i>
+                            <span>1. Information Gathering & Enum</span>
+                        </div>
+                        <div style="padding: 1.2rem; background: #111; border-radius: 8px; display: flex; align-items: center; gap: 1rem; opacity: 0.7;">
+                            <i data-lucide="zap" style="color: #fff;"></i>
+                            <span>2. Vulnerability Assessment</span>
+                        </div>
+                        <div style="padding: 1.2rem; background: #111; border-radius: 8px; display: flex; align-items: center; gap: 1rem; opacity: 0.7;">
+                            <i data-lucide="flag" style="color: #fff;"></i>
+                            <span>3. Exploitation & Post-Exploitation</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span style="margin-left: 1rem; color: #555; font-size: 0.7rem;">root@sentinel-pwnbox:~</span>
+                    </div>
+                    <div class="terminal-body">
+                        <p><span class="command">root@sentinel:~$</span> nmap -sC -sV 10.10.11.23</p>
+                        <p style="color: #555;">Starting Nmap 7.92...</p>
+                        <p>Host is up (0.043s latency).</p>
+                        <p>PORT   STATE SERVICE VERSION</p>
+                        <p>22/tcp open  ssh     OpenSSH 8.2p1</p>
+                        <p>80/tcp open  http    Apache httpd 2.4.41</p>
+                        <br>
+                        <p><span class="command">root@sentinel:~$</span> python3 exploit.py -t 10.10.11.23</p>
+                        <p style="color: var(--accent);">[+] Target appears vulnerable!</p>
+                        <p style="color: var(--accent);">[+] Sending payload...</p>
+                        <p style="color: #fff; font-weight: bold;">$ whoami</p>
+                        <p>root</p>
+                        <p><span class="command" style="animation: blink 1s infinite;">_</span></p>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <!-- ABOUT US SECTION -->
+        <section id="about" class="content-section">
+            <div class="about-section">
+                <h1>ABOUT SENTINEL LMS</h1>
+                
+                <div class="about-content">
+                    <div class="about-text">
+                        <p>Sentinel LMS is the world's premier cybersecurity training platform, designed to transform aspiring security professionals into elite defenders and ethical hackers.</p>
+                        
+                        <p>Founded by industry veterans with decades of combined experience in offensive security, incident response, and security operations, we've created an immersive learning environment that mirrors real-world scenarios.</p>
+                        
+                        <p>Our platform goes beyond traditional video-based learning. Every course includes hands-on labs, capture-the-flag challenges, and access to our proprietary Pwnbox environment—a fully configured pentesting workstation accessible directly from your browser.</p>
+                    </div>
+                    
+                    <div class="about-stats">
+                        <div class="stat-card">
+                            <div class="stat-number">50K+</div>
+                            <div class="stat-label">Active Students</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">500+</div>
+                            <div class="stat-label">Training Modules</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">95%</div>
+                            <div class="stat-label">Job Placement Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Lab Availability</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mission-values">
+                    <h2>Our Core Values</h2>
+                    <div class="values-grid">
+                        <div class="value-card">
+                            <div class="value-icon">
+                                <i data-lucide="target" size="24" style="color: var(--accent);"></i>
+                            </div>
+                            <h3>Practical Excellence</h3>
+                            <p>We believe in learning by doing. Every concept is reinforced through hands-on exercises in real-world scenarios.</p>
+                        </div>
+                        <div class="value-card">
+                            <div class="value-icon">
+                                <i data-lucide="shield" size="24" style="color: var(--accent);"></i>
+                            </div>
+                            <h3>Ethical Security</h3>
+                            <p>We emphasize responsible disclosure and ethical hacking principles in all our training materials.</p>
+                        </div>
+                        <div class="value-card">
+                            <div class="value-icon">
+                                <i data-lucide="users" size="24" style="color: var(--accent);"></i>
+                            </div>
+                            <h3>Community Driven</h3>
+                            <p>Our platform thrives on collaboration, knowledge sharing, and supporting each other's growth.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT US SECTION -->
+        <section id="contact" class="content-section">
+            <div class="contact-section">
+                <h1>GET IN TOUCH</h1>
+                <p>Have questions about our courses or need support? We're here to help.</p>
+                
+                <div class="contact-container">
+                    <div class="contact-form">
+                        <h2>Send Us a Message</h2>
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="subject">Subject</label>
+                                <input type="text" id="subject" name="subject" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Message</label>
+                                <textarea id="message" name="message" required></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn">SEND MESSAGE</button>
+                        </form>
+                    </div>
+
+                    <div class="contact-info">
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i data-lucide="mail" size="24" style="color: var(--accent);"></i>
+                            </div>
+                            <h3>Email</h3>
+                            <p><a href="mailto:support@sentinel-lms.com">support@sentinel-lms.com</a></p>
+                            <p><a href="mailto:info@sentinel-lms.com">info@sentinel-lms.com</a></p>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i data-lucide="phone" size="24" style="color: var(--accent);"></i>
+                            </div>
+                            <h3>Phone</h3>
+                            <p>Support: <a href="tel:+1234567890">+1 (234) 567-890</a></p>
+                            <p>Sales: <a href="tel:+1234567891">+1 (234) 567-891</a></p>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i data-lucide="map-pin" size="24" style="color: var(--accent);"></i>
+                            </div>
+                            <h3>Location</h3>
+                            <p>Sentinel Security HQ<br>
+                            123 Cyber Street<br>
+                            Tech Valley, CA 94025<br>
+                            United States</p>
+                        </div>
+
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i data-lucide="clock" size="24" style="color: var(--accent);"></i>
+                            </div>
+                            <h3>Business Hours</h3>
+                            <p>Monday - Friday: 9:00 AM - 6:00 PM PST<br>
+                            Saturday: 10:00 AM - 4:00 PM PST<br>
+                            Sunday: Closed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+        
+        // Mouse tracking for grid glow effect
+        window.addEventListener('mousemove', (e) => {
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        });
+
+        // Navigation functionality
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.content-section');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Remove active class from all links and sections
+                navLinks.forEach(l => l.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                
+                // Add active class to clicked link
+                link.classList.add('active');
+                
+                // Show corresponding section
+                const sectionId = link.getAttribute('data-section');
+                document.getElementById(sectionId).classList.add('active');
+                
+                // Smooth scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        // Contact form submission
+        document.getElementById('contactForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Thank you for your message! We will get back to you soon.');
+            e.target.reset();
+        });
+    </script>
+</body>
+</html>

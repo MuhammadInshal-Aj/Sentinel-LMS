@@ -6,6 +6,7 @@
     <title>Sentinel-LMS | Digital Fortress</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg: #050505;
@@ -1508,14 +1509,16 @@
                 </div>
             </div>
 
-            <button class="profile-btn" id="profileBtn">
-                <div class="profile-avatar">JD</div>
-                <div class="profile-info">
-                    <div class="profile-name">John Doe</div>
-                    <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e545156507e4d5b504a57505b52105d5153">[email&#160;protected]</a></div>
-                </div>
-                <i data-lucide="chevron-up" size="18"></i>
-            </button>
+           <button class="profile-btn" id="profileBtn">
+    <div class="profile-avatar" id="display-avatar">??</div> 
+    
+    <div class="profile-info">
+        <div class="profile-name" id="display-name">Loading...</div>
+        
+        <div class="profile-email" id="display-email">Please wait...</div>
+    </div>
+    <i data-lucide="chevron-up" size="18"></i>
+</button>
         </div>
     </nav>
 
@@ -1935,508 +1938,457 @@
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script>
+    // 1. INITIALIZE SUPABASE
+    const supabaseUrl = 'https://dtvdoyigadkdjkvjahna.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0dmRveWlnYWRrZGprdmphaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NjgzMzksImV4cCI6MjA4NTM0NDMzOX0.VYoYd4Gkdt8kalCusROFZ1J-7Ha1N9ojF2hGJlnkHsE'; 
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // 2. CORE SYSTEM INITIALIZATION
+    lucide.createIcons();
+    
+    let userData = JSON.parse(localStorage.getItem('sentinelUserData')) || {
+        enrolledCourse: null,
+        courseType: null,
+        progress: { offensive: 0, defensive: 0, general: 0 },
+        streak: { count: 0, lastLogin: null, activeDays: [] }
+    };
+
+    // 3. USER DATA SYNC (The "John Doe" Fix)
+   async function loadUserData() {
+    const token = localStorage.getItem('sentinel_token');
+    
+    if (!token) {
+        // User not logged in - redirect to login
+        window.location.href = 'login.html';
+        return;
+    }
+
+    try {
+        // Fetch the user using the token
+        const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+        if (error) {
+            console.error("Auth error:", error);
+            // If token is invalid, redirect to login
+            localStorage.removeItem('sentinel_token');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (user) {
+            // Get the name from metadata
+            const name = user.user_metadata?.display_name || "Agent";
+            const email = user.email || "agent@sentinel.com";
+
+            // Update profile display
+            const nameElement = document.getElementById('display-name');
+            const emailElement = document.getElementById('display-email');
+            const avatarElement = document.getElementById('display-avatar');
+
+            if (nameElement) nameElement.textContent = name;
+            if (emailElement) emailElement.textContent = email;
+
+            // Create initials for avatar
+            if (avatarElement) {
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                avatarElement.textContent = initials || "AG";
+            }
+        }
+    } catch (err) {
+        console.error("Error loading user data:", err);
+    }
+}
+
+    // 4. UI & NAVIGATION LOGIC
+    // Mouse tracking for grid glow effect
+    window.addEventListener('mousemove', (e) => {
+        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.content-section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sectionId = link.getAttribute('data-section');
+            if (sectionId) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                link.classList.add('active');
+                document.getElementById(sectionId).classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (sectionId === 'dashboard') updateDashboard();
+                if (sectionId === 'my-courses') initializeMyCoursesPage();
+            }
+        });
+    });
+
+    // Profile popup toggle
+    const profileBtn = document.getElementById('profileBtn');
+    const profilePopup = document.getElementById('profilePopup');
+
+    profileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profilePopup.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!profileBtn.contains(e.target) && !profilePopup.contains(e.target)) {
+            profilePopup.classList.remove('active');
+        }
+    });
+
+    // 5. STREAK & PROGRESS LOGIC
+    function checkStreak() {
+        const today = new Date().toDateString();
+        const lastLogin = userData.streak.lastLogin;
+        
+        if (lastLogin !== today) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (lastLogin === yesterday.toDateString()) {
+                userData.streak.count++;
+            } else if (lastLogin !== null) {
+                userData.streak.count = 1;
+                userData.streak.activeDays = [];
+            } else {
+                userData.streak.count = 1;
+            }
+            const dayOfWeek = new Date().getDay();
+            if (!userData.streak.activeDays.includes(dayOfWeek)) userData.streak.activeDays.push(dayOfWeek);
+            userData.streak.lastLogin = today;
+            saveUserData();
+        }
+    }
+
+    function updateDashboard() {
+        const noCoursesContent = document.getElementById('noCoursesContent');
+        const courseContent = document.getElementById('courseContent');
+        
+        if (userData.enrolledCourse) {
+            noCoursesContent.style.display = 'none';
+            courseContent.style.display = 'flex';
+            document.getElementById('courseName').textContent = userData.enrolledCourse;
+            document.getElementById('courseProgress').textContent = userData.progress[userData.courseType] + '%';
+        } else {
+            noCoursesContent.style.display = 'block';
+            courseContent.style.display = 'none';
+        }
+        setTimeout(animateProgressCircles, 300);
+        updateStreakDisplay();
+    }
+
+    function animateProgressCircles() {
+        const circumference = 2 * Math.PI * 65;
+        ['offensive', 'defensive', 'general'].forEach(type => {
+            const circle = document.getElementById(`${type}Circle`);
+            const percent = document.getElementById(`${type}Percent`);
+            const progress = userData.progress[type];
+            circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
+            percent.textContent = progress.toFixed(1) + '%';
+        });
+    }
+
+    // 6. LOGOUT & SETTINGS
+    function goToSettings() {
+        document.querySelector('[data-section="settings"]').click();
+        profilePopup.classList.remove('active');
+    }
+
+    function navigateToMyCourses() {
+        document.querySelector('[data-section="my-courses"]').click();
+    }
+
+    function handleLogout() {
+        document.getElementById('logoutModal').classList.add('active');
+        profilePopup.classList.remove('active');
         lucide.createIcons();
-        
-        // Initialize data from localStorage
-        let userData = JSON.parse(localStorage.getItem('sentinelUserData')) || {
-            enrolledCourse: null,
-            courseType: null,
-            progress: {
-                offensive: 0,
-                defensive: 0,
-                general: 0
-            },
-            streak: {
-                count: 0,
-                lastLogin: null,
-                activeDays: []
-            }
-        };
+    }
 
-        // Check and update streak on load
+    function closeLogoutModal() {
+        document.getElementById('logoutModal').classList.remove('active');
+    }
+
+    function confirmLogout() {
+        localStorage.removeItem('sentinel_token'); // Clear auth token
+        window.location.href = 'login.html';
+    }
+
+    function toggleSwitch(element) {
+        element.classList.toggle('active');
+    }
+
+    function saveSettings(section) {
+        alert(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully!`);
+    }
+
+    function deleteAccount() {
+        if (confirm('Are you absolutely sure? This action cannot be undone.')) {
+            if (confirm('All your data will be permanently deleted. Continue?')) {
+                localStorage.removeItem('sentinelUserData');
+                localStorage.removeItem('sentinel_token');
+                alert('Account deleted. Redirecting...');
+                window.location.href = 'login.html';
+            }
+        }
+    }
+
+    function saveUserData() {
+        localStorage.setItem('sentinelUserData', JSON.stringify(userData));
+    }
+
+    // 7. INITIALIZE PAGE
+    document.addEventListener('DOMContentLoaded', () => {
+        loadUserData();
         checkStreak();
-        
-        // Mouse tracking for grid glow effect
-        window.addEventListener('mousemove', (e) => {
-            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-        });
-
-        // Navigation functionality
-        const navLinks = document.querySelectorAll('.nav-link');
-        const sections = document.querySelectorAll('.content-section');
-
-        navLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                const sectionId = link.getAttribute('data-section');
-                
-                if (sectionId) {
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    sections.forEach(s => s.classList.remove('active'));
-                    
-                    link.classList.add('active');
-                    document.getElementById(sectionId).classList.add('active');
-                    
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    
-                    if (sectionId === 'dashboard') {
-                        updateDashboard();
-                    }
-                }
-            });
-        });
-
-        // Settings tabs
-        const settingsTabs = document.querySelectorAll('.settings-tab');
-        const settingsPanels = document.querySelectorAll('.settings-panel');
-
-        settingsTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const tabName = tab.getAttribute('data-tab');
-                
-                settingsTabs.forEach(t => t.classList.remove('active'));
-                settingsPanels.forEach(p => p.classList.remove('active'));
-                
-                tab.classList.add('active');
-                document.getElementById(tabName).classList.add('active');
-                
-                // Re-render icons
-                lucide.createIcons();
-            });
-        });
-
-        // Profile button popup toggle
-        const profileBtn = document.getElementById('profileBtn');
-        const profilePopup = document.getElementById('profilePopup');
-
-        profileBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            profilePopup.classList.toggle('active');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!profileBtn.contains(e.target) && !profilePopup.contains(e.target)) {
-                profilePopup.classList.remove('active');
-            }
-        });
-
-        // Functions
-        function simulateProgress() {
-            if (!userData.enrolledCourse) return;
-            
-            const type = userData.courseType;
-            const currentProgress = userData.progress[type];
-            
-            if (currentProgress < 100) {
-                userData.progress[type] = Math.min(100, currentProgress + Math.floor(Math.random() * 15) + 5);
-                saveUserData();
-                updateDashboard();
-                
-                // Update streak
-                checkStreak();
-                
-                alert('Great job! Your progress has been updated.');
-            } else {
-                alert('Congratulations! You\'ve completed this course!');
-            }
-        }
-
-        function updateDashboard() {
-            // Update enrolled course display
-            const noCoursesContent = document.getElementById('noCoursesContent');
-            const courseContent = document.getElementById('courseContent');
-            
-            if (userData.enrolledCourse) {
-                noCoursesContent.style.display = 'none';
-                courseContent.style.display = 'flex';
-                document.getElementById('courseName').textContent = userData.enrolledCourse;
-                document.getElementById('courseProgress').textContent = userData.progress[userData.courseType] + '%';
-            } else {
-                noCoursesContent.style.display = 'block';
-                courseContent.style.display = 'none';
-            }
-            
-            // Update progress circles
-            setTimeout(animateProgressCircles, 300);
-            
-            // Update streak display
-            updateStreakDisplay();
-        }
-
-        function animateProgressCircles() {
-            const circumference = 2 * Math.PI * 65;
-            
-            ['offensive', 'defensive', 'general'].forEach(type => {
-                const circle = document.getElementById(`${type}Circle`);
-                const percent = document.getElementById(`${type}Percent`);
-                const progress = userData.progress[type];
-                
-                const offset = circumference - (progress / 100) * circumference;
-                circle.style.strokeDashoffset = offset;
-                percent.textContent = progress.toFixed(1) + '%';
-            });
-        }
-
-        function checkStreak() {
-            const today = new Date().toDateString();
-            const lastLogin = userData.streak.lastLogin;
-            
-            if (lastLogin !== today) {
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toDateString();
-                
-                if (lastLogin === yesterdayStr) {
-                    // Consecutive day
-                    userData.streak.count++;
-                } else if (lastLogin !== null) {
-                    // Streak broken
-                    userData.streak.count = 1;
-                    userData.streak.activeDays = [];
-                } else {
-                    // First login
-                    userData.streak.count = 1;
-                }
-                
-                // Mark today as active
-                const dayOfWeek = new Date().getDay();
-                if (!userData.streak.activeDays.includes(dayOfWeek)) {
-                    userData.streak.activeDays.push(dayOfWeek);
-                }
-                
-                userData.streak.lastLogin = today;
-                saveUserData();
-            }
-        }
-
-        function updateStreakDisplay() {
-            document.getElementById('streakNumber').textContent = userData.streak.count;
-            document.getElementById('streakPoints').textContent = userData.streak.count * 5;
-            
-            // Update day dots (Sunday = 0, Monday = 1, etc.)
-            const dayDots = document.querySelectorAll('.day-dot');
-            dayDots.forEach((dot, index) => {
-                if (userData.streak.activeDays.includes(index)) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
-            });
-        }
-
-        function saveUserData() {
-            localStorage.setItem('sentinelUserData', JSON.stringify(userData));
-        }
-
-        function goToSettings() {
-            document.querySelector('[data-section="settings"]').click();
-            profilePopup.classList.remove('active');
-        }
-
-        function navigateToMyCourses() {
-            document.querySelector('[data-section="my-courses"]').click();
-        }
-
-        function handleLogout() {
-            document.getElementById('logoutModal').classList.add('active');
-            profilePopup.classList.remove('active');
-            // Re-render icons in modal
-            lucide.createIcons();
-        }
-
-        function closeLogoutModal() {
-            document.getElementById('logoutModal').classList.remove('active');
-        }
-
-        function confirmLogout() {
-            // Clear user data
-            localStorage.removeItem('sentinelUserData');
-            // Redirect to landing page
-            window.location.href = 'landing.html';
-        }
-
-        function toggleSwitch(element) {
-            element.classList.toggle('active');
-        }
-
-        function saveSettings(section) {
-            alert(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully!`);
-        }
-
-        function deleteAccount() {
-            if (confirm('Are you absolutely sure? This action cannot be undone.')) {
-                if (confirm('All your data will be permanently deleted. Continue?')) {
-                    localStorage.removeItem('sentinelUserData');
-                    alert('Account deleted. Redirecting...');
-                    location.reload();
-                }            }
-        }
-
-        // === MY COURSES FUNCTIONALITY ===
-        
-        // Course Data Structure
-        const coursesData = {
-            "myCourses": [
-                {
-                    "id": "computer-networking",
-                    "title": "Computer Networking",
-                    "category": "fundamentals",
-                    "description": "Learn core networking concepts essential for cybersecurity.",
-                    "progress": {
-                        "percentage": 0,
-                        "status": "not-started",
-                        "currentLesson": null
-                    },
-                    "meta": {
-                        "estimatedDuration": "6 weeks",
-                        "modulesCount": 5,
-                        "lessonsCount": 22
-                    }
-                },
-                {
-                    "id": "information-security",
-                    "title": "Information Security",
-                    "category": "fundamentals",
-                    "description": "Understand security principles, risk models, and defensive thinking.",
-                    "progress": {
-                        "percentage": 0,
-                        "status": "not-started",
-                        "currentLesson": null
-                    },
-                    "meta": {
-                        "estimatedDuration": "5 weeks",
-                        "modulesCount": 4,
-                        "lessonsCount": 18
-                    }
-                },
-                {
-                    "id": "ethical-hacking",
-                    "title": "Ethical Hacking",
-                    "category": "intermediate",
-                    "description": "Practice offensive security techniques with hands-on labs.",
-                    "progress": {
-                        "percentage": 35,
-                        "status": "in-progress",
-                        "currentLesson": "SQL Injection Basics"
-                    },
-                    "meta": {
-                        "estimatedDuration": "8 weeks",
-                        "modulesCount": 6,
-                        "lessonsCount": 30
-                    }
-                }
-            ]
-        };
-
-        /**
-         * Render a single course card
-         */
-        function renderCourseCard(course) {
-            const isActive = course.progress.status === 'in-progress';
-            const progressText = course.progress.percentage === 0 
-                ? 'Not started' 
-                : `${course.progress.percentage}% completed`;
-            const buttonText = course.progress.status === 'not-started' 
-                ? 'Start Course' 
-                : 'Resume Course';
-            const buttonIcon = course.progress.status === 'not-started' 
-                ? 'play-circle' 
-                : 'arrow-right';
-
-            return `
-                <article class="course-card ${isActive ? 'active-course' : ''}" data-course-id="${course.id}">
-                    <div class="card-header-courses">
-                        <div class="course-title-wrapper">
-                            <h3 class="course-title">${course.title}</h3>
-                            <span class="course-category-badge">${course.category}</span>
-                        </div>
-                    </div>
-
-                    <div class="card-content-courses">
-                        <p class="course-description">${course.description}</p>
-
-                        ${course.progress.currentLesson ? `
-                            <div class="current-lesson">
-                                <i data-lucide="play-circle"></i>
-                                <span class="current-lesson-text">
-                                    Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
-                                </span>
-                            </div>
-                        ` : ''}
-
-                        <div class="course-meta">
-                            <div class="meta-item">
-                                <i data-lucide="clock"></i>
-                                <span>${course.meta.estimatedDuration}</span>
-                            </div>
-                            <div class="meta-item">
-                                <i data-lucide="folder"></i>
-                                <span>${course.meta.modulesCount} modules</span>
-                            </div>
-                            <div class="meta-item">
-                                <i data-lucide="book-open"></i>
-                                <span>${course.meta.lessonsCount} lessons</span>
-                            </div>
-                        </div>
-
-                        <div class="progress-section-courses">
-                            <div class="progress-header-courses">
-                                <span class="progress-label-courses">Progress</span>
-                                <span class="progress-percentage-courses">${course.progress.percentage}%</span>
-                            </div>
-                            <div class="progress-bar-container-courses">
-                                <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
-                            </div>
-                            <p class="progress-status-courses">${progressText}</p>
-                        </div>
-                    </div>
-
-                    <div class="card-actions-courses">
-                        <button class="btn-course-primary" onclick="handleCourseAction('${course.id}', '${course.progress.status}')">
-                            <i data-lucide="${buttonIcon}"></i>
-                            ${buttonText}
-                        </button>
-                    </div>
-                </article>
-            `;
-        }
-
-        /**
-         * Render courses by category
-         */
-        function renderCoursesByCategory(courses, category) {
-            const filteredCourses = courses.filter(course => course.category === category);
-            const gridElement = document.getElementById(`${category}-grid`);
-            const countElement = document.getElementById(`${category}-count`);
-
-            if (!gridElement || !countElement) return;
-
-            if (filteredCourses.length === 0) {
-                gridElement.innerHTML = '<p style="color: var(--text-muted); padding: 2rem 0;">No courses in this category yet.</p>';
-                countElement.textContent = '0 courses';
-                return;
-            }
-
-            gridElement.innerHTML = filteredCourses.map(course => renderCourseCard(course)).join('');
-            countElement.textContent = `${filteredCourses.length} ${filteredCourses.length === 1 ? 'course' : 'courses'}`;
-
-            // Re-render icons after DOM update
-            lucide.createIcons();
-        }
-
-        /**
-         * Initialize My Courses page
-         */
-        function initializeMyCoursesPage() {
-            const courses = coursesData.myCourses;
-
-            // Render courses by category
-            renderCoursesByCategory(courses, 'fundamentals');
-            renderCoursesByCategory(courses, 'intermediate');
-
-            // Animate progress bars
-            setTimeout(() => {
-                document.querySelectorAll('.progress-bar-fill-courses').forEach(bar => {
-                    bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
-                });
-            }, 100);
-        }
-
-        /**
-         * Handle course action button clicks
-         */
-        let currentCourseAction = null;
-
-        function handleCourseAction(courseId, status) {
-            const course = coursesData.myCourses.find(c => c.id === courseId);
-            if (!course) return;
-
-            // Store the action details
-            currentCourseAction = { courseId, status };
-
-            // Update modal content based on status
-            const modal = document.getElementById('courseActionModal');
-            const title = document.getElementById('courseActionTitle');
-            const message = document.getElementById('courseActionMessage');
-            const icon = modal.querySelector('.modal-icon i');
-
-            if (status === 'not-started') {
-                title.textContent = 'Start Course';
-                message.textContent = `Ready to begin "${course.title}"? This course will take approximately ${course.meta.estimatedDuration} to complete.`;
-                icon.setAttribute('data-lucide', 'rocket');
-            } else if (status === 'in-progress') {
-                title.textContent = 'Resume Course';
-                message.textContent = `Continue learning "${course.title}"? You'll pick up where you left off at: ${course.progress.currentLesson}`;
-                icon.setAttribute('data-lucide', 'play-circle');
-            }
-
-            // Re-render the icon
-            lucide.createIcons();
-
-            // Show modal
-            modal.classList.add('active');
-        }
-
-        function closeCourseActionModal() {
-            document.getElementById('courseActionModal').classList.remove('active');
-            currentCourseAction = null;
-        }
-
-        function confirmCourseAction() {
-            if (currentCourseAction) {
-                console.log(`Navigating to course: ${currentCourseAction.courseId}`);
-                // In production, this would navigate to the course page:
-                // window.location.href = `/course/${currentCourseAction.courseId}`;
-                
-                // For now, just close the modal and show a subtle notification
-                closeCourseActionModal();
-                
-                // Optional: You could add a toast notification here instead
-                console.log(`Course action confirmed for: ${currentCourseAction.courseId}`);
-            }
-        }
-
-        /**
-         * Update course progress (for future backend integration)
-         */
-        function updateCourseProgress(courseId, newPercentage) {
-            const course = coursesData.myCourses.find(c => c.id === courseId);
-            
-            if (course) {
-                course.progress.percentage = newPercentage;
-                
-                if (newPercentage > 0 && newPercentage < 100) {
-                    course.progress.status = 'in-progress';
-                } else if (newPercentage === 100) {
-                    course.progress.status = 'completed';
-                }
-                
-                initializeMyCoursesPage();
-            }
-        }
-
-        // Initialize My Courses when the section becomes active
-        const originalNavClick = navLinks.forEach;
-        navLinks.forEach(link => {
-            const originalClickHandler = link.onclick;
-            link.addEventListener('click', function(e) {
-                const sectionId = this.getAttribute('data-section');
-                if (sectionId === 'my-courses') {
-                    setTimeout(() => {
-                        initializeMyCoursesPage();
-                    }, 50);
-                }
-            });
-        });
-
-        // Also initialize if My Courses is the active section on page load
+        updateDashboard();
         if (document.getElementById('my-courses')?.classList.contains('active')) {
             initializeMyCoursesPage();
         }
+    });
 
-    </script>
+    // === MY COURSES FUNCTIONALITY ===
+    
+    // Course Data Structure
+    const coursesData = {
+        "myCourses": [
+            {
+                "id": "computer-networking",
+                "title": "Computer Networking",
+                "category": "fundamentals",
+                "description": "Learn core networking concepts essential for cybersecurity.",
+                "progress": {
+                    "percentage": 0,
+                    "status": "not-started",
+                    "currentLesson": null
+                },
+                "meta": {
+                    "estimatedDuration": "6 weeks",
+                    "modulesCount": 5,
+                    "lessonsCount": 22
+                }
+            },
+            {
+                "id": "information-security",
+                "title": "Information Security",
+                "category": "fundamentals",
+                "description": "Understand security principles, risk models, and defensive thinking.",
+                "progress": {
+                    "percentage": 0,
+                    "status": "not-started",
+                    "currentLesson": null
+                },
+                "meta": {
+                    "estimatedDuration": "5 weeks",
+                    "modulesCount": 4,
+                    "lessonsCount": 18
+                }
+            },
+            {
+                "id": "ethical-hacking",
+                "title": "Ethical Hacking",
+                "category": "intermediate",
+                "description": "Practice offensive security techniques with hands-on labs.",
+                "progress": {
+                    "percentage": 35,
+                    "status": "in-progress",
+                    "currentLesson": "SQL Injection Basics"
+                },
+                "meta": {
+                    "estimatedDuration": "8 weeks",
+                    "modulesCount": 6,
+                    "lessonsCount": 30
+                }
+            }
+        ]
+    };
+
+    /**
+     * Render a single course card
+     */
+    function renderCourseCard(course) {
+        const isActive = course.progress.status === 'in-progress';
+        const progressText = course.progress.percentage === 0 
+            ? 'Not started' 
+            : `${course.progress.percentage}% completed`;
+        const buttonText = course.progress.status === 'not-started' 
+            ? 'Start Course' 
+            : 'Resume Course';
+        const buttonIcon = course.progress.status === 'not-started' 
+            ? 'play-circle' 
+            : 'arrow-right';
+
+        return `
+            <article class="course-card ${isActive ? 'active-course' : ''}" data-course-id="${course.id}">
+                <div class="card-header-courses">
+                    <div class="course-title-wrapper">
+                        <h3 class="course-title">${course.title}</h3>
+                        <span class="course-category-badge">${course.category}</span>
+                    </div>
+                </div>
+
+                <div class="card-content-courses">
+                    <p class="course-description">${course.description}</p>
+
+                    ${course.progress.currentLesson ? `
+                        <div class="current-lesson">
+                            <i data-lucide="play-circle"></i>
+                            <span class="current-lesson-text">
+                                Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
+                            </span>
+                        </div>
+                    ` : ''}
+
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <i data-lucide="clock"></i>
+                            <span>${course.meta.estimatedDuration}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i data-lucide="folder"></i>
+                            <span>${course.meta.modulesCount} modules</span>
+                        </div>
+                        <div class="meta-item">
+                            <i data-lucide="book-open"></i>
+                            <span>${course.meta.lessonsCount} lessons</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-section-courses">
+                        <div class="progress-header-courses">
+                            <span class="progress-label-courses">Progress</span>
+                            <span class="progress-percentage-courses">${course.progress.percentage}%</span>
+                        </div>
+                        <div class="progress-bar-container-courses">
+                            <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
+                        </div>
+                        <p class="progress-status-courses">${progressText}</p>
+                    </div>
+                </div>
+
+                <div class="card-actions-courses">
+                    <button class="btn-course-primary" onclick="handleCourseAction('${course.id}', '${course.progress.status}')">
+                        <i data-lucide="${buttonIcon}"></i>
+                        ${buttonText}
+                    </button>
+                </div>
+            </article>
+        `;
+    }
+
+    /**
+     * Render courses by category
+     */
+    function renderCoursesByCategory(courses, category) {
+        const filteredCourses = courses.filter(course => course.category === category);
+        const gridElement = document.getElementById(`${category}-grid`);
+        const countElement = document.getElementById(`${category}-count`);
+
+        if (!gridElement || !countElement) return;
+
+        if (filteredCourses.length === 0) {
+            gridElement.innerHTML = '<p style="color: var(--text-muted); padding: 2rem 0;">No courses in this category yet.</p>';
+            countElement.textContent = '0 courses';
+            return;
+        }
+
+        gridElement.innerHTML = filteredCourses.map(course => renderCourseCard(course)).join('');
+        countElement.textContent = `${filteredCourses.length} ${filteredCourses.length === 1 ? 'course' : 'courses'}`;
+
+        // Re-render icons after DOM update
+        lucide.createIcons();
+    }
+
+    /**
+     * Initialize My Courses page
+     */
+    function initializeMyCoursesPage() {
+        const courses = coursesData.myCourses;
+
+        // Render courses by category
+        renderCoursesByCategory(courses, 'fundamentals');
+        renderCoursesByCategory(courses, 'intermediate');
+
+        // Animate progress bars
+        setTimeout(() => {
+            document.querySelectorAll('.progress-bar-fill-courses').forEach(bar => {
+                bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+        }, 100);
+    }
+
+    /**
+     * Handle course action button clicks
+     */
+    let currentCourseAction = null;
+
+    function handleCourseAction(courseId, status) {
+        const course = coursesData.myCourses.find(c => c.id === courseId);
+        if (!course) return;
+
+        // Store the action details
+        currentCourseAction = { courseId, status };
+
+        // Update modal content based on status
+        const modal = document.getElementById('courseActionModal');
+        const title = document.getElementById('courseActionTitle');
+        const message = document.getElementById('courseActionMessage');
+        const icon = modal.querySelector('.modal-icon i');
+
+        if (status === 'not-started') {
+            title.textContent = 'Start Course';
+            message.textContent = `Ready to begin "${course.title}"? This course will take approximately ${course.meta.estimatedDuration} to complete.`;
+            icon.setAttribute('data-lucide', 'rocket');
+        } else if (status === 'in-progress') {
+            title.textContent = 'Resume Course';
+            message.textContent = `Continue learning "${course.title}"? You'll pick up where you left off at: ${course.progress.currentLesson}`;
+            icon.setAttribute('data-lucide', 'play-circle');
+        }
+
+        // Re-render the icon
+        lucide.createIcons();
+
+        // Show modal
+        modal.classList.add('active');
+    }
+
+    function closeCourseActionModal() {
+        document.getElementById('courseActionModal').classList.remove('active');
+        currentCourseAction = null;
+    }
+
+    function confirmCourseAction() {
+        if (currentCourseAction) {
+            console.log(`Navigating to course: ${currentCourseAction.courseId}`);
+            // In production, navigate to the course page:
+            // window.location.href = `/course/${currentCourseAction.courseId}`;
+            
+            closeCourseActionModal();
+        }
+    }
+
+    /**
+     * Update course progress (for future backend integration)
+     */
+    function updateCourseProgress(courseId, newPercentage) {
+        const course = coursesData.myCourses.find(c => c.id === courseId);
+        
+        if (course) {
+            course.progress.percentage = newPercentage;
+            
+            if (newPercentage > 0 && newPercentage < 100) {
+                course.progress.status = 'in-progress';
+            } else if (newPercentage === 100) {
+                course.progress.status = 'completed';
+            }
+            
+            initializeMyCoursesPage();
+        }
+    }
+</script>
 </body>
 </html>

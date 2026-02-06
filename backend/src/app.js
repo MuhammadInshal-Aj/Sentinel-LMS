@@ -16,28 +16,30 @@ app.use(cors()); // Allows your HTML file to talk to this server
 app.use(express.json());
 
 // 3. The Registration API (The "Handshake")
+// --- Update this in app.js ---
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
 
     try {
-        // Create user in Supabase Auth
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: email,
             password: password,
+            // THIS OPTIONS BLOCK IS WHAT SAVES THE NAME TO THE AUTH DATABASE
+            options: {
+                data: {
+                    display_name: username 
+                }
+            }
         });
 
         if (authError) throw authError;
 
-        // Save the "Designation Name" (Username) into our profiles table
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([
-                { id: authData.user.id, username: username, email: email }
-            ]);
+        // Keep your profiles table insert too
+        await supabase.from('profiles').insert([
+            { id: authData.user.id, username: username, email: email }
+        ]);
 
-        if (profileError) throw profileError;
-
-        res.status(201).json({ message: "Clearance Granted. Check your email for verification!" });
+        res.status(201).json({ message: "Clearance Granted!" });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

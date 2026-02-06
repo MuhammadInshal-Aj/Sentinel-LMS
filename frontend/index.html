@@ -1087,6 +1087,351 @@
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
+
+        /* MY COURSES SECTION STYLES */
+        .courses-container {
+            padding: 3rem 4rem;
+            max-width: 1600px;
+        }
+
+        .courses-page-header {
+            margin-bottom: 3rem;
+        }
+
+        .courses-page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .courses-page-title i {
+            color: var(--accent);
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+
+        .courses-page-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .course-category {
+            margin-bottom: 3rem;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .category-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .category-badge {
+            padding: 0.3rem 0.8rem;
+            background: var(--accent-soft);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 2rem;
+        }
+
+        .course-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .course-card:hover {
+            background: #111111;
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(0, 242, 255, 0.15);
+        }
+
+        .course-card:hover::before {
+            opacity: 1;
+        }
+
+        .course-card.active-course {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.05) 0%, var(--card) 100%);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+        }
+
+        .course-card.active-course::before {
+            opacity: 1;
+            background: linear-gradient(90deg, var(--accent), #00ff88);
+        }
+
+        .course-card.active-course::after {
+            content: 'ACTIVE';
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.4rem 0.8rem;
+            background: var(--accent);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .card-header-courses {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-title-wrapper {
+            flex: 1;
+        }
+
+        .course-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .course-category-badge {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .course-card.active-course .course-category-badge {
+            background: rgba(0, 242, 255, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .card-content-courses {
+            margin-bottom: 1.5rem;
+        }
+
+        .course-description {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .meta-item i {
+            width: 16px;
+            height: 16px;
+            color: var(--accent);
+        }
+
+        .progress-section-courses {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-header-courses {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-label-courses {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .progress-percentage-courses {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .progress-bar-container-courses {
+            position: relative;
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar-fill-courses {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #00ff88);
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .progress-bar-fill-courses::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-status-courses {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .course-card.active-course .progress-status-courses {
+            color: var(--accent);
+        }
+
+        .card-actions-courses {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-course-primary {
+            flex: 1;
+            padding: 0.9rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), #00a8ff);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(0, 242, 255, 0.3);
+        }
+
+        .btn-course-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 242, 255, 0.5);
+        }
+
+        .current-lesson {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: rgba(0, 242, 255, 0.08);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .current-lesson i {
+            width: 16px;
+            height: 16px;
+            color: var(--accent);
+        }
+
+        .current-lesson-text {
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .current-lesson-name {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        @keyframes fadeInCourse {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .course-card {
+            animation: fadeInCourse 0.6s ease-out backwards;
+        }
+
+        .course-card:nth-child(1) { animation-delay: 0.1s; }
+        .course-card:nth-child(2) { animation-delay: 0.2s; }
+        .course-card:nth-child(3) { animation-delay: 0.3s; }
     </style>
 </head>
 <body>
@@ -1108,7 +1453,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link">
+                <a class="nav-link" data-section="my-courses">
                     <i data-lucide="book-open" size="20"></i>
                     <span>My Courses</span>
                 </a>
@@ -1157,7 +1502,7 @@
                 <div class="profile-avatar">JD</div>
                 <div class="profile-info">
                     <div class="profile-name">John Doe</div>
-                    <div class="profile-email">john@sentinel.com</div>
+                    <div class="profile-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e545156507e4d5b504a57505b52105d5153">[email&#160;protected]</a></div>
                 </div>
                 <i data-lucide="chevron-up" size="18"></i>
             </button>
@@ -1508,6 +1853,42 @@
             </div>
         </section>
 
+        <!-- MY COURSES SECTION -->
+        <section id="my-courses" class="content-section">
+            <div class="courses-container">
+                <!-- Page Header -->
+                <header class="courses-page-header">
+                    <h1 class="courses-page-title">
+                        <i data-lucide="graduation-cap"></i>
+                        My Courses
+                    </h1>
+                    <p class="courses-page-subtitle">Track your learning journey and continue where you left off</p>
+                </header>
+
+                <!-- Fundamentals Category -->
+                <section class="course-category" id="fundamentals-section">
+                    <div class="category-header">
+                        <h2 class="category-title">Fundamentals</h2>
+                        <span class="category-badge" id="fundamentals-count">0 courses</span>
+                    </div>
+                    <div class="course-grid" id="fundamentals-grid">
+                        <!-- Fundamentals courses will be rendered here -->
+                    </div>
+                </section>
+
+                <!-- Intermediate Category -->
+                <section class="course-category" id="intermediate-section">
+                    <div class="category-header">
+                        <h2 class="category-title">Intermediate</h2>
+                        <span class="category-badge" id="intermediate-count">0 courses</span>
+                    </div>
+                    <div class="course-grid" id="intermediate-grid">
+                        <!-- Intermediate courses will be rendered here -->
+                    </div>
+                </section>
+            </div>
+        </section>
+
     </main>
 
     <!-- LOGOUT CONFIRMATION MODAL -->
@@ -1527,7 +1908,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         lucide.createIcons();
         
         // Initialize data from localStorage
@@ -1760,14 +2141,226 @@
                     localStorage.removeItem('sentinelUserData');
                     alert('Account deleted. Redirecting...');
                     location.reload();
+                }            }
+        }
+
+        // === MY COURSES FUNCTIONALITY ===
+        
+        // Course Data Structure
+        const coursesData = {
+            "myCourses": [
+                {
+                    "id": "computer-networking",
+                    "title": "Computer Networking",
+                    "category": "fundamentals",
+                    "description": "Learn core networking concepts essential for cybersecurity.",
+                    "progress": {
+                        "percentage": 0,
+                        "status": "not-started",
+                        "currentLesson": null
+                    },
+                    "meta": {
+                        "estimatedDuration": "6 weeks",
+                        "modulesCount": 5,
+                        "lessonsCount": 22
+                    }
+                },
+                {
+                    "id": "information-security",
+                    "title": "Information Security",
+                    "category": "fundamentals",
+                    "description": "Understand security principles, risk models, and defensive thinking.",
+                    "progress": {
+                        "percentage": 0,
+                        "status": "not-started",
+                        "currentLesson": null
+                    },
+                    "meta": {
+                        "estimatedDuration": "5 weeks",
+                        "modulesCount": 4,
+                        "lessonsCount": 18
+                    }
+                },
+                {
+                    "id": "ethical-hacking",
+                    "title": "Ethical Hacking",
+                    "category": "intermediate",
+                    "description": "Practice offensive security techniques with hands-on labs.",
+                    "progress": {
+                        "percentage": 35,
+                        "status": "in-progress",
+                        "currentLesson": "SQL Injection Basics"
+                    },
+                    "meta": {
+                        "estimatedDuration": "8 weeks",
+                        "modulesCount": 6,
+                        "lessonsCount": 30
+                    }
                 }
+            ]
+        };
+
+        /**
+         * Render a single course card
+         */
+        function renderCourseCard(course) {
+            const isActive = course.progress.status === 'in-progress';
+            const progressText = course.progress.percentage === 0 
+                ? 'Not started' 
+                : `${course.progress.percentage}% completed`;
+            const buttonText = course.progress.status === 'not-started' 
+                ? 'Start Course' 
+                : 'Resume Course';
+            const buttonIcon = course.progress.status === 'not-started' 
+                ? 'play-circle' 
+                : 'arrow-right';
+
+            return `
+                <article class="course-card ${isActive ? 'active-course' : ''}" data-course-id="${course.id}">
+                    <div class="card-header-courses">
+                        <div class="course-title-wrapper">
+                            <h3 class="course-title">${course.title}</h3>
+                            <span class="course-category-badge">${course.category}</span>
+                        </div>
+                    </div>
+
+                    <div class="card-content-courses">
+                        <p class="course-description">${course.description}</p>
+
+                        ${course.progress.currentLesson ? `
+                            <div class="current-lesson">
+                                <i data-lucide="play-circle"></i>
+                                <span class="current-lesson-text">
+                                    Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
+                                </span>
+                            </div>
+                        ` : ''}
+
+                        <div class="course-meta">
+                            <div class="meta-item">
+                                <i data-lucide="clock"></i>
+                                <span>${course.meta.estimatedDuration}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i data-lucide="folder"></i>
+                                <span>${course.meta.modulesCount} modules</span>
+                            </div>
+                            <div class="meta-item">
+                                <i data-lucide="book-open"></i>
+                                <span>${course.meta.lessonsCount} lessons</span>
+                            </div>
+                        </div>
+
+                        <div class="progress-section-courses">
+                            <div class="progress-header-courses">
+                                <span class="progress-label-courses">Progress</span>
+                                <span class="progress-percentage-courses">${course.progress.percentage}%</span>
+                            </div>
+                            <div class="progress-bar-container-courses">
+                                <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
+                            </div>
+                            <p class="progress-status-courses">${progressText}</p>
+                        </div>
+                    </div>
+
+                    <div class="card-actions-courses">
+                        <button class="btn-course-primary" onclick="handleCourseAction('${course.id}', '${course.progress.status}')">
+                            <i data-lucide="${buttonIcon}"></i>
+                            ${buttonText}
+                        </button>
+                    </div>
+                </article>
+            `;
+        }
+
+        /**
+         * Render courses by category
+         */
+        function renderCoursesByCategory(courses, category) {
+            const filteredCourses = courses.filter(course => course.category === category);
+            const gridElement = document.getElementById(`${category}-grid`);
+            const countElement = document.getElementById(`${category}-count`);
+
+            if (!gridElement || !countElement) return;
+
+            if (filteredCourses.length === 0) {
+                gridElement.innerHTML = '<p style="color: var(--text-muted); padding: 2rem 0;">No courses in this category yet.</p>';
+                countElement.textContent = '0 courses';
+                return;
+            }
+
+            gridElement.innerHTML = filteredCourses.map(course => renderCourseCard(course)).join('');
+            countElement.textContent = `${filteredCourses.length} ${filteredCourses.length === 1 ? 'course' : 'courses'}`;
+
+            // Re-render icons after DOM update
+            lucide.createIcons();
+        }
+
+        /**
+         * Initialize My Courses page
+         */
+        function initializeMyCoursesPage() {
+            const courses = coursesData.myCourses;
+
+            // Render courses by category
+            renderCoursesByCategory(courses, 'fundamentals');
+            renderCoursesByCategory(courses, 'intermediate');
+
+            // Animate progress bars
+            setTimeout(() => {
+                document.querySelectorAll('.progress-bar-fill-courses').forEach(bar => {
+                    bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
+                });
+            }, 100);
+        }
+
+        /**
+         * Handle course action button clicks
+         */
+        function handleCourseAction(courseId, status) {
+            console.log(`Action triggered for course: ${courseId}, status: ${status}`);
+            alert(`Navigating to course: ${courseId}`);
+            // In production: window.location.href = `/course/${courseId}`;
+        }
+
+        /**
+         * Update course progress (for future backend integration)
+         */
+        function updateCourseProgress(courseId, newPercentage) {
+            const course = coursesData.myCourses.find(c => c.id === courseId);
+            
+            if (course) {
+                course.progress.percentage = newPercentage;
+                
+                if (newPercentage > 0 && newPercentage < 100) {
+                    course.progress.status = 'in-progress';
+                } else if (newPercentage === 100) {
+                    course.progress.status = 'completed';
+                }
+                
+                initializeMyCoursesPage();
             }
         }
 
-        // Initialize dashboard on load
-        if (document.getElementById('dashboard').classList.contains('active')) {
-            updateDashboard();
+        // Initialize My Courses when the section becomes active
+        const originalNavClick = navLinks.forEach;
+        navLinks.forEach(link => {
+            const originalClickHandler = link.onclick;
+            link.addEventListener('click', function(e) {
+                const sectionId = this.getAttribute('data-section');
+                if (sectionId === 'my-courses') {
+                    setTimeout(() => {
+                        initializeMyCoursesPage();
+                    }, 50);
+                }
+            });
+        });
+
+        // Also initialize if My Courses is the active section on page load
+        if (document.getElementById('my-courses')?.classList.contains('active')) {
+            initializeMyCoursesPage();
         }
+
     </script>
 </body>
 </html>

@@ -18,16 +18,18 @@ app.use(express.json());
 // 3. The Registration API (The "Handshake")
 // --- Update this in app.js ---
 app.post('/api/register', async (req, res) => {
-    const { username, email, password } = req.body;
+    const { first_name, last_name, email, password } = req.body;
 
     try {
+        const display_name = `${first_name} ${last_name}`;
+
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: email,
             password: password,
             // THIS OPTIONS BLOCK IS WHAT SAVES THE NAME TO THE AUTH DATABASE
             options: {
                 data: {
-                    display_name: username 
+                    display_name: display_name
                 }
             }
         });
@@ -36,7 +38,12 @@ app.post('/api/register', async (req, res) => {
 
         // Keep your profiles table insert too
         await supabase.from('profiles').insert([
-            { id: authData.user.id, username: username, email: email }
+            { 
+                id: authData.user.id, 
+                first_name: first_name, 
+                last_name: last_name, 
+                email: email 
+            }
         ]);
 
         res.status(201).json({ message: "Clearance Granted!" });

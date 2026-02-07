@@ -105,6 +105,12 @@
         }
         input:focus { outline: none; }
 
+        .name-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
         .btn-enlist {
             width: 100%; padding: 1.1rem; background: #fff; color: #000;
             border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
@@ -119,70 +125,6 @@
         .footer-nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
         .footer-nav a:hover { text-decoration: underline; }
 
-    </style>
-</head>
-<body>
-
-    <div class="cyber-bg">
-        <div class="grid"></div>
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-    </div>
-
-    <nav>
-        <a href="landing.html" class="logo">SENTINEL<span>LMS</span></a>
-        <ul class="nav-links">
-            <li><a href="landing.html">Home</a></li>
-            <li><a href="#">Tracks</a></li>
-            <li><a href="#">Support</a></li>
-        </ul>
-        <button class="btn-enlist" style="margin: 0; width: auto; padding: 0.6rem 1.5rem; font-size: 0.75rem;" onclick="location.href='login.html'">LOGIN</button>
-    </nav>
-
-    <div class="main-content">
-        <div class="auth-card">
-            
-            <div class="card-controls">
-                <div class="control-dot" onclick="window.history.back()" title="Go Back">
-                    <i data-lucide="chevron-left" size="18"></i>
-                </div>
-                <div class="control-dot" onclick="window.history.forward()" title="Go Forward">
-                    <i data-lucide="chevron-right" size="18"></i>
-                </div>
-            </div>
-
-            <div class="header-area">
-                <h2>New Enlistment</h2>
-                <p>Create your secure profile to begin training</p>
-            </div>
-
-            <form id="registerForm">
-                <div class="input-group">
-                    <label>Designation Name</label>
-                    <div class="field-wrapper">
-                        <i data-lucide="user-check" size="18"></i>
-                        <input type="text" name="username" id="regUsername" placeholder="Enter your full name" required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Terminal Email</label>
-                    <div class="field-wrapper">
-                        <i data-lucide="mail" size="18"></i>
-                        <input type="email" name="email" id="regEmail" placeholder="agent@sentinel-lms.io" required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Establish Access Key</label>
-                    <div class="field-wrapper">
-                        <i data-lucide="shield-check" size="18"></i>
-                        <input type="password" name="password" id="regPassword" placeholder="Min. 8 characters" required>
-                    </div>
-                </div>
-                        <div id="statusMessage" class="status-box hidden"></div>
-
-<style>
   /* Cyberpunk Status Box Styling */
   .status-box {
     padding: 12px;
@@ -230,7 +172,79 @@
     gap: 10px;
 }
 
-</style>
+    </style>
+</head>
+<body>
+
+    <div class="cyber-bg">
+        <div class="grid"></div>
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <nav>
+        <a href="landing.html" class="logo">SENTINEL<span>LMS</span></a>
+        <ul class="nav-links">
+            <li><a href="landing.html">Home</a></li>
+            <li><a href="#">Tracks</a></li>
+            <li><a href="#">Support</a></li>
+        </ul>
+        <button class="btn-enlist" style="margin: 0; width: auto; padding: 0.6rem 1.5rem; font-size: 0.75rem;" onclick="location.href='login.html'">LOGIN</button>
+    </nav>
+
+    <div class="main-content">
+        <div class="auth-card">
+            
+            <div class="card-controls">
+                <div class="control-dot" onclick="window.history.back()" title="Go Back">
+                    <i data-lucide="chevron-left" size="18"></i>
+                </div>
+                <div class="control-dot" onclick="window.history.forward()" title="Go Forward">
+                    <i data-lucide="chevron-right" size="18"></i>
+                </div>
+            </div>
+
+            <div class="header-area">
+                <h2>New Enlistment</h2>
+                <p>Create your secure profile to begin training</p>
+            </div>
+
+            <form id="registerForm">
+                <div class="name-row">
+                    <div class="input-group">
+                        <label>First Name</label>
+                        <div class="field-wrapper">
+                            <i data-lucide="user" size="18"></i>
+                            <input type="text" name="firstName" id="firstName" placeholder="First name" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Last Name</label>
+                        <div class="field-wrapper">
+                            <i data-lucide="user-check" size="18"></i>
+                            <input type="text" name="lastName" id="lastName" placeholder="Last name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Terminal Email</label>
+                    <div class="field-wrapper">
+                        <i data-lucide="mail" size="18"></i>
+                        <input type="email" name="email" id="regEmail" placeholder="agent@sentinel-lms.io" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Establish Access Key</label>
+                    <div class="field-wrapper">
+                        <i data-lucide="shield-check" size="18"></i>
+                        <input type="password" name="password" id="regPassword" placeholder="Min. 8 characters" required>
+                    </div>
+                </div>
+                        <div id="statusMessage" class="status-box hidden"></div>
+
                 <button type="submit" class="btn-enlist" id="registerBtn">
     <span id="btnText">Request Clearance</span>
     <div class="spinner" id="spinner"></div>
@@ -254,7 +268,8 @@
     const btnText = document.getElementById('btnText');
     const spinner = document.getElementById('spinner');
 
-    const usernameInput = document.getElementById('regUsername');
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
     const emailInput = document.getElementById('regEmail');
     const passwordInput = document.getElementById('regPassword');
 
@@ -266,7 +281,8 @@
 
     function setLoadingState(isLoading) {
         submitBtn.disabled = isLoading;
-        usernameInput.disabled = isLoading;
+        firstNameInput.disabled = isLoading;
+        lastNameInput.disabled = isLoading;
         emailInput.disabled = isLoading;
         passwordInput.disabled = isLoading;
 
@@ -287,7 +303,8 @@
 
         setLoadingState(true);
 
-        const username = usernameInput.value.trim();
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
 
@@ -295,7 +312,7 @@
             const response = await fetch(`${API_URL}/api/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password })
+                body: JSON.stringify({ firstName, lastName, email, password })
             });
 
             const result = await response.json();

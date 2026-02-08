@@ -312,7 +312,12 @@
             const response = await fetch(`${API_URL}/api/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ firstName, lastName, email, password })
+                body: JSON.stringify({ 
+                    first_name: firstName,  // ✅ FIXED: Changed from firstName to first_name
+                    last_name: lastName,    // ✅ FIXED: Changed from lastName to last_name
+                    email, 
+                    password 
+                })
             });
 
             const result = await response.json();

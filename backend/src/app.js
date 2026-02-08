@@ -16,35 +16,23 @@ app.use(cors()); // Allows your HTML file to talk to this server
 app.use(express.json());
 
 // 3. The Registration API (The "Handshake")
-// --- Update this in app.js ---
 app.post('/api/register', async (req, res) => {
     const { first_name, last_name, email, password } = req.body;
 
     try {
-        const display_name = `${first_name} ${last_name}`;
-
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            // THIS OPTIONS BLOCK IS WHAT SAVES THE NAME TO THE AUTH DATABASE
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
             options: {
                 data: {
-                    display_name: display_name
+                    first_name,
+                    last_name,
+                    display_name: `${first_name} ${last_name}`
                 }
             }
         });
 
-        if (authError) throw authError;
-
-        // Keep your profiles table insert too
-        await supabase.from('profiles').insert([
-            { 
-                id: authData.user.id, 
-                first_name: first_name, 
-                last_name: last_name, 
-                email: email 
-            }
-        ]);
+        if (error) throw error;
 
         res.status(201).json({ message: "Clearance Granted!" });
     } catch (error) {
@@ -56,9 +44,6 @@ app.post('/api/register', async (req, res) => {
 app.get('/', (req, res) => {
   res.json({ status: 'Sentinel Backend: Online' });
 });
-
-module.exports = app;
-
 
 // --- AUTHORIZATION ROUTE (Login) ---
 app.post('/api/login', async (req, res) => {
@@ -82,3 +67,5 @@ app.post('/api/login', async (req, res) => {
         res.status(401).json({ error: "Authorization Failed: " + error.message });
     }
 });
+
+module.exports = app;

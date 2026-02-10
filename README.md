@@ -371,4 +371,23 @@ Once My Courses is working:
 
 **You now have a database-accurate, production-ready My Courses section! 🎉**
 
-Any questions? Check the inline comments in `my-courses-enhanced-REVISED.js` - they explain exactly how it maps to your database schema.
+Any questions? Check the inline comments in `my-courses-enhanced-REVISED.js` - they explain exactly how it maps to your database schema.## Folder Structure
+
+- `backend/` API server and business logic
+- `frontend/` HTML/CSS/JS client
+- `database/` SQL schema and policies
+- `curriculum/` course design notes
+- `labs/` lab specs and drafts
+- `content/` lesson markdown and simulation JSON
+- `assets/` shared images and logos
+- `docs/` project documentation index
+- `scripts/` developer utilities
+- `tools/` local tooling helpers
+- `tests/` automated tests
+- `config/` config templates and examples
+
+Local-only (gitignored):
+- `.temp/` temporary files
+- `logs/` runtime logs
+- `infra/` local infrastructure experiments
+- `design/` local design explorations

@@ -1,17 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel-LMS | Enlistment</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+    <link rel="shortcut icon" href="../assets/sentinel-mark.svg">
     <script src="config.js"></script>
     <script src="auth.js"></script>
+    <script src="api.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Shared Stylesheets -->
     <link rel="stylesheet" href="styles/theme.css">
     <link rel="stylesheet" href="styles/auth.css">
+    <script src="toast.js"></script>
 
     <!-- Register-specific overrides -->
     <style>
@@ -35,7 +39,10 @@
     </div>
 
     <nav class="auth-nav">
-        <a href="landing.html" class="logo">SENTINEL<span>LMS</span></a>
+        <a href="landing.html" class="logo">
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS logo">
+            SENTINEL<span>LMS</span>
+        </a>
         <ul class="nav-links">
             <li><a href="landing.html">Home</a></li>
             <li><a href="#">Tracks</a></li>
@@ -96,8 +103,6 @@
                     </div>
                 </div>
 
-                <div id="statusMessage" class="status-box hidden"></div>
-
                 <button type="submit" class="btn-auth" id="registerBtn">
                     <span id="btnText">Request Clearance</span>
                     <div class="spinner hidden" id="spinner"></div>
@@ -110,13 +115,10 @@
         </div>
     </div>
 
-<script src="config.js"></script>
-
 <script>
     lucide.createIcons();
 
     const registerForm = document.getElementById('registerForm');
-    const statusBox = document.getElementById('statusMessage');
     const submitBtn = document.getElementById('registerBtn');
     const btnText = document.getElementById('btnText');
     const spinner = document.getElementById('spinner');
@@ -126,10 +128,20 @@
     const emailInput = document.getElementById('regEmail');
     const passwordInput = document.getElementById('regPassword');
 
+    // Prevent forward navigation without proper registration completion
+    window.history.replaceState(null, '', window.location.href);
+
     function updateSystemStatus(message, isSuccess) {
-        statusBox.textContent = `> ${message}`;
-        statusBox.className = `status-box ${isSuccess ? 'success' : 'error'}`;
-        statusBox.classList.remove('hidden');
+        if (isSuccess) {
+            Toast.success(message, 3500);
+        } else {
+            Toast.error(message, 3500);
+        }
+        
+        // Keep status box for backward compatibility with CSS styling
+        // statusBox.textContent = `> ${message}`;
+        // statusBox.className = `status-box ${isSuccess ? 'success' : 'error'}`;
+        // statusBox.classList.remove('hidden');
     }
 
     function setLoadingState(isLoading) {
@@ -152,7 +164,6 @@
 
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        statusBox.classList.add('hidden');
 
         setLoadingState(true);
 
@@ -162,35 +173,29 @@
         const password = passwordInput.value.trim();
 
         try {
-            const response = await fetch(`${API_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    first_name: firstName,
-                    last_name: lastName,
-                    email, 
-                    password 
-                })
-            });
+            await Api.register(firstName, lastName, email, password);
 
-            const result = await response.json();
-
-            if (response.ok) {
-                updateSystemStatus("ENLISTMENT SUCCESSFUL. INITIALIZING CLEARANCE...", true);
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2000);
-            } else {
-                setLoadingState(false);
-                updateSystemStatus(`ACCESS DENIED: ${result.error}`, false);
-                btnText.textContent = "RETRY ENLISTMENT";
-            }
+            updateSystemStatus("ENLISTMENT SUCCESSFUL. INITIALIZING CLEARANCE...", true);
+            
+            // Replace history state to prevent going back to register.html
+            window.history.replaceState({registered: true}, '', window.location.href);
+            
+            setTimeout(() => {
+                // Use location.replace to prevent back navigation
+                window.location.replace('login.html');
+            }, 2000);
         } catch (err) {
             setLoadingState(false);
-            updateSystemStatus("CRITICAL: SENTINEL SERVER OFFLINE", false);
+            if (err instanceof TypeError) {
+                updateSystemStatus("CRITICAL: SENTINEL SERVER OFFLINE", false);
+            } else {
+                updateSystemStatus(`ACCESS DENIED: ${err.message}`, false);
+            }
+            btnText.textContent = "RETRY ENLISTMENT";
         }
     });
 </script>
 
 </body>
 </html>
+

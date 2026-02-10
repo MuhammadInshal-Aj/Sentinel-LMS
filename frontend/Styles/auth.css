@@ -92,6 +92,15 @@
     color: #fff;
     text-decoration: none;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auth-nav .logo-mark {
+    width: 22px;
+    height: 22px;
+    display: inline-block;
 }
 
 .auth-nav .logo span { color: var(--accent); }
@@ -252,6 +261,27 @@
 
 .auth-field input:focus { outline: none; }
 .auth-field input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-field input::placeholder {
+    color: #6b7280;
+    opacity: 0.8;
+}
+
+/* Autofill styling (prevents white background on Chrome) */
+.auth-field input:-webkit-autofill,
+.auth-field input:-webkit-autofill:hover,
+.auth-field input:-webkit-autofill:focus,
+.auth-field input:-webkit-autofill:active {
+    -webkit-text-fill-color: #fff;
+    caret-color: #fff;
+    box-shadow: 0 0 0 1000px #000 inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+.auth-field input:autofill {
+    color: #fff;
+    box-shadow: 0 0 0 1000px #000 inset;
+}
 
 /* Two-column name row (register) */
 .auth-name-row {

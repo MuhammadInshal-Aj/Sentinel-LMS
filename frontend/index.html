@@ -1,14 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel-LMS | Digital Fortress</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+    <link rel="shortcut icon" href="../assets/sentinel-mark.svg">
 
+    <!-- Favicon (prevent 404 error) -->
+    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Shared Stylesheets (order matters: tokens → structure → components → helpers) -->
+    <!-- Shared Stylesheets (order matters: tokens â†’ structure â†’ components â†’ helpers) -->
     <link rel="stylesheet" href="styles/theme.css">
     <link rel="stylesheet" href="styles/layout.css">
     <link rel="stylesheet" href="styles/components.css">
@@ -18,10 +22,17 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- Shared Modules -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="toast.js"></script>
+    <script src="navigation.js"></script>
+
     <!-- IMMEDIATE AUTH GUARD: Redirect before page renders if not authenticated -->
     <script>
         (function() {
-            var token = localStorage.getItem('sentinel_token');
+            var token = Auth.getToken();
             if (!token) {
                 window.location.replace('login.html');
                 document.documentElement.style.display = 'none';
@@ -255,7 +266,7 @@
 
     <nav class="sidebar">
         <div class="logo">
-            <i data-lucide="shield-check" style="color: var(--accent);"></i>
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS logo">
             SENTINEL<span>LMS</span>
         </div>
         
@@ -399,7 +410,7 @@
                         </div>
                         <div class="path-info">
                             <div class="path-name" id="courseName">Penetration Tester</div>
-                            <div class="path-meta">Current Path â€¢ <span id="courseProgress">0%</span> Progress</div>
+                            <div class="path-meta">Current Path Ã¢â‚¬Â¢ <span id="courseProgress">0%</span> Progress</div>
                             <div class="path-actions">
                                 <button class="btn-continue" onclick="simulateProgress()">Continue Learning</button>
                                 <button class="btn-secondary">View Details</button>
@@ -541,7 +552,7 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <h4>Current Session</h4>
-                                <p id="sessionInfo">Chrome on Windows â€¢ Last active: Just now</p>
+                                <p id="sessionInfo">Chrome on Windows Ã¢â‚¬Â¢ Last active: Just now</p>
                             </div>
                             <button class="btn-secondary" disabled>Current</button>
                         </div>
@@ -731,13 +742,12 @@
             </div>
             <p id="courseActionMessage">Ready to begin your learning journey?</p>
             <div class="modal-actions">
-                <button class="modal-btn modal-btn-cancel" onclick="closeCourseActionModal()">Cancel</button>
-                <button class="modal-btn modal-btn-confirm" onclick="confirmCourseAction()">Continue</button>
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeCourseActionModal(); return false;">Cancel</button>
+                <button type="button" class="modal-btn modal-btn-confirm" onclick="confirmCourseAction(); return false;">Continue</button>
             </div>
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script>
     // 1. INITIALIZE SUPABASE
     const supabaseUrl = 'https://dtvdoyigadkdjkvjahna.supabase.co';
@@ -756,7 +766,7 @@
 
     // 3. USER DATA SYNC (The "John Doe" Fix)
    async function loadUserData() {
-    const token = localStorage.getItem('sentinel_token');
+    const token = Auth.getToken();
     
     if (!token) {
         window.location.replace('login.html');
@@ -767,15 +777,14 @@
         // Set the session so Supabase client is authenticated
         await supabaseClient.auth.setSession({
             access_token: token,
-            refresh_token: localStorage.getItem('sentinel_refresh_token') || ''
+            refresh_token: Auth.getRefreshToken() || ''
         });
 
         const { data: { user }, error } = await supabaseClient.auth.getUser(token);
 
         if (error || !user) {
             console.error("Auth error:", error);
-            localStorage.removeItem('sentinel_token');
-            localStorage.removeItem('sentinel_refresh_token');
+            Auth.clearAuth();
             window.location.replace('login.html');
             return;
         }
@@ -832,69 +841,32 @@
         document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
     });
 
-    const navLinks = document.querySelectorAll('.nav-link');
-    const sections = document.querySelectorAll('.content-section');
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const sectionId = link.getAttribute('data-section');
-            if (sectionId) {
-                navLinks.forEach(l => l.classList.remove('active'));
-                sections.forEach(s => s.classList.remove('active'));
-                link.classList.add('active');
-                document.getElementById(sectionId).classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                if (sectionId === 'dashboard') updateDashboard();
-                if (sectionId === 'my-courses') initializeMyCoursesPage();
-                if (sectionId === 'settings') loadAccountSettingsData();
-            }
-        });
-    });
-
-    // Settings tabs functionality
-    const settingsTabs = document.querySelectorAll('.settings-tab');
-    const settingsPanels = document.querySelectorAll('.settings-panel');
-
-    settingsTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const tabName = tab.getAttribute('data-tab');
-            const parentContainer = tab.closest('.settings-container');
-            
-            if (parentContainer && tabName) {
-                // Remove active class from all tabs in this container
-                parentContainer.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-                parentContainer.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
-                
-                // Add active class to clicked tab and corresponding panel
-                tab.classList.add('active');
-                const panel = parentContainer.querySelector(`#${tabName}`);
-                if (panel) {
-                    panel.classList.add('active');
-                }
-                
-                // Re-render icons
-                lucide.createIcons();
-            }
-        });
-    });
-
-    // Profile popup toggle
-    const profileBtn = document.getElementById('profileBtn');
-    const profilePopup = document.getElementById('profilePopup');
-
-    profileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        profilePopup.classList.toggle('active');
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!profileBtn.contains(e.target) && !profilePopup.contains(e.target)) {
-            profilePopup.classList.remove('active');
-        }
-    });
+    // Navigation, profile popup, and settings tabs are handled by navigation.js.
+    // Callbacks registered in DOMContentLoaded below.
 
     // 5. STREAK & PROGRESS LOGIC
+    function updateStreakDisplay() {
+        // Update streak number
+        const streakNumber = document.getElementById('streakNumber');
+        if (streakNumber) streakNumber.textContent = userData.streak.count || 0;
+
+        // Update streak points (example: 30 points per week)
+        const streakPoints = document.getElementById('streakPoints');
+        if (streakPoints) streakPoints.textContent = (userData.streak.count * 5) || 0;
+
+        // Update active days (highlight dots)
+        const streakDays = document.querySelectorAll('.day-dot');
+        if (Array.isArray(userData.streak.activeDays)) {
+            streakDays.forEach((dot, idx) => {
+                if (userData.streak.activeDays.includes(idx)) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+    }
+
     function checkStreak() {
         const today = new Date().toDateString();
         const lastLogin = userData.streak.lastLogin;
@@ -947,48 +919,24 @@
 
     // 6. LOGOUT & SETTINGS
     function goToSettings() {
-        // Close popup first
-        const profilePopup = document.getElementById('profilePopup');
-        if (profilePopup) {
-            profilePopup.classList.remove('active');
-        }
-        
-        // Navigate to settings section
-        const settingsLink = document.querySelector('[data-section="settings"]');
-        if (settingsLink) {
-            settingsLink.click();
-        }
-        
-        // Wait for section to load, then load data and activate Profile tab
+        Navigation.goTo('settings');
+        // Ensure profile tab is the active panel
         setTimeout(() => {
             const settingsSection = document.getElementById('settings');
-            if (settingsSection) {
-                // Load account settings data
-                loadAccountSettingsData();
-                
-                const profileTab = settingsSection.querySelector('[data-tab="profile"]');
-                const profilePanel = settingsSection.querySelector('#profile');
-                
-                // Deactivate all tabs and panels in settings
-                settingsSection.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-                settingsSection.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
-                
-                // Activate profile tab and panel
-                if (profileTab) profileTab.classList.add('active');
-                if (profilePanel) profilePanel.classList.add('active');
-                
-                // Load account data
-                loadAccountSettingsData();
-                
-                // Re-render icons
-                lucide.createIcons();
-            }
+            if (!settingsSection) return;
+            settingsSection.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+            settingsSection.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+            const profileTab = settingsSection.querySelector('[data-tab="profile"]');
+            const profilePanel = settingsSection.querySelector('#profile');
+            if (profileTab) profileTab.classList.add('active');
+            if (profilePanel) profilePanel.classList.add('active');
+            lucide.createIcons();
         }, 100);
     }
 
     async function loadAccountSettingsData() {
         try {
-            const token = localStorage.getItem('sentinel_token');
+            const token = Auth.getToken();
             if (!token) return;
 
             const { data: { user }, error } = await supabaseClient.auth.getUser(token);
@@ -1048,13 +996,13 @@
 
             if (error) throw error;
 
-            alert('Settings saved successfully!');
-            
+            Toast.success('Settings saved successfully!');
+
             // Reload user data in sidebar
             await loadUserData();
         } catch (error) {
             console.error('Error saving settings:', error);
-            alert('Error saving settings. Please try again.');
+            Toast.error('Error saving settings. Please try again.');
         }
     }
 
@@ -1064,17 +1012,17 @@
         const confirmPassword = document.getElementById('confirmPassword').value;
 
         if (!currentPassword || !newPassword || !confirmPassword) {
-            alert('Please fill in all password fields.');
+            Toast.warning('Please fill in all password fields.');
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            alert('New passwords do not match.');
+            Toast.error('New passwords do not match.');
             return;
         }
 
         if (newPassword.length < 6) {
-            alert('Password must be at least 6 characters long.');
+            Toast.warning('Password must be at least 6 characters long.');
             return;
         }
 
@@ -1085,15 +1033,15 @@
 
             if (error) throw error;
 
-            alert('Password updated successfully!');
-            
+            Toast.success('Password updated successfully!');
+
             // Clear password fields
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
         } catch (error) {
             console.error('Error updating password:', error);
-            alert('Error updating password. Please try again.');
+            Toast.error('Error updating password. Please try again.');
         }
     }
 
@@ -1108,7 +1056,7 @@
                 data: { twoFactorEnabled: enabled }
             });
             
-            alert(enabled ? '2FA has been enabled. Please set up your authenticator app.' : '2FA has been disabled.');
+            Toast.info(enabled ? '2FA has been enabled. Please set up your authenticator app.' : '2FA has been disabled.');
         } catch (error) {
             console.error('Error toggling 2FA:', error);
             element.classList.toggle('active'); // Revert on error
@@ -1116,12 +1064,17 @@
     }
 
     function navigateToMyCourses() {
-        document.querySelector('[data-section="my-courses"]').click();
+        if (window.Navigation && typeof Navigation.goTo === 'function') {
+            Navigation.goTo('my-courses');
+        } else {
+            document.querySelector('[data-section="my-courses"]').click();
+        }
     }
 
     function handleLogout() {
         document.getElementById('logoutModal').classList.add('active');
-        profilePopup.classList.remove('active');
+        var profilePopup = document.getElementById('profilePopup');
+        if (profilePopup) profilePopup.classList.remove('active');
         lucide.createIcons();
     }
 
@@ -1130,9 +1083,7 @@
     }
 
     function confirmLogout() {
-        localStorage.removeItem('sentinel_token');
-        localStorage.removeItem('sentinel_refresh_token');
-        window.location.href = 'login.html';
+        Auth.logout('login.html');
     }
 
     function toggleSwitch(element) {
@@ -1181,13 +1132,13 @@
                     }
                 });
 
-                alert('Appearance settings saved successfully!');
+                Toast.success('Appearance settings saved successfully!');
             } catch (error) {
                 console.error('Error saving appearance settings:', error);
-                alert('Error saving settings. Please try again.');
+                Toast.error('Error saving settings. Please try again.');
             }
         } else {
-            alert(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully!`);
+            Toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully!`);
         }
     }
 
@@ -1195,10 +1146,8 @@
         if (confirm('Are you absolutely sure? This action cannot be undone.')) {
             if (confirm('All your data will be permanently deleted. Continue?')) {
                 localStorage.removeItem('sentinelUserData');
-                localStorage.removeItem('sentinel_token');
-                localStorage.removeItem('sentinel_refresh_token');
-                alert('Account deleted. Redirecting...');
-                window.location.href = 'login.html';
+                Toast.info('Account deleted. Redirecting...');
+                Auth.logout('login.html');
             }
         }
     }
@@ -1209,18 +1158,83 @@
 
     // 7. INITIALIZE PAGE
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded fired');
+        
+        // Push a history state so back navigation is detected
+        window.history.pushState({authenticated: true, page: 'index'}, '', window.location.href);
+        
         loadUserData();
         checkStreak();
         updateDashboard();
+
+        // Wire section callbacks then initialize navigation
+        Navigation.onSectionActivate['dashboard'] = updateDashboard;
+        // Use a dynamic reference to initializeMyCoursesPage (loaded from my-courses.js)
+        Navigation.onSectionActivate['my-courses'] = () => window.initializeMyCoursesPage?.();
+        Navigation.onSectionActivate['settings'] = loadAccountSettingsData;
+        Navigation.init();
+        Navigation.initProfilePopup();
+        Navigation.initSettingsTabs();
+
+        // ADD EVENT DELEGATION FOR COURSE ACTION MODAL BUTTONS
+        const confirmBtn = document.querySelector('#courseActionModal .modal-btn-confirm');
+        const cancelBtn = document.querySelector('#courseActionModal .modal-btn-cancel');
+        
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', (e) => {
+                console.log('Confirm button clicked via event listener');
+                e.preventDefault();
+                e.stopPropagation();
+                confirmCourseAction();
+            });
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                console.log('Cancel button clicked via event listener');
+                e.preventDefault();
+                e.stopPropagation();
+                closeCourseActionModal();
+            });
+        }
+
         if (document.getElementById('my-courses')?.classList.contains('active')) {
-            initializeMyCoursesPage();
+            window.initializeMyCoursesPage?.();
+        }
+        
+        // DEBUG: Log the current state
+        console.log('=== INITIALIZATION DEBUG ===');
+        console.log('window.coursesData:', window.coursesData);
+        if (window.coursesData) {
+            console.log('coursesData.myCourses:', window.coursesData.myCourses);
+            console.log('coursesData.myCourses length:', window.coursesData.myCourses?.length);
+            console.log('renderCoursesByCategory available:', typeof renderCoursesByCategory);
+            console.log('handleCourseAction available:', typeof handleCourseAction);
+        }
+        console.log('=====================================');
+        
+        console.log('Initialization complete');
+    });
+
+    // === PREVENT BACK NAVIGATION WITHOUT RE-AUTHENTICATION ===
+    // When user tries to go back (browser back button), check if still authenticated
+    window.addEventListener('popstate', (event) => {
+        console.log('popstate event detected - user may have clicked back button');
+        
+        // Check if still authenticated
+        const token = Auth.getToken();
+        if (!token) {
+            console.warn('User not authenticated, redirecting to login...');
+            window.location.replace('login.html');
+        } else {
+            console.log('User still authenticated, allowing navigation');
         }
     });
 
     // === MY COURSES FUNCTIONALITY ===
     
-    // Course Data Structure
-    const coursesData = {
+    // Course Data Structure (MUST be global for my-courses.js)
+    window.coursesData = {
         "myCourses": [
             {
                 "id": "computer-networking",
@@ -1350,18 +1364,30 @@
      * Render courses by category
      */
     function renderCoursesByCategory(courses, category) {
+        console.log(`renderCoursesByCategory called with category: ${category}, courses:`, courses);
+        
         const filteredCourses = courses.filter(course => course.category === category);
+        console.log(`Filtered courses for ${category}:`, filteredCourses);
+        
         const gridElement = document.getElementById(`${category}-grid`);
         const countElement = document.getElementById(`${category}-count`);
+        
+        console.log(`Grid element for ${category}:`, gridElement);
+        console.log(`Count element for ${category}:`, countElement);
 
-        if (!gridElement || !countElement) return;
+        if (!gridElement || !countElement) {
+            console.error(`Missing grid or count element for category: ${category}`);
+            return;
+        }
 
         if (filteredCourses.length === 0) {
+            console.warn(`No courses found for category: ${category}`);
             gridElement.innerHTML = '<p style="color: var(--text-muted); padding: 2rem 0;">No courses in this category yet.</p>';
             countElement.textContent = '0 courses';
             return;
         }
 
+        console.log(`Rendering ${filteredCourses.length} courses for ${category}`);
         gridElement.innerHTML = filteredCourses.map(course => renderCourseCard(course)).join('');
         countElement.textContent = `${filteredCourses.length} ${filteredCourses.length === 1 ? 'course' : 'courses'}`;
 
@@ -1369,23 +1395,7 @@
         lucide.createIcons();
     }
 
-    /**
-     * Initialize My Courses page
-     */
-    function initializeMyCoursesPage() {
-        const courses = coursesData.myCourses;
-
-        // Render courses by category
-        renderCoursesByCategory(courses, 'fundamentals');
-        renderCoursesByCategory(courses, 'intermediate');
-
-        // Animate progress bars
-        setTimeout(() => {
-            document.querySelectorAll('.progress-bar-fill-courses').forEach(bar => {
-                bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
-            });
-        }, 100);
-    }
+    // NOTE: initializeMyCoursesPage is now defined in my-courses.js (async version with proper data loading)
 
     /**
      * Handle course action button clicks
@@ -1393,11 +1403,25 @@
     let currentCourseAction = null;
 
     function handleCourseAction(courseId, status) {
-        const course = coursesData.myCourses.find(c => c.id === courseId);
-        if (!course) return;
+        console.log('handleCourseAction called with:', { courseId, status });
+        console.log('window.coursesData available:', !!window.coursesData);
+        
+        if (!window.coursesData || !window.coursesData.myCourses) {
+            console.error('coursesData not initialized');
+            alert('Error: Course data not loaded. Please refresh the page.');
+            return;
+        }
+
+        const course = window.coursesData.myCourses.find(c => c.id === courseId);
+        if (!course) {
+            console.error('Course not found:', courseId);
+            console.log('Available courses:', window.coursesData.myCourses.map(c => c.id));
+            return;
+        }
 
         // Store the action details
         currentCourseAction = { courseId, status };
+        console.log('currentCourseAction set to:', currentCourseAction);
 
         // Update modal content based on status
         const modal = document.getElementById('courseActionModal');
@@ -1420,20 +1444,65 @@
 
         // Show modal
         modal.classList.add('active');
+        console.log('Modal shown');
     }
 
     function closeCourseActionModal() {
+        console.log('Closing modal');
         document.getElementById('courseActionModal').classList.remove('active');
         currentCourseAction = null;
     }
 
     function confirmCourseAction() {
-        if (currentCourseAction) {
-            console.log(`Navigating to course: ${currentCourseAction.courseId}`);
-            // In production, navigate to the course page:
-            // window.location.href = `/course/${currentCourseAction.courseId}`;
+        console.log('confirmCourseAction called');
+        console.log('currentCourseAction:', currentCourseAction);
+        
+        if (!currentCourseAction) {
+            console.error('currentCourseAction is null or undefined');
+            alert('Error: No course selected. Please try again.');
+            return;
+        }
+        
+        try {
+            const courseId = currentCourseAction.courseId;
+            console.log('Course ID:', courseId);
+            
+            if (!courseId) {
+                console.error('courseId is empty');
+                alert('Error: Course ID is missing');
+                return;
+            }
             
             closeCourseActionModal();
+            
+            // Build URL and navigate
+            const url = `infoSec.html?course=${encodeURIComponent(courseId)}`;
+            console.log('Navigating to URL:', url);
+            
+            // Use multiple methods to ensure navigation works
+            setTimeout(() => {
+                window.location.href = url;
+                // Fallback
+                window.location = url;
+            }, 100);
+            
+        } catch (error) {
+            console.error('Error in confirmCourseAction:', error);
+            console.error('Error stack:', error.stack);
+            alert('Error navigating to course: ' + error.message);
+        }
+    } 
+
+    function simulateProgress() {
+        // Get the first enrolled course or use default
+        const enrolledCourse = window.coursesData && window.coursesData.myCourses && window.coursesData.myCourses[0];
+        if (enrolledCourse) {
+            console.log(`Continuing to course: ${enrolledCourse.id}`);
+            window.location.href = `infoSec.html?course=${enrolledCourse.id}`;
+        } else {
+            // Fallback to info-security course
+            console.log('No enrolled course, using default');
+            window.location.href = 'infoSec.html?course=information-security';
         }
     }
 
@@ -1441,7 +1510,8 @@
      * Update course progress (for future backend integration)
      */
     function updateCourseProgress(courseId, newPercentage) {
-        const course = coursesData.myCourses.find(c => c.id === courseId);
+        const course = window.coursesData && window.coursesData.myCourses ? 
+            window.coursesData.myCourses.find(c => c.id === courseId) : null;
         
         if (course) {
             course.progress.percentage = newPercentage;
@@ -1452,13 +1522,32 @@
                 course.progress.status = 'completed';
             }
             
-            initializeMyCoursesPage();
+            window.initializeMyCoursesPage?.();
         }
     }
+    
+    // DEBUG FUNCTION: Type in browser console to debug course rendering
+    window.debugCourses = function() {
+        console.log('=== COURSES DEBUG INFO ===');
+        console.log('coursesData exists:', !!window.coursesData);
+        console.log('coursesData.myCourses:', window.coursesData?.myCourses);
+        console.log('Number of courses:', window.coursesData?.myCourses?.length);
+        window.coursesData?.myCourses?.forEach((c, i) => {
+            console.log(`[${i}] ${c.id}: ${c.title} (${c.category})`);
+        });
+        console.log('renderCoursesByCategory:', typeof renderCoursesByCategory);
+        console.log('handleCourseAction:', typeof handleCourseAction);
+        console.log('=========================');
+    };
 </script>
 
     <!-- My Courses Backend Integration -->
     <script src="my-courses.js"></script>
 
+    <!-- (Keep all inline scripts and DOMContentLoaded after all modules are loaded) -->
+
 </body>
 </html>
+
+
+

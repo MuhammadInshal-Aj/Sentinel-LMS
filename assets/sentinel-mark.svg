@@ -1,0 +1,27 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Sentinel logo">
+  <defs>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00f2ff"/>
+      <stop offset="1" stop-color="#00a8ff"/>
+    </linearGradient>
+    <linearGradient id="cyanDeep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b2a36"/>
+      <stop offset="1" stop-color="#07121b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer shield ring -->
+  <path d="M128 14l90 34v72c0 60-38 116-90 136-52-20-90-76-90-136V48l90-34z" fill="#0a0e14" stroke="url(#cyan)" stroke-width="10"/>
+
+  <!-- Inner shield ring -->
+  <path d="M128 34l70 26v56c0 46-30 92-70 108-40-16-70-62-70-108V60l70-26z" fill="url(#cyanDeep)" stroke="url(#cyan)" stroke-width="6"/>
+
+  <!-- Core shield plate -->
+  <path d="M128 54l54 20v44c0 36-24 72-54 86-30-14-54-50-54-86V74l54-20z" fill="#0b1822"/>
+
+  <!-- Top highlight arc -->
+  <path d="M72 64c18-12 38-18 56-18s38 6 56 18" fill="none" stroke="url(#cyan)" stroke-width="4" opacity="0.6"/>
+
+  <!-- Monogram -->
+  <text x="128" y="158" text-anchor="middle" font-family="Space Grotesk, Arial, sans-serif" font-size="92" font-weight="700" fill="#00f2ff">S</text>
+</svg>

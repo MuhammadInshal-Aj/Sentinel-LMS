@@ -813,6 +813,62 @@
 
 
 /* =========================
+   SKELETON LOADING
+   ========================= */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 242, 255, 0.05) 0%,
+        rgba(0, 242, 255, 0.15) 50%,
+        rgba(0, 242, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    border-radius: var(--radius-sm);
+    height: 16px;
+    animation: shimmer 2s infinite;
+    backdrop-filter: blur(2px);
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 8px;
+}
+
+.skeleton-badge {
+    height: 20px;
+    width: 100px;
+}
+
+.skeleton-card {
+    opacity: 0.8;
+    animation: fadeInUp 0.6s ease-out backwards;
+}
+
+.skeleton-card .card-header-courses {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+}
+
+.skeleton-card .card-header-courses > :first-child {
+    flex: 1;
+}
+
+.skeleton-card .skeleton {
+    margin-bottom: 10px;
+}
+
+.skeleton-card .skeleton:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================
    RESPONSIVE COMPONENTS
    ========================= */
 

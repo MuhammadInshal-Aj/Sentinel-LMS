@@ -1,0 +1,1041 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Information Security | Sentinel-LMS</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+    <link rel="shortcut icon" href="../assets/sentinel-mark.svg">
+    
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Shared Stylesheets -->
+    <link rel="stylesheet" href="Styles/theme.css">
+    <link rel="stylesheet" href="Styles/layout.css">
+    <link rel="stylesheet" href="Styles/components.css">
+    <link rel="stylesheet" href="Styles/utilities.css">
+
+    <!-- Shared Configuration & Auth Modules -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="toast.js"></script>
+    <script src="navigation.js"></script>
+
+    <!-- IMMEDIATE AUTH GUARD: Redirect before page renders if not authenticated -->
+    <script>
+        (function() {
+            var token = Auth.getToken();
+            if (!token) {
+                window.location.replace('login.html');
+                document.documentElement.style.display = 'none';
+                throw new Error('AUTH_REDIRECT');
+            }
+        })();
+    </script>
+    
+    <style>
+        /* PAGE LAYOUT - sidebar flex layout */
+        body { display: flex; }
+
+        /* Main content area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 3rem 4rem;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 3rem;
+            min-height: 100vh;
+        }
+
+        /* COURSE HEADER */
+        .course-header { 
+            grid-column: 1 / -1;
+            margin-bottom: 2rem; 
+        }
+
+        .breadcrumbs { 
+            color: var(--text-secondary);
+            font-size: 0.9rem; 
+            margin-bottom: 1rem; 
+            display: flex; 
+            gap: 0.5rem; 
+            align-items: center;
+        }
+
+        .breadcrumbs a { 
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .breadcrumbs a:hover { 
+            color: var(--accent);
+        }
+
+        .course-title { 
+            font-size: 3rem; 
+            font-weight: 700; 
+            line-height: 1.1; 
+            margin-bottom: 1.5rem; 
+        }
+
+        .course-meta { 
+            display: flex; 
+            gap: 1rem; 
+            flex-wrap: wrap; 
+            margin-bottom: 2rem; 
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid var(--border);
+        }
+
+        .badge.difficulty { 
+            border-color: var(--success); 
+            color: var(--success); 
+        }
+
+        .badge.type { 
+            border-color: var(--accent); 
+            color: var(--accent); 
+        }
+
+        /* SECTION BOXES */
+        .section-box { 
+            margin-bottom: 3rem; 
+        }
+
+        .section-title { 
+            font-size: 1.2rem; 
+            margin-bottom: 1.5rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.8rem; 
+            color: #fff; 
+        }
+
+        .section-title i { 
+            color: var(--accent); 
+        }
+
+        .outcomes-grid {
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 1rem;
+        }
+
+        .outcome-card {
+            background: var(--bg-surface); 
+            border: 1px solid var(--border); 
+            padding: 1.2rem; 
+            border-radius: 8px;
+            display: flex; 
+            gap: 1rem; 
+            align-items: flex-start;
+        }
+
+        .outcome-card i { 
+            color: var(--accent); 
+            margin-top: 3px; 
+        }
+
+        .outcome-text { 
+            font-size: 0.95rem; 
+            color: #ccc; 
+            line-height: 1.5; 
+        }
+
+        /* CURRICULUM */
+        .curriculum-container { 
+            position: relative; 
+        }
+
+        .curriculum-locked {
+            filter: blur(5px);
+            opacity: 0.6;
+            pointer-events: none;
+            user-select: none;
+            transition: all 0.5s ease;
+        }
+
+        .module {
+            border: 1px solid var(--border); 
+            background: var(--bg-surface); 
+            border-radius: 8px; 
+            margin-bottom: 1rem; 
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .module:hover { 
+            border-color: #333; 
+        }
+
+        .module-header {
+            padding: 1.5rem; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+            transition: background 0.2s;
+        }
+
+        .module-header:hover { 
+            background: linear-gradient(90deg, rgba(255,255,255,0.04), transparent); 
+        }
+
+        .module-header:focus { 
+            outline: 2px solid var(--accent); 
+            outline-offset: -2px; 
+        }
+
+        .module-info h3 { 
+            font-size: 1.1rem; 
+            margin-bottom: 0.3rem; 
+            color: #fff; 
+        }
+
+        .module-info p { 
+            font-size: 0.85rem; 
+            color: var(--text-secondary); 
+        }
+
+        .progress-track {
+            width: 100%; 
+            height: 4px; 
+            background: #222; 
+            margin-top: 10px; 
+            border-radius: 2px; 
+            overflow: hidden; 
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%; 
+            background: var(--accent); 
+            width: 0%; 
+            transition: width 0.5s ease;
+        }
+
+        .module-body {
+            max-height: 0; 
+            overflow: hidden; 
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+            border-top: 1px solid var(--border);
+        }
+
+        .module.active .module-body { 
+            max-height: 1000px; 
+            transition: max-height 0.8s ease-in-out; 
+        }
+
+        .module.active .chevron { 
+            transform: rotate(180deg); 
+        }
+
+        .lesson-row {
+            padding: 1rem 1.5rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.03); 
+            transition: background 0.2s;
+            cursor: pointer; 
+            text-decoration: none; 
+            color: inherit;
+        }
+
+        .lesson-row:last-child { 
+            border-bottom: none; 
+        }
+
+        .lesson-row:hover { 
+            background: rgba(0, 242, 255, 0.03); 
+        }
+
+        .lesson-row.completed .lesson-icon { 
+            color: var(--success); 
+            fill: var(--success); 
+        }
+
+        .lesson-row.completed .lesson-title { 
+            text-decoration: line-through; 
+            color: #666; 
+        }
+
+        .lesson-row.simulation { 
+            background: rgba(0, 242, 255, 0.02); 
+        }
+
+        .lesson-row.simulation .lesson-icon { 
+            color: var(--accent); 
+        }
+
+        .lesson-row.simulation .lesson-title { 
+            color: var(--accent); 
+        }
+
+        .lesson-row.checkpoint { 
+            background: rgba(255, 189, 46, 0.05); 
+            border-left: 2px solid var(--warning); 
+        }
+
+        .lesson-row.checkpoint .lesson-icon { 
+            color: var(--warning); 
+        }
+
+        .lesson-row.checkpoint .lesson-title { 
+            color: var(--warning); 
+        }
+
+        .lesson-left { 
+            display: flex; 
+            gap: 1rem; 
+            align-items: center; 
+        }
+
+        .lesson-icon { 
+            color: var(--text-secondary); 
+            width: 18px; 
+            transition: 0.3s; 
+        }
+
+        .lesson-title { 
+            font-size: 0.95rem; 
+            color: #e0e0e0; 
+            font-family: 'JetBrains Mono', monospace; 
+        }
+
+        .lesson-right { 
+            display: flex; 
+            gap: 1rem; 
+            align-items: center; 
+        }
+
+        .lesson-tag { 
+            font-size: 0.7rem; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            background: #1a1a1a; 
+            color: #888; 
+            border: 1px solid #333; 
+            text-transform: uppercase; 
+        }
+
+        .lesson-tag.required { 
+            color: var(--accent); 
+            border-color: rgba(0,242,255,0.3); 
+        }
+
+        /* STICKY CARD */
+        .sticky-card {
+            background: var(--bg-surface); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 1.5rem;
+            position: sticky; 
+            top: 2rem; 
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .video-preview {
+            width: 100%; 
+            aspect-ratio: 16/9; 
+            background: #000; 
+            border-radius: 8px; 
+            margin-bottom: 1.5rem;
+            position: relative; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .video-overlay {
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            background: radial-gradient(circle, rgba(0,242,255,0.1), transparent 70%);
+        }
+
+        .play-btn {
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            background: var(--accent); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            box-shadow: 0 0 20px var(--accent-glow); 
+            cursor: pointer; 
+            z-index: 2; 
+            transition: transform 0.2s;
+        }
+
+        .play-btn:hover { 
+            transform: scale(1.1); 
+        }
+
+        .play-btn i { 
+            color: #000; 
+            fill: #000; 
+        }
+
+        .price-tag { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            margin-bottom: 1rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: baseline; 
+        }
+
+        .price-tag span { 
+            font-size: 0.9rem; 
+            font-weight: 400; 
+            color: var(--text-secondary); 
+        }
+
+        .enroll-btn {
+            width: 100%; 
+            padding: 1rem; 
+            background: var(--accent); 
+            color: #000; 
+            font-weight: 700; 
+            font-family: 'Space Grotesk', sans-serif;
+            border: none; 
+            border-radius: 6px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            margin-bottom: 1.5rem;
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            transition: all 0.3s;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .enroll-btn:hover { 
+            background: #fff; 
+            box-shadow: 0 0 25px rgba(255,255,255,0.4); 
+        }
+
+        .enroll-btn.enrolled { 
+            background: #fff; 
+            color: #000; 
+        }
+
+        .course-features { 
+            list-style: none; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 0.8rem; 
+        }
+
+        .course-features li { 
+            display: flex; 
+            gap: 0.8rem; 
+            align-items: center; 
+            color: #bbb; 
+            font-size: 0.9rem; 
+        }
+
+        .course-features li i { 
+            width: 16px; 
+            color: var(--accent); 
+        }
+
+        .module.locked { 
+            opacity: 0.5; 
+            pointer-events: none; 
+            filter: grayscale(1); 
+            transition: all 0.5s; 
+        }
+
+        .module.unlocked { 
+            opacity: 1; 
+            pointer-events: auto; 
+            filter: grayscale(0); 
+            border-color: var(--accent); 
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); 
+        }
+
+        .toast {
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px;
+            background: #111; 
+            border: 1px solid var(--accent); 
+            color: var(--accent);
+            padding: 1rem 2rem; 
+            border-radius: 8px;
+            transform: translateY(100px); 
+            opacity: 0; 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            z-index: 2000;
+        }
+
+        .toast.show { 
+            transform: translateY(0); 
+            opacity: 1; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- SIDEBAR NAVIGATION (Shared with index.html) -->
+    <nav class="sidebar">
+        <div class="logo">
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS logo">
+            SENTINEL<span>LMS</span>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" onclick="goBackToDashboard()">
+                    <i data-lucide="arrow-left" size="20"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="goToMyCourses()">
+                    <i data-lucide="book-open" size="20"></i>
+                    <span>All Courses</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link">
+                    <i data-lucide="terminal-square" size="20"></i>
+                    <span>Labs & CTFs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link">
+                    <i data-lucide="bar-chart-2" size="20"></i>
+                    <span>Grades</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="user-status">Logged In</div>
+            
+            <div class="profile-popup" id="profilePopup">
+                <div class="popup-item logout" onclick="handleLogout()">
+                    <i data-lucide="log-out" size="18"></i>
+                    <span>Logout</span>
+                </div>
+            </div>
+
+            <button class="profile-btn" id="profileBtn">
+                <div class="profile-avatar" id="display-avatar">??</div> 
+                <div class="profile-info">
+                    <div class="profile-name" id="display-name">Loading...</div>
+                    <div class="profile-email" id="display-email">Please wait...</div>
+                </div>
+                <i data-lucide="chevron-up" size="18"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="course-header">
+            <div class="breadcrumbs">
+                <a href="#" onclick="goBackToDashboard()"><i data-lucide="home" size="14"></i></a> / 
+                <a href="#" onclick="goToMyCourses()">Courses</a> / 
+                <span id="courseBreadcrumb">Information Security</span>
+            </div>
+            <h1 class="course-title">Information Security</h1>
+            <p style="font-size: 1.1rem; color: #aaa; margin-bottom: 1.5rem; max-width: 600px;">
+                Core principles of information security and defensive thinking.
+            </p>
+            <div class="course-meta">
+                <span class="badge difficulty">Beginner Friendly</span>
+                <span class="badge type">Foundation Path</span>
+                <span class="badge"><i data-lucide="clock" size="12" style="display:inline; vertical-align:middle"></i> 4 Weeks</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 320px; gap: 3rem; padding: 0 4rem;">
+            <section>
+                <div class="section-box">
+                    <h3 class="section-title"><i data-lucide="target"></i> Acquired Capabilities</h3>
+                    <div class="outcomes-grid">
+                        <div class="outcome-card">
+                            <i data-lucide="check-circle"></i>
+                            <span class="outcome-text">Develop a security-first mindset before touching tools.</span>
+                        </div>
+                        <div class="outcome-card">
+                            <i data-lucide="check-circle"></i>
+                            <span class="outcome-text">Understand risk, vulnerabilities, and threat models.</span>
+                        </div>
+                        <div class="outcome-card">
+                            <i data-lucide="check-circle"></i>
+                            <span class="outcome-text">Recognize attacker strategies vs. defensive realities.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <h3 class="section-title"><i data-lucide="layers"></i> Operational Modules</h3>
+                    
+                    <div class="curriculum-container" id="curriculumArea">
+                        <div class="curriculum-locked" id="lockedOverlay"> 
+                        
+                        <div class="module active" id="module1">
+                            <div class="module-header" data-module-id="module1" role="button" tabindex="0" aria-expanded="false">
+                                <div class="module-info">
+                                    <h3>Module 01: Security Mindset & Core Principles</h3>
+                                    <p>Foundational security thinking, terminology, and mental models.</p>
+                                    <div class="progress-track" id="m1-track">
+                                        <div class="progress-fill" id="m1-fill"></div>
+                                    </div>
+                                </div>
+                                <i data-lucide="chevron-down" class="chevron"></i>
+                            </div>
+                            <div class="module-body">
+                                
+                                <div class="lesson-row">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">1.1 What Is Information Security?</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag">10 min</span>
+                                    </div>
+                                </div>
+
+                                <div class="lesson-row simulation\">
+                                    <div class=\"lesson-left\">
+                                        <i data-lucide=\"crosshair\" class=\"lesson-icon\"></i>
+                                        <span class=\"lesson-title\">1.2 SIMULATION: Attacker vs Defender</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag">Optional</span>
+                                    </div>
+                                </div>
+
+                                <div class="lesson-row">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">1.3 The CIA Triad</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag">10 min</span>
+                                    </div>
+                                </div>
+
+                                <div class="lesson-row">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">1.4 Threats, Vulnerabilities, and Risk</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag">15 min</span>
+                                    </div>
+                                </div>
+
+                                <div class=\"lesson-row simulation\">
+                                    <div class=\"lesson-left\">
+                                        <i data-lucide=\"crosshair\" class=\"lesson-icon\"></i>
+                                        <span class=\"lesson-title\">1.5 SIMULATION: Threat or Risk?</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag required">Required</span>
+                                    </div>
+                                </div>
+
+                                <div class="lesson-row">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">1.6 Secure by Design</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag">10 min</span>
+                                    </div>
+                                </div>
+
+                                <div class="lesson-row">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">1.7 Defense in Depth</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag">15 min</span>
+                                    </div>
+                                </div>
+
+                                <div class=\"lesson-row checkpoint\">
+                                    <div class=\"lesson-left\">
+                                        <i data-lucide="shield" class="lesson-icon" style="color: var(--warning)"></i>
+                                        <span class="lesson-title" style="color: var(--warning)">1.8 CHECKPOINT: Security Mindset</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag" style="border-color: var(--warning); color: var(--warning)">EXAM</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="module locked" id="module2">
+                            <div class="module-header">
+                                <div class="module-info">
+                                    <h3 style="color: #666" id="m2-title">Module 02: Risk Management</h3>
+                                    <p id="m2-desc">LOCKED: Complete Module 01 (100%) to unlock.</p>
+                                </div>
+                                <i data-lucide="lock" size="18" style="color: #444" id="m2-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="module locked">
+                            <div class="module-header">
+                                <div class="module-info">
+                                    <h3 style="color: #666">Module 03: Defensive Architecture</h3>
+                                    <p>Prerequisite: Complete Module 02</p>
+                                </div>
+                                <i data-lucide="lock" size="18" style="color: #444"></i>
+                            </div>
+                        </div>
+
+                        </div> </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="toast" id="toast">
+                <i data-lucide="check-circle"></i>
+                <div>
+                    <strong style="color:#fff">Lesson Complete</strong><br>
+                    <span style="font-size:0.8rem">+20 Tokens Added</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STICKY COURSE INFO CARD (Right side) -->
+        <aside>
+            <div class="sticky-card">
+                <div class="video-preview">
+                    <div class="video-overlay"></div>
+                    <div class="play-btn"><i data-lucide="play"></i></div>
+                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" style="width:100%; height:100%; object-fit:cover; opacity: 0.6;">
+                </div>
+
+                <div class="price-tag">
+                    FREE <span>For Students</span>
+                </div>
+
+                <button class="enroll-btn" id="enrollBtn" onclick="enrollUser()">
+                    INITIATE PROTOCOL
+                </button>
+
+                <ul class="course-features">
+                    <li><i data-lucide="monitor"></i> 2 Hands-on Labs (Pwnbox)</li>
+                    <li><i data-lucide="film"></i> 5 Theory Lessons</li>
+                    <li><i data-lucide="shield-check"></i> Certificate of Completion</li>
+                    <li><i data-lucide="globe"></i> 100% Online & Self-Paced</li>
+                </ul>
+
+                <!-- Token Display (moved from sidebar) -->
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--card-border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #888;">
+                        <span>SYSTEM TOKENS</span>
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--accent);" id="tokenCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        // ============================================
+        // APPLICATION CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            TOKENS_PER_LESSON: 20,
+            TOAST_DURATION: 2000,
+            UNLOCK_DELAY: 500,
+            MODULE_CONFIG: {
+                module1: { totalItems: 8, name: 'Security Mindset & Core Principles' },
+                module2: { name: 'Risk Management', prerequisite: 'module1', description: 'Risk assessment frameworks and calculation.' },
+                module3: { name: 'Defensive Architecture', prerequisite: 'module2', description: 'Building secure infrastructure.' }
+            }
+        };
+
+        // ============================================
+        // APPLICATION STATE
+        // ============================================
+        const APP = {
+            isEnrolled: false,
+            totalTokens: 0,
+            moduleProgress: {
+                module1: 0
+            },
+            completedLessons: new Set(),
+            unlockedModules: new Set(),
+
+            init() {
+                this.registerEventListeners();
+                lucide.createIcons();
+            },
+
+            registerEventListeners() {
+                // Event delegation for lesson rows
+                document.addEventListener('click', (e) => {
+                    const lessonRow = e.target.closest('.lesson-row');
+                    if (lessonRow) this.completeLesson(lessonRow);
+                });
+
+                // Module header accordion toggle with keyboard support
+                document.addEventListener('click', (e) => {
+                    const moduleHeader = e.target.closest('.module-header');
+                    if (moduleHeader) {
+                        const moduleId = moduleHeader.dataset.moduleId;
+                        if (moduleId) toggleAccordion(moduleId);
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        const moduleHeader = e.target.closest('.module-header');
+                        if (moduleHeader) {
+                            e.preventDefault();
+                            const moduleId = moduleHeader.dataset.moduleId;
+                            if (moduleId) toggleAccordion(moduleId);
+                        }
+                    }
+                });
+            }
+        };
+
+        // ============================================
+        // ENROLLMENT SYSTEM
+        // ============================================
+        function enrollUser() {
+            if (APP.isEnrolled) return;
+
+            APP.isEnrolled = true;
+            const curriculum = document.getElementById('lockedOverlay');
+            const btn = document.getElementById('enrollBtn');
+            const pTrack = document.getElementById('m1-track');
+
+            // Visual updates
+            curriculum.classList.remove('curriculum-locked');
+            btn.textContent = 'CONTINUE LEARNING';
+            btn.classList.add('enrolled');
+            pTrack.style.display = 'block';
+
+            // Auto-open Module 1
+            document.getElementById('module1').classList.add('active');
+        }
+
+        // ============================================
+        // ACCORDION TOGGLE
+        // ============================================
+        function toggleAccordion(moduleId) {
+            if (!APP.isEnrolled) {
+                showNotification('Please enroll to access course content.', 'info');
+                return;
+            }
+            const module = document.getElementById(moduleId);
+            if (module) module.classList.toggle('active');
+        }
+
+        // ============================================
+        // LESSON COMPLETION
+        // ============================================
+        function completeLesson(lessonElement) {
+            if (!APP.isEnrolled) {
+                showNotification('Please enroll to access lessons.', 'info');
+                return;
+            }
+
+            // Prevent duplicate completion
+            if (lessonElement.classList.contains('completed')) return;
+
+            // Mark lesson as completed
+            lessonElement.classList.add('completed');
+
+            // Get lesson identifier (use data-lesson-id if available, fallback to text)
+            const lessonId = lessonElement.dataset.lessonId || lessonElement.textContent.trim();
+            APP.completedLessons.add(lessonId);
+
+            // Award tokens
+            APP.totalTokens += CONFIG.TOKENS_PER_LESSON;
+            updateTokenDisplay();
+            showToast(`+${CONFIG.TOKENS_PER_LESSON} Tokens`);
+
+            // Update progress for Module 1
+            APP.moduleProgress.module1 = APP.completedLessons.size;
+            updateModuleProgress('module1', CONFIG.MODULE_CONFIG.module1.totalItems);
+        }
+
+        // ============================================
+        // PROGRESS TRACKING
+        // ============================================
+        function updateModuleProgress(moduleId, totalItems) {
+            const progressFill = document.getElementById(moduleId + '-fill');
+            if (!progressFill) return;
+
+            const percentage = (APP.moduleProgress[moduleId] / totalItems) * 100;
+            progressFill.style.width = percentage + '%';
+
+            // Check unlock conditions
+            if (moduleId === 'module1' && APP.moduleProgress.module1 === totalItems) {
+                unlockModule('module2');
+            } else if (moduleId === 'module2' && APP.moduleProgress.module2 === CONFIG.MODULE_CONFIG.module2.totalItems) {
+                unlockModule('module3');
+            }
+        }
+
+        // ============================================
+        // MODULE UNLOCK SYSTEM
+        // ============================================
+        function unlockModule(moduleId) {
+            if (APP.unlockedModules.has(moduleId)) return; // Already unlocked
+
+            const module = document.getElementById(moduleId);
+            if (!module) return;
+
+            setTimeout(() => {
+                // Update classes
+                module.classList.remove('locked');
+                module.classList.add('unlocked');
+                APP.unlockedModules.add(moduleId);
+
+                // Update UI elements
+                const moduleConfig = CONFIG.MODULE_CONFIG[moduleId];
+                const title = module.querySelector('.module-info h3');
+                const description = module.querySelector('.module-info p');
+                const lockIcon = module.querySelector('[data-lucide="lock"]');
+
+                if (title) title.style.color = '#fff';
+                if (description) description.textContent = moduleConfig.description;
+                if (lockIcon) {
+                    lockIcon.setAttribute('data-lucide', 'unlock');
+                    lockIcon.style.color = 'var(--accent)';
+                    lucide.createIcons(); // Re-render Lucide icons
+                }
+
+                // Show notification
+                showNotification(`${moduleConfig.name} unlocked!`, 'success');
+            }, CONFIG.UNLOCK_DELAY);
+        }
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateTokenDisplay() {
+            const counter = document.getElementById('tokenCount');
+            if (!counter) return;
+            counter.textContent = APP.totalTokens;
+            counter.style.color = 'var(--success)';
+            setTimeout(() => { counter.style.color = '#fff'; }, 300);
+        }
+
+        function showToast(message = 'Lesson Complete') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            const messageEl = toast.querySelector('div');
+            if (messageEl) {
+                messageEl.innerHTML = `<strong style="color:#fff">${message}</strong>`;
+            }
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, CONFIG.TOAST_DURATION);
+        }
+
+        function showNotification(message, type = 'info') {
+            // Simple notification - can be enhanced with toast system
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // ============================================
+        // NAVIGATION FUNCTIONS
+        // ============================================
+        function goBackToDashboard() {
+            window.location.href = 'index.html';
+        }
+
+        function goToMyCourses() {
+            window.location.href = 'index.html#my-courses';
+        }
+
+        function handleLogout() {
+            Auth.clearAuth();
+            Auth.logout('login.html');
+        }
+
+        // ============================================
+        // PAGE INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize shared modules
+            lucide.createIcons();
+            Navigation.initProfilePopup();
+            
+            // Push a history state so back navigation is detected
+            window.history.pushState({authenticated: true, page: 'infoSec'}, '', window.location.href);
+            
+            // Load user profile info from session storage
+            try {
+                const user = Auth.getUser();
+                if (user) {
+                    document.getElementById('display-name').textContent = user.name || 'User';
+                    document.getElementById('display-email').textContent = user.email || 'user@sentinel.local';
+                    const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
+                    document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
+                }
+            } catch (e) {
+                console.error('Failed to load user profile:', e);
+            }
+
+            // Parse course slug from URL
+            const params = new URLSearchParams(window.location.search);
+            const courseSlug = params.get('course');
+            if (courseSlug) {
+                document.getElementById('courseBreadcrumb').textContent = courseSlug.replace('-', ' ').toUpperCase();
+            }
+
+            // Initialize course state
+            APP.init();
+        });
+
+        // === PREVENT BACK NAVIGATION WITHOUT RE-AUTHENTICATION ===
+        window.addEventListener('popstate', (event) => {
+            console.log('popstate event detected on infoSec page');
+            
+            // Check if still authenticated
+            const token = Auth.getToken();
+            if (!token) {
+                console.warn('User not authenticated, redirecting to login...');
+                window.location.replace('login.html');
+            } else {
+                console.log('User still authenticated, allowing navigation');
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+

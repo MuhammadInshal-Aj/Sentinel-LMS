@@ -131,6 +131,12 @@
     gap: 10px;
 }
 
+.logo-mark {
+    width: 26px;
+    height: 26px;
+    display: inline-block;
+}
+
 .logo span {
     color: var(--accent);
 }

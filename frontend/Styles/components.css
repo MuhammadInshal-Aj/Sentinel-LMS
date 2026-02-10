@@ -689,11 +689,135 @@
 
 
 /* =========================
+   HERO SECTION
+   Shared by: landing.html (home), index.html (dead CSS kept for parity)
+   ========================= */
+
+.hero {
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    padding: 0 2rem;
+}
+
+.hero h1 {
+    font-size: 4.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    max-width: 600px;
+    font-size: 1.15rem;
+    color: #999;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.status-pill {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 15px var(--accent-glow);
+}
+
+
+/* =========================
+   SECTION LAYOUT
+   Shared by: landing.html, index.html
+   ========================= */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.section-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+
+/* =========================
+   PRACTICE SECTION & TERMINAL
+   Shared by: landing.html, index.html
+   ========================= */
+
+.practice-section {
+    background: rgba(8, 8, 8, 0.6);
+    display: flex;
+    gap: 4rem;
+    padding: 6rem;
+    border-top: 1px solid var(--border);
+}
+
+.practice-content { flex: 1; }
+
+.terminal {
+    flex: 1;
+    background: #090909;
+    border: 1px solid #222;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-header {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.terminal-body {
+    color: #00ff00;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.red    { background: #ff5f56; }
+.yellow { background: #ffbd2e; }
+.green  { background: #27c93f; }
+.command { color: #fff; }
+
+
+/* =========================
    RESPONSIVE COMPONENTS
    ========================= */
 
 @media (max-width: 1200px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
+    .hero h1     { font-size: 3.5rem; }
+    .grid-cards  { grid-template-columns: repeat(2, 1fr); }
+    .form-row    { grid-template-columns: 1fr; }
 }

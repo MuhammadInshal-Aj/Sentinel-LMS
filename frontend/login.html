@@ -4,166 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel-LMS | Secure Access</title>
-        <script src="config.js"></script>
-        <script src="auth.js"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Shared Stylesheets -->
+    <link rel="stylesheet" href="styles/theme.css">
+    <link rel="stylesheet" href="styles/auth.css">
+
+    <!-- Login-specific: only body height lock -->
     <style>
-        :root {
-            --bg: #050505; --accent: #00f2ff; --text: #e0e0e0; --border: rgba(255, 255, 255, 0.08);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; height: 100vh; overflow: hidden; }
-
-        /* --- GLOBAL NAV --- */
-        nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 1.2rem 4rem; border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(10px); z-index: 100; position: relative;
-        }
-        .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: 2px; cursor: pointer; }
-        .logo span { color: var(--accent); }
-
-        /* --- ADVANCED BACKGROUND --- */
-        .cyber-bg { position: fixed; inset: 0; background: #020202; z-index: -1; }
-        .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.2; }
-        .blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.1; animation: drift 15s infinite alternate; }
-        .blob-1 { width: 400px; height: 400px; background: var(--accent); top: 10%; left: 10%; }
-        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(50px, 50px); } }
-
-        /* --- AUTH CARD --- */
-        .container { display: flex; justify-content: center; align-items: center; height: calc(100vh - 75px); }
-        .auth-card {
-            width: 420px; background: rgba(10, 10, 10, 0.8); border: 1px solid var(--border);
-            border-radius: 12px; padding: 3rem 2.5rem 2.5rem; position: relative; backdrop-filter: blur(20px);
-        }
-
-        /* FIXED NAVIGATION PLACEMENT (Integrated into Card) */
-        .card-nav {
-            position: absolute; top: 15px; left: 15px; display: flex; gap: 10px;
-        }
-        .nav-dot {
-            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.03); color: #555; cursor: pointer; transition: 0.3s;
-        }
-        .nav-dot:hover { border-color: var(--accent); color: var(--accent); background: rgba(0, 242, 255, 0.05); }
-
-        /* --- FORM ELEMENTS --- */
-        .input-group { margin-bottom: 1.5rem; text-align: left; }
-        .input-group label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 0.5rem; }
-        .field { display: flex; align-items: center; background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 0 1rem; }
-        input { background: transparent; border: none; padding: 0.9rem; color: #fff; width: 100%; font-family: 'JetBrains Mono'; font-size: 0.85rem; }
-        input:focus { outline: none; }
-        input:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .btn-main { 
-            width: 100%; padding: 1rem; background: #fff; color: #000; border: none; 
-            border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.3s; 
-            margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-        }
-        .btn-main:hover:not(:disabled) { background: var(--accent); box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
-        .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        .switch-link { margin-top: 1.5rem; font-size: 0.8rem; color: #444; text-align: center; }
-        .switch-link a { color: var(--accent); text-decoration: none; }
-
-        .status-box {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid transparent;
-            transition: all 0.3s ease;
-        }
-        .status-box.success {
-            background: rgba(0, 255, 170, 0.1);
-            border-color: #00ffaa;
-            color: #00ffaa;
-            box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
-        }
-        .status-box.error {
-            background: rgba(255, 0, 60, 0.1);
-            border-color: #ff003c;
-            color: #ff003c;
-            box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
-        }
-        .hidden { display: none; }
-
-        /* ===== NEW: LOADING SPINNER ===== */
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 3px solid rgba(0, 0, 0, 0.3);
-            border-top: 3px solid #000;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* When button is in loading state, spinner appears */
-        .btn-main.loading .spinner {
-            display: inline-block;
-        }
-
-        /* ===== BONUS: Pulse effect on button during loading ===== */
-        .btn-main.loading {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(0, 242, 255, 0.5); }
-        }
+        body { height: 100vh; overflow: hidden; }
     </style>
 </head>
 <body>
     <div class="cyber-bg"><div class="grid"></div><div class="blob blob-1"></div></div>
 
-    <nav>
+    <nav class="auth-nav">
         <div class="logo" onclick="location.href='landing.html'">SENTINEL<span>LMS</span></div>
-        <button class="nav-dot" title="Home" onclick="location.href='landing.html'"><i data-lucide="home" size="16"></i></button>
+        <div class="nav-dot" title="Home" onclick="location.href='landing.html'"><i data-lucide="home" size="16"></i></div>
     </nav>
 
-    <div class="container">
+    <div class="auth-container">
         <div class="auth-card">
             <div class="card-nav">
                 <div class="nav-dot" onclick="window.history.back()" title="Go Back"><i data-lucide="chevron-left" size="18"></i></div>
                 <div class="nav-dot" onclick="window.history.forward()" title="Go Forward"><i data-lucide="chevron-right" size="18"></i></div>
             </div>
 
-            <h2 style="margin-bottom: 2rem; font-size: 1.2rem; letter-spacing: 1px; text-align: center;">SYSTEM ACCESS</h2>
+            <div class="auth-header">
+                <h2>SYSTEM ACCESS</h2>
+            </div>
             
             <form id="loginForm">
-                <div class="input-group">
+                <div class="auth-input-group">
                     <label>Identifier</label>
-                    <div class="field">
+                    <div class="auth-field">
                         <i data-lucide="user" size="16"></i>
                         <input type="text" name="identifier" id="loginIdentifier" placeholder="Username or Email" required>
                     </div>
                 </div>
-                <div class="input-group">
+                <div class="auth-input-group">
                     <label>Security Key</label>
-                    <div class="field">
+                    <div class="auth-field">
                         <i data-lucide="lock" size="16"></i>
                         <input type="password" name="password" id="loginPassword" placeholder="••••••••" required>
                     </div>
                 </div>
                 <div id="statusMessage" class="status-box hidden"></div>
 
-                <!-- ===== UPDATED BUTTON: Now has space for spinner ===== -->
-                <button type="submit" class="btn-main" id="submitBtn">
+                <button type="submit" class="btn-auth" id="submitBtn">
                     <span id="btnText">AUTHORIZE</span>
                     <div class="spinner hidden" id="spinner"></div>
                 </button>
             </form>
-            <p class="switch-link">Need clearance? <a href="register.html">Create an account</a></p>
+            <p class="auth-footer">Need clearance? <a href="register.html">Create an account</a></p>
         </div>
     </div>
 
@@ -189,7 +85,7 @@
         statusBox.classList.remove('hidden');
     }
 
-    // ===== NEW FUNCTION: Show loading state =====
+    // ===== Show loading state =====
     function setLoadingState(isLoading) {
         if (isLoading) {
             // Disable everything

@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel-LMS | Digital Fortress</title>
-<<<<<<< HEAD
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-=======
     <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
     <link rel="shortcut icon" href="../assets/sentinel-mark.svg">
 
@@ -22,7 +19,6 @@
     <link rel="stylesheet" href="styles/utilities.css">
 
     <!-- External Libraries -->
->>>>>>> feature/login-ui
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -47,317 +43,6 @@
 
     <!-- PAGE-SPECIFIC STYLES (only what's unique to index.html) -->
     <style>
-<<<<<<< HEAD
-        :root {
-            --bg: #050505;
-            --sidebar-bg: #0a0a0a;
-            --card: #0d0d0d;
-            --accent: #00f2ff;
-            --accent-glow: rgba(0, 242, 255, 0.4);
-            --text: #e0e0e0;
-            --text-muted: #888;
-            --border: rgba(255, 255, 255, 0.08);
-            
-            /* High Visibility Grid Variables */
-            --grid-color: rgba(0, 242, 255, 0.15); 
-            --grid-hover-glow: rgba(0, 242, 255, 0.25);
-            
-            --sidebar-width: 280px;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Space Grotesk', sans-serif;
-            overflow-x: hidden;
-            display: flex; /* Flex layout for Sidebar + Main */
-        }
-
-        /* --- BACKGROUND LAYERS --- */
-        .grid-background {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            background-size: 40px 40px;
-            background-image: 
-                linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
-            pointer-events: none;
-        }
-
-        .grid-cursor-follower {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            background: radial-gradient(
-                600px circle at var(--mouse-x) var(--mouse-y),
-                var(--grid-hover-glow),
-                transparent 50%
-            );
-            pointer-events: none;
-        }
-
-        /* --- SIDEBAR NAVIGATION --- */
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border);
-            position: fixed;
-            top: 0; left: 0;
-            display: flex;
-            flex-direction: column;
-            padding: 2rem 1.5rem;
-            z-index: 1000;
-            box-shadow: 5px 0 30px rgba(0,0,0,0.5);
-        }
-
-        .logo { 
-            font-weight: 700; 
-            font-size: 1.5rem; 
-            letter-spacing: 1px; 
-            color: #fff; 
-            margin-bottom: 3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo span { color: var(--accent); }
-        .logo svg { stroke: var(--accent); }
-
-        .nav-menu {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .nav-item {
-            position: relative;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.8rem 1rem;
-            color: var(--text-muted);
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 0.95rem;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255, 255, 255, 0.03);
-            color: #fff;
-        }
-
-        .nav-link:hover i, .nav-link.active i {
-            color: var(--accent);
-            filter: drop-shadow(0 0 5px var(--accent-glow));
-        }
-
-        /* Active Indicator Line */
-        .nav-link.active::before {
-            content: '';
-            position: absolute;
-            left: -1.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-            height: 20px;
-            width: 4px;
-            background: var(--accent);
-            border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 10px var(--accent);
-        }
-
-        /* Auth Buttons Area */
-        .sidebar-footer {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .user-status {
-            font-size: 0.75rem;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-        }
-
-        /* --- BUTTON STYLES --- */
-        .btn { 
-            width: 100%;
-            padding: 0.8rem; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: 0.3s; 
-            font-family: 'Space Grotesk', sans-serif;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-        .btn-outline { 
-            border: 1px solid var(--border); 
-            background: transparent; 
-            color: #fff; 
-        }
-        .btn-outline:hover {
-            border-color: var(--text);
-            background: rgba(255,255,255,0.05);
-        }
-        .btn-primary { 
-            background: var(--accent); 
-            color: #000; 
-            border: none; 
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-        .btn-primary:hover { 
-            background: #fff; 
-            box-shadow: 0 0 25px rgba(255,255,255,0.5); 
-        }
-
-        /* --- MAIN CONTENT AREA --- */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            width: calc(100% - var(--sidebar-width));
-            min-height: 100vh;
-            position: relative;
-        }
-
-        /* --- HERO --- */
-        .hero {
-            height: 85vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start; /* Left align text in main area */
-            text-align: left;
-            padding: 0 6rem; /* More padding since we are shifted */
-            position: relative;
-        }
-
-        /* Subtle gradient behind hero text to improve readability against grid */
-        .hero::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 30% 50%, rgba(5,5,5,0.8) 0%, transparent 70%);
-            z-index: -1;
-        }
-
-        .status-pill {
-            background: rgba(0, 255, 0, 0.05);
-            color: #00ff00;
-            padding: 0.4rem 1rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 1.5rem;
-            border: 1px solid rgba(0, 255, 0, 0.2);
-            display: inline-block;
-        }
-
-        .hero h1 { 
-            font-size: 5rem; 
-            line-height: 1; 
-            margin-bottom: 1.5rem; 
-            color: #fff; 
-            font-weight: 700;
-        }
-        
-        .hero p { 
-            max-width: 600px; 
-            color: #aaa; 
-            font-size: 1.1rem; 
-            line-height: 1.6; 
-        }
-
-        .hero-actions {
-            margin-top: 3rem; 
-            display: flex; 
-            gap: 1.5rem;
-        }
-
-        /* --- TRACKS --- */
-        .container { padding: 4rem 6rem; position: relative; }
-        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
-        .section-header h2 { font-size: 2rem; text-transform: uppercase; letter-spacing: 1px; }
-
-        .grid-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-
-        .card {
-            background: rgba(13, 13, 13, 0.6); /* Slightly more transparent */
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: 0.4s;
-            position: relative;
-            z-index: 1;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            border-color: var(--accent);
-            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.1);
-        }
-
-        .difficulty { 
-            position: absolute; top: 1rem; right: 1rem; 
-            font-size: 0.65rem; padding: 4px 8px; border-radius: 4px;
-            background: #1a1a1a; text-transform: uppercase; font-weight: 700;
-        }
-
-        .card img { width: 100%; border-radius: 8px; margin-bottom: 1.5rem; filter: grayscale(0.6); transition: 0.4s; }
-        .card:hover img { filter: grayscale(0); }
-        .card h3 { margin-bottom: 0.5rem; color: #fff; }
-        .card p { font-size: 0.9rem; color: #999; margin-bottom: 1.5rem; line-height: 1.5; }
-
-        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; }
-        .deploy-btn { 
-            background: transparent; color: var(--accent); border: 1px solid var(--border); 
-            padding: 0.5rem 1rem; border-radius: 4px; font-weight: 600; cursor: pointer; transition: 0.2s;
-        }
-        .deploy-btn:hover { border-color: var(--accent); background: rgba(0, 242, 255, 0.1); }
-
-        /* --- PRACTICE/TERMINAL --- */
-        .practice-section { 
-            background: rgba(8, 8, 8, 0.6); 
-            display: flex; gap: 4rem; padding: 6rem; 
-            border-top: 1px solid var(--border); 
-        }
-        .practice-content { flex: 1; }
-        
-        .terminal {
-            flex: 1;
-            background: #090909;
-            border: 1px solid #222;
-            border-radius: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            padding: 1rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-
-        .terminal-header { display: flex; gap: 6px; margin-bottom: 1rem; align-items: center; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; }
-        .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
-        .terminal-body { color: #00ff00; font-size: 0.85rem; line-height: 1.5; }
-        .command { color: #fff; }
-
-        @media (max-width: 1200px) {
-            .hero h1 { font-size: 3.5rem; }
-            .grid-cards { grid-template-columns: repeat(2, 1fr); }
-=======
         /* This page uses sidebar layout = body needs flex */
         body { display: flex; }
 
@@ -571,7 +256,6 @@
         /* === RESPONSIVE === */
         @media (max-width: 1200px) {
             .progress-section { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
->>>>>>> feature/login-ui
         }
     </style>
 </head>
@@ -582,71 +266,43 @@
 
     <nav class="sidebar">
         <div class="logo">
-<<<<<<< HEAD
-            <i data-lucide="shield-check" style="color: var(--accent);"></i>
-=======
             <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS logo">
->>>>>>> feature/login-ui
             SENTINEL<span>LMS</span>
         </div>
         
         <ul class="nav-menu">
             <li class="nav-item">
-<<<<<<< HEAD
-                <a href="#" class="nav-link active">
-=======
                 <a class="nav-link active" data-section="dashboard">
->>>>>>> feature/login-ui
                     <i data-lucide="layout-dashboard" size="20"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-<<<<<<< HEAD
-                <a href="#" class="nav-link">
-=======
                 <a class="nav-link" data-section="my-courses">
->>>>>>> feature/login-ui
                     <i data-lucide="book-open" size="20"></i>
                     <span>My Courses</span>
                 </a>
             </li>
             <li class="nav-item">
-<<<<<<< HEAD
-                <a href="#" class="nav-link">
-=======
                 <a class="nav-link">
->>>>>>> feature/login-ui
                     <i data-lucide="terminal-square" size="20"></i>
                     <span>Labs & CTFs</span>
                 </a>
             </li>
             <li class="nav-item">
-<<<<<<< HEAD
-                <a href="#" class="nav-link">
-=======
                 <a class="nav-link">
->>>>>>> feature/login-ui
                     <i data-lucide="bar-chart-2" size="20"></i>
                     <span>Grades</span>
                 </a>
             </li>
             <li class="nav-item">
-<<<<<<< HEAD
-                <a href="#" class="nav-link">
-=======
                 <a class="nav-link">
->>>>>>> feature/login-ui
                     <i data-lucide="calendar" size="20"></i>
                     <span>Schedule</span>
                 </a>
             </li>
              <li class="nav-item">
-<<<<<<< HEAD
-                <a href="#" class="nav-link">
-=======
                 <a class="nav-link" data-section="settings">
->>>>>>> feature/login-ui
                     <i data-lucide="settings" size="20"></i>
                     <span>Settings</span>
                 </a>
@@ -654,11 +310,6 @@
         </ul>
 
         <div class="sidebar-footer">
-<<<<<<< HEAD
-            <div class="user-status">System Access</div>
-            <button class="btn btn-primary" onclick="location.href='login.html'">LOGIN</button>
-            <button class="btn btn-outline" onclick="location.href='register.html'">JOIN NOW</button>
-=======
             <div class="user-status">Logged In</div>
             
             <div class="profile-popup" id="profilePopup">
@@ -678,67 +329,11 @@
     </div>
     <i data-lucide="chevron-up" size="18"></i>
 </button>
->>>>>>> feature/login-ui
         </div>
     </nav>
 
     <main class="main-content">
         
-<<<<<<< HEAD
-        <section class="hero">
-            <div class="status-pill">System Online • Security Status: Optimal</div>
-            
-            <h1>TRAIN. EXPLOIT.<br>DEFEND.</h1>
-            
-            <p>Master the art of cybersecurity. Access offensive and defensive labs directly in your browser with our state-of-the-art Pwnbox integration.</p>
-            <div class="hero-actions">
-                <button class="btn btn-primary" style="width: auto; padding: 1rem 2.5rem;">START PATH</button>
-                <button class="btn btn-outline" style="width: auto; padding: 1rem 2.5rem;">EXPLORE LABS</button>
-            </div>
-        </section>
-
-        <div class="container">
-            <div class="section-header">
-                <div>
-                    <p style="color: var(--accent); font-size: 0.8rem; letter-spacing: 2px;">TRAINING MODULES</p>
-                    <h2>Featured Tracks</h2>
-                </div>
-                <a href="#" style="color: #666; font-size: 0.9rem; text-decoration: none;">VIEW ALL TRACKS &rarr;</a>
-            </div>
-
-            <div class="grid-cards">
-                <div class="card">
-                    <span class="difficulty" style="color: #ff4444;">Hard</span>
-                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400" alt="Hacking">
-                    <h3>OSCP Prep Track</h3>
-                    <p>Advanced penetration testing techniques, buffer overflows, and privilege escalation methodologies.</p>
-                    <div class="card-footer">
-                        <span style="font-size: 0.9rem; color: #777;">Modules: 12</span>
-                        <button class="deploy-btn">ENROLL</button>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <span class="difficulty" style="color: #44ff44;">Medium</span>
-                    <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400" alt="Server">
-                    <h3>SOC Analyst Level 1</h3>
-                    <p>Master the core concepts of security operations, threat hunting, and incident response.</p>
-                    <div class="card-footer">
-                        <span style="font-size: 0.9rem; color: #777;">Modules: 8</span>
-                        <button class="deploy-btn">ENROLL</button>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <span class="difficulty" style="color: #ffaa00;">Expert</span>
-                    <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=400" alt="Code">
-                    <h3>Malware Reverse Engineering</h3>
-                    <p>Deconstruct sophisticated threats and learn to reverse engineer malicious binaries safely.</p>
-                    <div class="card-footer">
-                        <span style="font-size: 0.9rem; color: #777;">Modules: 15</span>
-                        <button class="deploy-btn">ENROLL</button>
-                    </div>
-=======
         <!-- DASHBOARD SECTION -->
         <section id="dashboard" class="content-section active">
             <div class="dashboard-header">
@@ -866,7 +461,6 @@
                     <button class="settings-tab" data-tab="security">Security</button>
                     <button class="settings-tab" data-tab="notifications">Notifications</button>
                     <button class="settings-tab" data-tab="preferences">Preferences</button>
->>>>>>> feature/login-ui
                 </div>
 
                 <!-- Profile Settings -->
@@ -1135,61 +729,8 @@
                 <button class="modal-btn modal-btn-confirm" onclick="confirmLogout()">Logout</button>
             </div>
         </div>
+    </div>
 
-<<<<<<< HEAD
-        <section class="practice-section">
-            <div class="practice-content">
-                <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2;">HANDS-ON<br>ENVIRONMENT</h2>
-                <p style="color: #aaa; font-size: 1.1rem; margin-bottom: 2rem;">Don't just watch videos. Connect to our secure VPN and launch attacks against real machines in a sandboxed environment.</p>
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="padding: 1.2rem; background: #111; border-radius: 8px; border-left: 3px solid var(--accent); display: flex; align-items: center; gap: 1rem;">
-                        <i data-lucide="search" style="color: var(--accent);"></i>
-                        <span>1. Information Gathering & Enum</span>
-                    </div>
-                    <div style="padding: 1.2rem; background: #111; border-radius: 8px; display: flex; align-items: center; gap: 1rem; opacity: 0.7;">
-                        <i data-lucide="zap" style="color: #fff;"></i>
-                        <span>2. Vulnerability Assessment</span>
-                    </div>
-                    <div style="padding: 1.2rem; background: #111; border-radius: 8px; display: flex; align-items: center; gap: 1rem; opacity: 0.7;">
-                        <i data-lucide="flag" style="color: #fff;"></i>
-                        <span>3. Exploitation & Post-Exploitation</span>
-                    </div>
-                </div>
-            </div>
-            <div class="terminal">
-                <div class="terminal-header">
-                    <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-                    <span style="margin-left: 1rem; color: #555; font-size: 0.7rem;">root@sentinel-pwnbox:~</span>
-                </div>
-                <div class="terminal-body">
-                    <p><span class="command">root@sentinel:~$</span> nmap -sC -sV 10.10.11.23</p>
-                    <p style="color: #555;">Starting Nmap 7.92...</p>
-                    <p>Host is up (0.043s latency).</p>
-                    <p>PORT   STATE SERVICE VERSION</p>
-                    <p>22/tcp open  ssh     OpenSSH 8.2p1</p>
-                    <p>80/tcp open  http    Apache httpd 2.4.41</p>
-                    <br>
-                    <p><span class="command">root@sentinel:~$</span> python3 exploit.py -t 10.10.11.23</p>
-                    <p style="color: var(--accent);">[+] Target appears vulnerable!</p>
-                    <p style="color: var(--accent);">[+] Sending payload...</p>
-                    <p style="color: #fff; font-weight: bold;">$ whoami</p>
-                    <p>root</p>
-                    <p><span class="command" style="animation: blink 1s infinite;">_</span></p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script>
-        lucide.createIcons();
-        window.addEventListener('mousemove', (e) => {
-            // Offset the mouse X by sidebar width for the glow calculation if needed, 
-            // but usually clientX works fine for the fixed background.
-            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-        });
-    </script>
-=======
     <!-- COURSE ACTION CONFIRMATION MODAL -->
     <div class="modal-overlay" id="courseActionModal">
         <div class="modal">
@@ -2005,7 +1546,6 @@
 
     <!-- (Keep all inline scripts and DOMContentLoaded after all modules are loaded) -->
 
->>>>>>> feature/login-ui
 </body>
 </html>
 

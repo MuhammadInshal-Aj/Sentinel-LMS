@@ -1,0 +1,13 @@
+{
+  "id": "infosec-m01-l05",
+  "title": "Defense in Depth",
+  "order": 5,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 15,
+  "objectives": [
+    "Explain layered security",
+    "Apply defense in depth to real systems"
+  ],
+  "tags": ["defense", "architecture"]
+}

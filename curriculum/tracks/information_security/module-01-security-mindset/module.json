@@ -1,0 +1,19 @@
+{
+  "id": "infosec-m01",
+  "track_id": "infosec",
+  "title": "Security Mindset & Core Principles",
+  "order": 1,
+  "description": "Foundational security thinking, terminology, and mental models",
+  "estimated_time": 60,
+  "lessons": [
+    "infosec-m01-l01",
+    "infosec-m01-l02",
+    "infosec-m01-l03",
+    "infosec-m01-l04",
+    "infosec-m01-l05"
+  ],
+  "checkpoint": {
+    "type": "reflection",
+    "unlock_condition": "all_lessons_completed"
+  }
+}

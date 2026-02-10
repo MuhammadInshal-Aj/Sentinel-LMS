@@ -1,0 +1,22 @@
+{
+  "id": "infosec",
+  "title": "Information Security",
+  "slug": "information-security",
+  "level": "foundation",
+  "description": "Core principles of information security and defensive thinking",
+  "prerequisites": [],
+  "learning_outcomes": [
+    "Develop a security-first mindset",
+    "Understand risk and threat models",
+    "Recognize attacker and defender perspectives"
+  ],
+  "modules": [
+    "infosec-m01",
+    "infosec-m02",
+    "infosec-m03"
+  ],
+  "meta": {
+    "version": "1.0",
+    "maintainer": "Cyber LMS Team"
+  }
+}

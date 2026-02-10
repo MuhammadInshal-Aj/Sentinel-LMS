@@ -1,0 +1,13 @@
+{
+  "id": "infosec-m01-l04",
+  "title": "Secure by Design",
+  "order": 4,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 10,
+  "objectives": [
+    "Understand why security must be built early",
+    "Recognize insecure default design patterns"
+  ],
+  "tags": ["design", "architecture"]
+}

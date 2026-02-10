@@ -1,12 +1,53 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel-LMS | Digital Fortress</title>
+<<<<<<< HEAD
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+=======
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+    <link rel="shortcut icon" href="../assets/sentinel-mark.svg">
+
+    <!-- Favicon (prevent 404 error) -->
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Shared Stylesheets (order matters: tokens â†’ structure â†’ components â†’ helpers) -->
+    <link rel="stylesheet" href="styles/theme.css">
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/utilities.css">
+
+    <!-- External Libraries -->
+>>>>>>> feature/login-ui
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Shared Modules -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="toast.js"></script>
+    <script src="navigation.js"></script>
+
+    <!-- IMMEDIATE AUTH GUARD: Redirect before page renders if not authenticated -->
+    <script>
+        (function() {
+            var token = Auth.getToken();
+            if (!token) {
+                window.location.replace('login.html');
+                document.documentElement.style.display = 'none';
+                throw new Error('AUTH_REDIRECT');
+            }
+        })();
+    </script>
+
+    <!-- PAGE-SPECIFIC STYLES (only what's unique to index.html) -->
     <style>
+<<<<<<< HEAD
         :root {
             --bg: #050505;
             --sidebar-bg: #0a0a0a;
@@ -316,6 +357,221 @@
         @media (max-width: 1200px) {
             .hero h1 { font-size: 3.5rem; }
             .grid-cards { grid-template-columns: repeat(2, 1fr); }
+=======
+        /* This page uses sidebar layout = body needs flex */
+        body { display: flex; }
+
+        /* === DASHBOARD: Progress Circles (SVG-based, unique to this page) === */
+        .progress-section {
+            padding: var(--space-2xl) var(--space-3xl);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-xl);
+            max-width: 1400px;
+        }
+
+        .progress-circle-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all var(--transition-base);
+        }
+
+        .progress-circle-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: translateY(-5px);
+        }
+
+        .progress-circle {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin-bottom: var(--space-md);
+        }
+
+        .progress-circle svg { transform: rotate(-90deg); }
+        .progress-circle-bg { fill: none; stroke: #1a1a1a; stroke-width: 10; }
+        .progress-circle-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+        .progress-circle-fill.offensive { stroke: #ff4444; }
+        .progress-circle-fill.defensive { stroke: #4444ff; }
+        .progress-circle-fill.general { stroke: #44ff44; }
+
+        .progress-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-percentage { font-size: 1.8rem; font-weight: 700; }
+        .progress-total { font-size: 0.8rem; color: #666; }
+        .progress-label { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+
+        /* === DASHBOARD: Grid & Enrolled Course === */
+        .dashboard-grid {
+            padding: 0 var(--space-3xl) var(--space-3xl) var(--space-3xl);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-xl);
+            max-width: 1400px;
+        }
+
+        .no-courses { text-align: center; padding: var(--space-3xl) var(--space-xl); }
+        .no-courses-icon {
+            width: 120px; height: 120px;
+            margin: 0 auto var(--space-xl);
+            background: var(--accent-soft);
+            border-radius: var(--radius-full);
+            display: flex; align-items: center; justify-content: center;
+            border: 2px dashed var(--border);
+        }
+        .no-courses h3 { font-size: 1.5rem; margin-bottom: var(--space-md); }
+        .no-courses p { color: var(--text-muted); margin-bottom: var(--space-xl); font-size: 1rem; }
+
+        .path-content { display: flex; gap: var(--space-xl); align-items: center; }
+        .path-image {
+            width: 120px; height: 120px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .path-info { flex: 1; }
+        .path-name { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-sm); }
+        .path-meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md); }
+        .path-actions { display: flex; gap: var(--space-md); }
+
+        /* === DASHBOARD: Streak Widget === */
+        .streak-count {
+            font-size: 3rem; font-weight: 700; color: var(--accent);
+            text-align: center; margin: var(--space-md) 0;
+            display: flex; align-items: center; justify-content: center; gap: var(--space-sm);
+        }
+        .streak-label { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md); }
+        .streak-days { display: flex; justify-content: center; gap: var(--space-sm); }
+        .day-dot { width: 10px; height: 10px; border-radius: var(--radius-full); background: #333; transition: all var(--transition-base); }
+        .day-dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+
+        /* === MY COURSES SECTION === */
+        .courses-container { padding: var(--space-2xl) var(--space-3xl); max-width: 1600px; }
+        .courses-page-header { margin-bottom: var(--space-2xl); }
+        .courses-page-title {
+            font-size: 2.5rem; font-weight: 700; color: var(--text-primary);
+            margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-md);
+        }
+        .courses-page-title i { color: var(--accent); filter: drop-shadow(0 0 10px var(--accent-glow)); }
+        .courses-page-subtitle { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+
+        .course-category { margin-bottom: var(--space-2xl); }
+        .category-header {
+            display: flex; align-items: center; gap: var(--space-md);
+            margin-bottom: var(--space-lg); padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .category-title { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; }
+
+        .course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: var(--space-xl); }
+
+        /* Course Cards */
+        .course-card {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: var(--radius-xl); padding: var(--space-xl);
+            transition: all 0.4s ease; cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+        .course-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        .course-card:hover { background: #111111; border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 40px rgba(0, 242, 255, 0.15); }
+        .course-card:hover::before { opacity: 1; }
+        .course-card.active-course { border-color: var(--accent); background: linear-gradient(135deg, rgba(0, 242, 255, 0.05) 0%, var(--bg-surface) 100%); box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
+        .course-card.active-course::before { opacity: 1; background: linear-gradient(90deg, var(--accent), #00ff88); }
+        .course-card.active-course::after {
+            content: 'ACTIVE'; position: absolute; top: 1.5rem; right: 1.5rem;
+            padding: 0.4rem 0.8rem; background: var(--accent); color: #000;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+            border-radius: var(--radius-sm); box-shadow: var(--shadow-glow);
+        }
+
+        .card-header-courses { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-lg); }
+        .course-title-wrapper { flex: 1; }
+        .course-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-sm); line-height: 1.3; }
+        .course-category-badge {
+            display: inline-block; padding: 0.3rem 0.7rem;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+            border-radius: var(--radius-md); font-size: 0.75rem; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            font-family: var(--font-mono);
+        }
+        .course-card.active-course .course-category-badge { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+        .card-content-courses { margin-bottom: var(--space-lg); }
+        .course-description { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: var(--space-lg); }
+        .course-meta { display: flex; gap: var(--space-lg); flex-wrap: wrap; margin-bottom: var(--space-lg); }
+        .meta-item { display: flex; align-items: center; gap: var(--space-sm); font-size: 0.85rem; color: var(--text-muted); }
+        .meta-item i { width: 16px; height: 16px; color: var(--accent); }
+
+        .progress-section-courses { margin-bottom: var(--space-lg); }
+        .progress-header-courses { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .progress-label-courses { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+        .progress-percentage-courses { font-size: 0.85rem; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+
+        .progress-bar-container-courses {
+            position: relative; width: 100%; height: 8px;
+            background: rgba(255, 255, 255, 0.05); border-radius: 10px;
+            overflow: hidden; border: 1px solid var(--border);
+        }
+        .progress-bar-fill-courses {
+            height: 100%; background: linear-gradient(90deg, var(--accent), #00ff88);
+            border-radius: 10px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .progress-bar-fill-courses::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        .progress-status-courses { font-size: 0.8rem; color: var(--text-muted); margin-top: var(--space-sm); font-style: italic; }
+        .course-card.active-course .progress-status-courses { color: var(--accent); }
+
+        .card-actions-courses { display: flex; gap: var(--space-md); }
+        .btn-course-primary {
+            flex: 1; padding: 0.9rem var(--space-lg); border: none; border-radius: var(--radius-lg);
+            font-family: var(--font-primary); font-weight: 600; font-size: 0.95rem;
+            cursor: pointer; transition: all var(--transition-base);
+            display: flex; align-items: center; justify-content: center; gap: var(--space-sm);
+            background: linear-gradient(135deg, var(--accent), #00a8ff); color: #000;
+            box-shadow: 0 4px 15px rgba(0, 242, 255, 0.3);
+        }
+        .btn-course-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0, 242, 255, 0.5); }
+
+        .current-lesson {
+            display: flex; align-items: center; gap: var(--space-sm);
+            padding: 0.6rem var(--space-md); background: rgba(0, 242, 255, 0.08);
+            border-left: 3px solid var(--accent); border-radius: var(--radius-sm);
+            margin-bottom: var(--space-md);
+        }
+        .current-lesson i { width: 16px; height: 16px; color: var(--accent); }
+        .current-lesson-text { font-size: 0.85rem; color: var(--text); }
+        .current-lesson-name { font-weight: 600; color: var(--accent); }
+
+        /* Course card stagger animation */
+        .course-card { animation: fadeInUp 0.6s ease-out backwards; }
+        .course-card:nth-child(1) { animation-delay: 0.1s; }
+        .course-card:nth-child(2) { animation-delay: 0.2s; }
+        .course-card:nth-child(3) { animation-delay: 0.3s; }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 1200px) {
+            .progress-section { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+>>>>>>> feature/login-ui
         }
     </style>
 </head>
@@ -326,43 +582,71 @@
 
     <nav class="sidebar">
         <div class="logo">
+<<<<<<< HEAD
             <i data-lucide="shield-check" style="color: var(--accent);"></i>
+=======
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS logo">
+>>>>>>> feature/login-ui
             SENTINEL<span>LMS</span>
         </div>
         
         <ul class="nav-menu">
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="#" class="nav-link active">
+=======
+                <a class="nav-link active" data-section="dashboard">
+>>>>>>> feature/login-ui
                     <i data-lucide="layout-dashboard" size="20"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="#" class="nav-link">
+=======
+                <a class="nav-link" data-section="my-courses">
+>>>>>>> feature/login-ui
                     <i data-lucide="book-open" size="20"></i>
                     <span>My Courses</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="#" class="nav-link">
+=======
+                <a class="nav-link">
+>>>>>>> feature/login-ui
                     <i data-lucide="terminal-square" size="20"></i>
                     <span>Labs & CTFs</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="#" class="nav-link">
+=======
+                <a class="nav-link">
+>>>>>>> feature/login-ui
                     <i data-lucide="bar-chart-2" size="20"></i>
                     <span>Grades</span>
                 </a>
             </li>
             <li class="nav-item">
+<<<<<<< HEAD
                 <a href="#" class="nav-link">
+=======
+                <a class="nav-link">
+>>>>>>> feature/login-ui
                     <i data-lucide="calendar" size="20"></i>
                     <span>Schedule</span>
                 </a>
             </li>
              <li class="nav-item">
+<<<<<<< HEAD
                 <a href="#" class="nav-link">
+=======
+                <a class="nav-link" data-section="settings">
+>>>>>>> feature/login-ui
                     <i data-lucide="settings" size="20"></i>
                     <span>Settings</span>
                 </a>
@@ -370,14 +654,37 @@
         </ul>
 
         <div class="sidebar-footer">
+<<<<<<< HEAD
             <div class="user-status">System Access</div>
             <button class="btn btn-primary" onclick="location.href='login.html'">LOGIN</button>
             <button class="btn btn-outline" onclick="location.href='register.html'">JOIN NOW</button>
+=======
+            <div class="user-status">Logged In</div>
+            
+            <div class="profile-popup" id="profilePopup">
+                <div class="popup-item logout" onclick="handleLogout()">
+                    <i data-lucide="log-out" size="18"></i>
+                    <span>Logout</span>
+                </div>
+            </div>
+
+           <button class="profile-btn" id="profileBtn">
+    <div class="profile-avatar" id="display-avatar">??</div> 
+    
+    <div class="profile-info">
+        <div class="profile-name" id="display-name">Loading...</div>
+        
+        <div class="profile-email" id="display-email">Please wait...</div>
+    </div>
+    <i data-lucide="chevron-up" size="18"></i>
+</button>
+>>>>>>> feature/login-ui
         </div>
     </nav>
 
     <main class="main-content">
         
+<<<<<<< HEAD
         <section class="hero">
             <div class="status-pill">System Online • Security Status: Optimal</div>
             
@@ -431,10 +738,405 @@
                         <span style="font-size: 0.9rem; color: #777;">Modules: 15</span>
                         <button class="deploy-btn">ENROLL</button>
                     </div>
+=======
+        <!-- DASHBOARD SECTION -->
+        <section id="dashboard" class="content-section active">
+            <div class="dashboard-header">
+                <h1>DASHBOARD</h1>
+                <div class="breadcrumb">Pages / Dashboard</div>
+            </div>
+
+            <section class="progress-section">
+                <div class="progress-circle-card">
+                    <div class="progress-circle">
+                        <svg width="150" height="150">
+                            <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
+                            <circle class="progress-circle-fill offensive" cx="75" cy="75" r="65" 
+                                    stroke-dasharray="408.407" stroke-dashoffset="408.407" id="offensiveCircle"></circle>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percentage" id="offensivePercent" style="color: #ff4444;">0.0%</div>
+                            <div class="progress-total">0/100</div>
+                        </div>
+                    </div>
+                    <div class="progress-label">Offensive</div>
                 </div>
+
+                <div class="progress-circle-card">
+                    <div class="progress-circle">
+                        <svg width="150" height="150">
+                            <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
+                            <circle class="progress-circle-fill defensive" cx="75" cy="75" r="65" 
+                                    stroke-dasharray="408.407" stroke-dashoffset="408.407" id="defensiveCircle"></circle>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percentage" id="defensivePercent" style="color: #4444ff;">0.0%</div>
+                            <div class="progress-total">0/100</div>
+                        </div>
+                    </div>
+                    <div class="progress-label">Defensive</div>
+                </div>
+
+                <div class="progress-circle-card">
+                    <div class="progress-circle">
+                        <svg width="150" height="150">
+                            <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
+                            <circle class="progress-circle-fill general" cx="75" cy="75" r="65" 
+                                    stroke-dasharray="408.407" stroke-dashoffset="408.407" id="generalCircle"></circle>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percentage" id="generalPercent" style="color: #44ff44;">0.0%</div>
+                            <div class="progress-total">0/100</div>
+                        </div>
+                    </div>
+                    <div class="progress-label">General</div>
+                </div>
+            </section>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card" id="enrolledCourseCard">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i data-lucide="graduation-cap" size="20" style="color: var(--accent);"></i>
+                        </div>
+                        <h2 class="card-title">Currently Enrolled Path</h2>
+                    </div>
+                    <div class="no-courses" id="noCoursesContent">
+                        <div class="no-courses-icon">
+                            <i data-lucide="book-x" size="60" style="color: #555;"></i>
+                        </div>
+                        <h3>No Courses Enrolled</h3>
+                        <p>Start your cybersecurity journey by enrolling in a course from our featured tracks.</p>
+                        <button class="btn-continue" onclick="navigateToMyCourses()">Browse Courses</button>
+                    </div>
+                    <div class="path-content" id="courseContent" style="display: none;">
+                        <div class="path-image">
+                            <i data-lucide="monitor" size="60" style="color: var(--accent);"></i>
+                        </div>
+                        <div class="path-info">
+                            <div class="path-name" id="courseName">Penetration Tester</div>
+                            <div class="path-meta">Current Path Ã¢â‚¬Â¢ <span id="courseProgress">0%</span> Progress</div>
+                            <div class="path-actions">
+                                <button class="btn-continue" onclick="simulateProgress()">Continue Learning</button>
+                                <button class="btn-secondary">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i data-lucide="flame" size="20" style="color: var(--accent);"></i>
+                        </div>
+                        <h2 class="card-title">Weekly Streak</h2>
+                        <span class="beta-badge">BETA</span>
+                    </div>
+                    <div class="streak-count">
+                        <i data-lucide="flame" size="40" style="color: var(--accent);"></i>
+                        <span id="streakNumber">0</span>
+                    </div>
+                    <div class="streak-label">This Week</div>
+                    <div class="streak-days" id="streakDays">
+                        <div class="day-dot"></div>
+                        <div class="day-dot"></div>
+                        <div class="day-dot"></div>
+                        <div class="day-dot"></div>
+                        <div class="day-dot"></div>
+                        <div class="day-dot"></div>
+                        <div class="day-dot"></div>
+                    </div>
+                    <div style="text-align: center; color: #666; font-size: 0.85rem; margin-top: 1rem;">
+                        <span id="streakPoints">0</span>/30 Streak pts
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SETTINGS SECTION -->
+        <section id="settings" class="content-section">
+            <div class="dashboard-header">
+                <h1>SETTINGS</h1>
+                <div class="breadcrumb">Pages / Settings</div>
+            </div>
+
+            <div class="settings-container">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="profile">Profile</button>
+                    <button class="settings-tab" data-tab="security">Security</button>
+                    <button class="settings-tab" data-tab="notifications">Notifications</button>
+                    <button class="settings-tab" data-tab="preferences">Preferences</button>
+>>>>>>> feature/login-ui
+                </div>
+
+                <!-- Profile Settings -->
+                <div class="settings-panel active" id="profile">
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="user" size="24" style="color: var(--accent);"></i>
+                            Personal Information
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" class="form-input" id="firstName" placeholder="First Name">
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" class="form-input" id="lastName" placeholder="Last Name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" class="form-input" id="emailAddress" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Bio</label>
+                            <textarea class="form-input" id="userBio" rows="4" placeholder="Tell us about yourself..."></textarea>
+                        </div>
+                        <button class="btn-save" onclick="saveAccountSettings()">Save Changes</button>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="briefcase" size="24" style="color: var(--accent);"></i>
+                            Professional Details
+                        </h3>
+                        <div class="form-group">
+                            <label>Job Title</label>
+                            <input type="text" class="form-input" id="jobTitle" placeholder="e.g., Security Analyst">
+                        </div>
+                        <div class="form-group">
+                            <label>Company</label>
+                            <input type="text" class="form-input" id="company" placeholder="e.g., Acme Corp">
+                        </div>
+                        <button class="btn-save" onclick="saveAccountSettings()">Save Changes</button>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="settings-panel" id="security">
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="lock" size="24" style="color: var(--accent);"></i>
+                            Change Password
+                        </h3>
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" class="form-input" id="currentPassword" placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" class="form-input" id="newPassword" placeholder="Enter new password">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm new password">
+                        </div>
+                        <button class="btn-save" onclick="updatePassword()">Update Password</button>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="shield" size="24" style="color: var(--accent);"></i>
+                            Two-Factor Authentication
+                        </h3>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Enable 2FA</h4>
+                                <p>Add an extra layer of security to your account</p>
+                            </div>
+                            <div class="toggle-switch" id="toggle2FA" onclick="toggle2FA(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="smartphone" size="24" style="color: var(--accent);"></i>
+                            Active Sessions
+                        </h3>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Current Session</h4>
+                                <p id="sessionInfo">Chrome on Windows Ã¢â‚¬Â¢ Last active: Just now</p>
+                            </div>
+                            <button class="btn-secondary" disabled>Current</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="settings-panel" id="notifications">
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="bell" size="24" style="color: var(--accent);"></i>
+                            Email Notifications
+                        </h3>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Course Updates</h4>
+                                <p>Get notified about new modules and content</p>
+                            </div>
+                            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Assignment Reminders</h4>
+                                <p>Receive reminders for pending assignments</p>
+                            </div>
+                            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Weekly Progress Report</h4>
+                                <p>Get a summary of your weekly progress</p>
+                            </div>
+                            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="message-square" size="24" style="color: var(--accent);"></i>
+                            Platform Notifications
+                        </h3>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Browser Notifications</h4>
+                                <p>Show notifications in your browser</p>
+                            </div>
+                            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Sound Effects</h4>
+                                <p>Play sounds for notifications</p>
+                            </div>
+                            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Settings -->
+                <div class="settings-panel" id="preferences">
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="palette" size="24" style="color: var(--accent);"></i>
+                            Appearance
+                        </h3>
+                        <div class="form-group">
+                            <label>Theme</label>
+                            <select class="form-input">
+                                <option>Dark Mode (Current)</option>
+                                <option>Light Mode</option>
+                                <option>Auto (System)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Language</label>
+                            <select class="form-input">
+                                <option>English</option>
+                                <option>Spanish</option>
+                                <option>French</option>
+                                <option>German</option>
+                            </select>
+                        </div>
+                        <button class="btn-save" onclick="saveSettings('appearance')">Save Changes</button>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="zap" size="24" style="color: var(--accent);"></i>
+                            Learning Preferences
+                        </h3>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Auto-play Videos</h4>
+                                <p>Automatically play next video in sequence</p>
+                            </div>
+                            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Show Hints</h4>
+                                <p>Display helpful hints during labs</p>
+                            </div>
+                            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>
+                            <i data-lucide="trash-2" size="24" style="color: #ff4444;"></i>
+                            Danger Zone
+                        </h3>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Delete Account</h4>
+                                <p>Permanently delete your account and all data</p>
+                            </div>
+                            <button class="btn-danger" onclick="deleteAccount()">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MY COURSES SECTION -->
+        <section id="my-courses" class="content-section">
+            <div class="courses-container">
+                <!-- Page Header -->
+                <header class="courses-page-header">
+                    <h1 class="courses-page-title">
+                        <i data-lucide="graduation-cap"></i>
+                        My Courses
+                    </h1>
+                    <p class="courses-page-subtitle">Track your learning journey and continue where you left off</p>
+                </header>
+
+                <!-- Fundamentals Category -->
+                <section class="course-category" id="fundamentals-section">
+                    <div class="category-header">
+                        <h2 class="category-title">Fundamentals</h2>
+                        <span class="category-badge" id="fundamentals-count">0 courses</span>
+                    </div>
+                    <div class="course-grid" id="fundamentals-grid">
+                        <!-- Fundamentals courses will be rendered here -->
+                    </div>
+                </section>
+
+                <!-- Intermediate Category -->
+                <section class="course-category" id="intermediate-section">
+                    <div class="category-header">
+                        <h2 class="category-title">Intermediate</h2>
+                        <span class="category-badge" id="intermediate-count">0 courses</span>
+                    </div>
+                    <div class="course-grid" id="intermediate-grid">
+                        <!-- Intermediate courses will be rendered here -->
+                    </div>
+                </section>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i data-lucide="log-out" size="24" style="color: #ff4444;"></i>
+                </div>
+                <h2>Confirm Logout</h2>
+            </div>
+            <p>Are you sure you want to logout? Your progress has been saved and you can continue where you left off when you return.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" onclick="confirmLogout()">Logout</button>
             </div>
         </div>
 
+<<<<<<< HEAD
         <section class="practice-section">
             <div class="practice-content">
                 <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2;">HANDS-ON<br>ENVIRONMENT</h2>
@@ -487,5 +1189,825 @@
             document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
         });
     </script>
+=======
+    <!-- COURSE ACTION CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="courseActionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i data-lucide="rocket" size="24" style="color: var(--accent);"></i>
+                </div>
+                <h2 id="courseActionTitle">Start Course</h2>
+            </div>
+            <p id="courseActionMessage">Ready to begin your learning journey?</p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeCourseActionModal(); return false;">Cancel</button>
+                <button type="button" class="modal-btn modal-btn-confirm" onclick="confirmCourseAction(); return false;">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // 1. INITIALIZE SUPABASE
+    const supabaseUrl = 'https://dtvdoyigadkdjkvjahna.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0dmRveWlnYWRrZGprdmphaG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NjgzMzksImV4cCI6MjA4NTM0NDMzOX0.VYoYd4Gkdt8kalCusROFZ1J-7Ha1N9ojF2hGJlnkHsE'; 
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // 2. CORE SYSTEM INITIALIZATION
+    lucide.createIcons();
+    
+    let userData = JSON.parse(localStorage.getItem('sentinelUserData')) || {
+        enrolledCourse: null,
+        courseType: null,
+        progress: { offensive: 0, defensive: 0, general: 0 },
+        streak: { count: 0, lastLogin: null, activeDays: [] }
+    };
+
+    // 3. USER DATA SYNC (The "John Doe" Fix)
+   async function loadUserData() {
+    const token = Auth.getToken();
+    
+    if (!token) {
+        window.location.replace('login.html');
+        return;
+    }
+
+    try {
+        // Set the session so Supabase client is authenticated
+        await supabaseClient.auth.setSession({
+            access_token: token,
+            refresh_token: Auth.getRefreshToken() || ''
+        });
+
+        const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+        if (error || !user) {
+            console.error("Auth error:", error);
+            Auth.clearAuth();
+            window.location.replace('login.html');
+            return;
+        }
+
+        // Make user available globally for other modules
+        window.__sentinelUser = user;
+
+        if (user) {
+            // Get the name from metadata - check multiple sources
+            const firstName = user.user_metadata?.first_name || '';
+            const lastName = user.user_metadata?.last_name || '';
+            const displayName = user.user_metadata?.display_name || '';
+            
+            // Construct full name with fallback logic
+            let name = '';
+            if (firstName || lastName) {
+                name = `${firstName} ${lastName}`.trim();
+            } else if (displayName) {
+                name = displayName;
+            } else {
+                name = user.email?.split('@')[0] || 'User';
+            }
+            
+            const email = user.email || "user@sentinel.com";
+
+            // Update profile display
+            const nameElement = document.getElementById('display-name');
+            const emailElement = document.getElementById('display-email');
+            const avatarElement = document.getElementById('display-avatar');
+
+            if (nameElement) nameElement.textContent = name;
+            if (emailElement) emailElement.textContent = email;
+
+            // Create initials for avatar
+            if (avatarElement) {
+                let initials = '';
+                if (firstName && lastName) {
+                    initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+                } else {
+                    initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                }
+                avatarElement.textContent = initials || "??";
+            }
+        }
+    } catch (err) {
+        console.error("Error loading user data:", err);
+    }
+}
+
+    // 4. UI & NAVIGATION LOGIC
+    // Mouse tracking for grid glow effect
+    window.addEventListener('mousemove', (e) => {
+        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    });
+
+    // Navigation, profile popup, and settings tabs are handled by navigation.js.
+    // Callbacks registered in DOMContentLoaded below.
+
+    // 5. STREAK & PROGRESS LOGIC
+    function updateStreakDisplay() {
+        // Update streak number
+        const streakNumber = document.getElementById('streakNumber');
+        if (streakNumber) streakNumber.textContent = userData.streak.count || 0;
+
+        // Update streak points (example: 30 points per week)
+        const streakPoints = document.getElementById('streakPoints');
+        if (streakPoints) streakPoints.textContent = (userData.streak.count * 5) || 0;
+
+        // Update active days (highlight dots)
+        const streakDays = document.querySelectorAll('.day-dot');
+        if (Array.isArray(userData.streak.activeDays)) {
+            streakDays.forEach((dot, idx) => {
+                if (userData.streak.activeDays.includes(idx)) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+    }
+
+    function checkStreak() {
+        const today = new Date().toDateString();
+        const lastLogin = userData.streak.lastLogin;
+        
+        if (lastLogin !== today) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (lastLogin === yesterday.toDateString()) {
+                userData.streak.count++;
+            } else if (lastLogin !== null) {
+                userData.streak.count = 1;
+                userData.streak.activeDays = [];
+            } else {
+                userData.streak.count = 1;
+            }
+            const dayOfWeek = new Date().getDay();
+            if (!userData.streak.activeDays.includes(dayOfWeek)) userData.streak.activeDays.push(dayOfWeek);
+            userData.streak.lastLogin = today;
+            saveUserData();
+        }
+    }
+
+    function updateDashboard() {
+        const noCoursesContent = document.getElementById('noCoursesContent');
+        const courseContent = document.getElementById('courseContent');
+        
+        if (userData.enrolledCourse) {
+            noCoursesContent.style.display = 'none';
+            courseContent.style.display = 'flex';
+            document.getElementById('courseName').textContent = userData.enrolledCourse;
+            document.getElementById('courseProgress').textContent = userData.progress[userData.courseType] + '%';
+        } else {
+            noCoursesContent.style.display = 'block';
+            courseContent.style.display = 'none';
+        }
+        setTimeout(animateProgressCircles, 300);
+        updateStreakDisplay();
+    }
+
+    function animateProgressCircles() {
+        const circumference = 2 * Math.PI * 65;
+        ['offensive', 'defensive', 'general'].forEach(type => {
+            const circle = document.getElementById(`${type}Circle`);
+            const percent = document.getElementById(`${type}Percent`);
+            const progress = userData.progress[type];
+            circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
+            percent.textContent = progress.toFixed(1) + '%';
+        });
+    }
+
+    // 6. LOGOUT & SETTINGS
+    function goToSettings() {
+        Navigation.goTo('settings');
+        // Ensure profile tab is the active panel
+        setTimeout(() => {
+            const settingsSection = document.getElementById('settings');
+            if (!settingsSection) return;
+            settingsSection.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+            settingsSection.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+            const profileTab = settingsSection.querySelector('[data-tab="profile"]');
+            const profilePanel = settingsSection.querySelector('#profile');
+            if (profileTab) profileTab.classList.add('active');
+            if (profilePanel) profilePanel.classList.add('active');
+            lucide.createIcons();
+        }, 100);
+    }
+
+    async function loadAccountSettingsData() {
+        try {
+            const token = Auth.getToken();
+            if (!token) return;
+
+            const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+            
+            if (error || !user) {
+                console.error('Error loading user:', error);
+                return;
+            }
+
+            // Load data from user_metadata
+            const firstName = user.user_metadata?.first_name || '';
+            const lastName = user.user_metadata?.last_name || '';
+            const bio = user.user_metadata?.bio || '';
+            const jobTitle = user.user_metadata?.job_title || user.user_metadata?.jobTitle || '';
+            const company = user.user_metadata?.company || '';
+            
+            // Populate form fields
+            const firstNameField = document.getElementById('firstName');
+            const lastNameField = document.getElementById('lastName');
+            const emailField = document.getElementById('emailAddress');
+            const bioField = document.getElementById('userBio');
+            const jobTitleField = document.getElementById('jobTitle');
+            const companyField = document.getElementById('company');
+            
+            if (firstNameField) firstNameField.value = firstName;
+            if (lastNameField) lastNameField.value = lastName;
+            if (emailField) emailField.value = user.email || '';
+            if (bioField) bioField.value = bio;
+            if (jobTitleField) jobTitleField.value = jobTitle;
+            if (companyField) companyField.value = company;
+            
+            console.log('Loaded settings data:', { firstName, lastName, email: user.email });
+        } catch (error) {
+            console.error('Error in loadAccountSettingsData:', error);
+        }
+    }
+
+    async function saveAccountSettings() {
+        const firstName = document.getElementById('firstName').value;
+        const lastName = document.getElementById('lastName').value;
+        const bio = document.getElementById('userBio').value;
+        const jobTitle = document.getElementById('jobTitle').value;
+        const company = document.getElementById('company').value;
+
+        try {
+            const { data, error } = await supabaseClient.auth.updateUser({
+                data: {
+                    first_name: firstName,
+                    last_name: lastName,
+                    display_name: `${firstName} ${lastName}`.trim(),
+                    bio: bio,
+                    job_title: jobTitle,
+                    jobTitle: jobTitle, // Keep both for backward compatibility
+                    company: company
+                }
+            });
+
+            if (error) throw error;
+
+            Toast.success('Settings saved successfully!');
+
+            // Reload user data in sidebar
+            await loadUserData();
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            Toast.error('Error saving settings. Please try again.');
+        }
+    }
+
+    async function updatePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            Toast.warning('Please fill in all password fields.');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            Toast.error('New passwords do not match.');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            Toast.warning('Password must be at least 6 characters long.');
+            return;
+        }
+
+        try {
+            const { data, error} = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) throw error;
+
+            Toast.success('Password updated successfully!');
+
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        } catch (error) {
+            console.error('Error updating password:', error);
+            Toast.error('Error updating password. Please try again.');
+        }
+    }
+
+    async function toggle2FA(element) {
+        element.classList.toggle('active');
+        const enabled = element.classList.contains('active');
+        
+        // Here you would implement actual 2FA logic with Supabase
+        // For now, just save the preference
+        try {
+            await supabase.auth.updateUser({
+                data: { twoFactorEnabled: enabled }
+            });
+            
+            Toast.info(enabled ? '2FA has been enabled. Please set up your authenticator app.' : '2FA has been disabled.');
+        } catch (error) {
+            console.error('Error toggling 2FA:', error);
+            element.classList.toggle('active'); // Revert on error
+        }
+    }
+
+    function navigateToMyCourses() {
+        if (window.Navigation && typeof Navigation.goTo === 'function') {
+            Navigation.goTo('my-courses');
+        } else {
+            document.querySelector('[data-section="my-courses"]').click();
+        }
+    }
+
+    function handleLogout() {
+        document.getElementById('logoutModal').classList.add('active');
+        var profilePopup = document.getElementById('profilePopup');
+        if (profilePopup) profilePopup.classList.remove('active');
+        lucide.createIcons();
+    }
+
+    function closeLogoutModal() {
+        document.getElementById('logoutModal').classList.remove('active');
+    }
+
+    function confirmLogout() {
+        Auth.logout('login.html');
+    }
+
+    function toggleSwitch(element) {
+        element.classList.toggle('active');
+        const isActive = element.classList.contains('active');
+        
+        // Save notification/preference settings
+        const settingRow = element.closest('.setting-row');
+        if (settingRow) {
+            const settingName = settingRow.querySelector('h4').textContent;
+            saveToggleSetting(settingName, isActive);
+        }
+    }
+
+    async function saveToggleSetting(settingName, value) {
+        try {
+            // Get current user settings
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const currentSettings = user.user_metadata?.settings || {};
+            currentSettings[settingName] = value;
+
+            await supabase.auth.updateUser({
+                data: { settings: currentSettings }
+            });
+
+            console.log(`Setting "${settingName}" saved:`, value);
+        } catch (error) {
+            console.error('Error saving setting:', error);
+        }
+    }
+
+    async function saveSettings(section) {
+        if (section === 'appearance') {
+            const theme = document.querySelector('select.form-input').value;
+            const language = document.querySelectorAll('select.form-input')[1].value;
+
+            try {
+                await supabase.auth.updateUser({
+                    data: {
+                        preferences: {
+                            theme: theme,
+                            language: language
+                        }
+                    }
+                });
+
+                Toast.success('Appearance settings saved successfully!');
+            } catch (error) {
+                console.error('Error saving appearance settings:', error);
+                Toast.error('Error saving settings. Please try again.');
+            }
+        } else {
+            Toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully!`);
+        }
+    }
+
+    function deleteAccount() {
+        if (confirm('Are you absolutely sure? This action cannot be undone.')) {
+            if (confirm('All your data will be permanently deleted. Continue?')) {
+                localStorage.removeItem('sentinelUserData');
+                Toast.info('Account deleted. Redirecting...');
+                Auth.logout('login.html');
+            }
+        }
+    }
+
+    function saveUserData() {
+        localStorage.setItem('sentinelUserData', JSON.stringify(userData));
+    }
+
+    // 7. INITIALIZE PAGE
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded fired');
+        
+        // Push a history state so back navigation is detected
+        window.history.pushState({authenticated: true, page: 'index'}, '', window.location.href);
+        
+        loadUserData();
+        checkStreak();
+        updateDashboard();
+
+        // Wire section callbacks then initialize navigation
+        Navigation.onSectionActivate['dashboard'] = updateDashboard;
+        // Use a dynamic reference to initializeMyCoursesPage (loaded from my-courses.js)
+        Navigation.onSectionActivate['my-courses'] = () => window.initializeMyCoursesPage?.();
+        Navigation.onSectionActivate['settings'] = loadAccountSettingsData;
+        Navigation.init();
+        Navigation.initProfilePopup();
+        Navigation.initSettingsTabs();
+
+        // ADD EVENT DELEGATION FOR COURSE ACTION MODAL BUTTONS
+        const confirmBtn = document.querySelector('#courseActionModal .modal-btn-confirm');
+        const cancelBtn = document.querySelector('#courseActionModal .modal-btn-cancel');
+        
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', (e) => {
+                console.log('Confirm button clicked via event listener');
+                e.preventDefault();
+                e.stopPropagation();
+                confirmCourseAction();
+            });
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                console.log('Cancel button clicked via event listener');
+                e.preventDefault();
+                e.stopPropagation();
+                closeCourseActionModal();
+            });
+        }
+
+        if (document.getElementById('my-courses')?.classList.contains('active')) {
+            window.initializeMyCoursesPage?.();
+        }
+        
+        // DEBUG: Log the current state
+        console.log('=== INITIALIZATION DEBUG ===');
+        console.log('window.coursesData:', window.coursesData);
+        if (window.coursesData) {
+            console.log('coursesData.myCourses:', window.coursesData.myCourses);
+            console.log('coursesData.myCourses length:', window.coursesData.myCourses?.length);
+            console.log('renderCoursesByCategory available:', typeof renderCoursesByCategory);
+            console.log('handleCourseAction available:', typeof handleCourseAction);
+        }
+        console.log('=====================================');
+        
+        console.log('Initialization complete');
+    });
+
+    // === PREVENT BACK NAVIGATION WITHOUT RE-AUTHENTICATION ===
+    // When user tries to go back (browser back button), check if still authenticated
+    window.addEventListener('popstate', (event) => {
+        console.log('popstate event detected - user may have clicked back button');
+        
+        // Check if still authenticated
+        const token = Auth.getToken();
+        if (!token) {
+            console.warn('User not authenticated, redirecting to login...');
+            window.location.replace('login.html');
+        } else {
+            console.log('User still authenticated, allowing navigation');
+        }
+    });
+
+    // === MY COURSES FUNCTIONALITY ===
+    
+    // Course Data Structure (MUST be global for my-courses.js)
+    window.coursesData = {
+        "myCourses": [
+            {
+                "id": "computer-networking",
+                "title": "Computer Networking",
+                "category": "fundamentals",
+                "description": "Learn core networking concepts essential for cybersecurity.",
+                "progress": {
+                    "percentage": 0,
+                    "status": "not-started",
+                    "currentLesson": null
+                },
+                "meta": {
+                    "estimatedDuration": "6 weeks",
+                    "modulesCount": 5,
+                    "lessonsCount": 22
+                }
+            },
+            {
+                "id": "information-security",
+                "title": "Information Security",
+                "category": "fundamentals",
+                "description": "Understand security principles, risk models, and defensive thinking.",
+                "progress": {
+                    "percentage": 0,
+                    "status": "not-started",
+                    "currentLesson": null
+                },
+                "meta": {
+                    "estimatedDuration": "5 weeks",
+                    "modulesCount": 4,
+                    "lessonsCount": 18
+                }
+            },
+            {
+                "id": "ethical-hacking",
+                "title": "Ethical Hacking",
+                "category": "intermediate",
+                "description": "Practice offensive security techniques with hands-on labs.",
+                "progress": {
+                    "percentage": 35,
+                    "status": "in-progress",
+                    "currentLesson": "SQL Injection Basics"
+                },
+                "meta": {
+                    "estimatedDuration": "8 weeks",
+                    "modulesCount": 6,
+                    "lessonsCount": 30
+                }
+            }
+        ]
+    };
+
+    /**
+     * Render a single course card
+     */
+    function renderCourseCard(course) {
+        const isActive = course.progress.status === 'in-progress';
+        const progressText = course.progress.percentage === 0 
+            ? 'Not started' 
+            : `${course.progress.percentage}% completed`;
+        const buttonText = course.progress.status === 'not-started' 
+            ? 'Start Course' 
+            : 'Resume Course';
+        const buttonIcon = course.progress.status === 'not-started' 
+            ? 'play-circle' 
+            : 'arrow-right';
+
+        return `
+            <article class="course-card ${isActive ? 'active-course' : ''}" data-course-id="${course.id}">
+                <div class="card-header-courses">
+                    <div class="course-title-wrapper">
+                        <h3 class="course-title">${course.title}</h3>
+                        <span class="course-category-badge">${course.category}</span>
+                    </div>
+                </div>
+
+                <div class="card-content-courses">
+                    <p class="course-description">${course.description}</p>
+
+                    ${course.progress.currentLesson ? `
+                        <div class="current-lesson">
+                            <i data-lucide="play-circle"></i>
+                            <span class="current-lesson-text">
+                                Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
+                            </span>
+                        </div>
+                    ` : ''}
+
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <i data-lucide="clock"></i>
+                            <span>${course.meta.estimatedDuration}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i data-lucide="folder"></i>
+                            <span>${course.meta.modulesCount} modules</span>
+                        </div>
+                        <div class="meta-item">
+                            <i data-lucide="book-open"></i>
+                            <span>${course.meta.lessonsCount} lessons</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-section-courses">
+                        <div class="progress-header-courses">
+                            <span class="progress-label-courses">Progress</span>
+                            <span class="progress-percentage-courses">${course.progress.percentage}%</span>
+                        </div>
+                        <div class="progress-bar-container-courses">
+                            <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
+                        </div>
+                        <p class="progress-status-courses">${progressText}</p>
+                    </div>
+                </div>
+
+                <div class="card-actions-courses">
+                    <button class="btn-course-primary" onclick="handleCourseAction('${course.id}', '${course.progress.status}')">
+                        <i data-lucide="${buttonIcon}"></i>
+                        ${buttonText}
+                    </button>
+                </div>
+            </article>
+        `;
+    }
+
+    /**
+     * Render courses by category
+     */
+    function renderCoursesByCategory(courses, category) {
+        console.log(`renderCoursesByCategory called with category: ${category}, courses:`, courses);
+        
+        const filteredCourses = courses.filter(course => course.category === category);
+        console.log(`Filtered courses for ${category}:`, filteredCourses);
+        
+        const gridElement = document.getElementById(`${category}-grid`);
+        const countElement = document.getElementById(`${category}-count`);
+        
+        console.log(`Grid element for ${category}:`, gridElement);
+        console.log(`Count element for ${category}:`, countElement);
+
+        if (!gridElement || !countElement) {
+            console.error(`Missing grid or count element for category: ${category}`);
+            return;
+        }
+
+        if (filteredCourses.length === 0) {
+            console.warn(`No courses found for category: ${category}`);
+            gridElement.innerHTML = '<p style="color: var(--text-muted); padding: 2rem 0;">No courses in this category yet.</p>';
+            countElement.textContent = '0 courses';
+            return;
+        }
+
+        console.log(`Rendering ${filteredCourses.length} courses for ${category}`);
+        gridElement.innerHTML = filteredCourses.map(course => renderCourseCard(course)).join('');
+        countElement.textContent = `${filteredCourses.length} ${filteredCourses.length === 1 ? 'course' : 'courses'}`;
+
+        // Re-render icons after DOM update
+        lucide.createIcons();
+    }
+
+    // NOTE: initializeMyCoursesPage is now defined in my-courses.js (async version with proper data loading)
+
+    /**
+     * Handle course action button clicks
+     */
+    let currentCourseAction = null;
+
+    function handleCourseAction(courseId, status) {
+        console.log('handleCourseAction called with:', { courseId, status });
+        console.log('window.coursesData available:', !!window.coursesData);
+        
+        if (!window.coursesData || !window.coursesData.myCourses) {
+            console.error('coursesData not initialized');
+            alert('Error: Course data not loaded. Please refresh the page.');
+            return;
+        }
+
+        const course = window.coursesData.myCourses.find(c => c.id === courseId);
+        if (!course) {
+            console.error('Course not found:', courseId);
+            console.log('Available courses:', window.coursesData.myCourses.map(c => c.id));
+            return;
+        }
+
+        // Store the action details
+        currentCourseAction = { courseId, status };
+        console.log('currentCourseAction set to:', currentCourseAction);
+
+        // Update modal content based on status
+        const modal = document.getElementById('courseActionModal');
+        const title = document.getElementById('courseActionTitle');
+        const message = document.getElementById('courseActionMessage');
+        const icon = modal.querySelector('.modal-icon i');
+
+        if (status === 'not-started') {
+            title.textContent = 'Start Course';
+            message.textContent = `Ready to begin "${course.title}"? This course will take approximately ${course.meta.estimatedDuration} to complete.`;
+            icon.setAttribute('data-lucide', 'rocket');
+        } else if (status === 'in-progress') {
+            title.textContent = 'Resume Course';
+            message.textContent = `Continue learning "${course.title}"? You'll pick up where you left off at: ${course.progress.currentLesson}`;
+            icon.setAttribute('data-lucide', 'play-circle');
+        }
+
+        // Re-render the icon
+        lucide.createIcons();
+
+        // Show modal
+        modal.classList.add('active');
+        console.log('Modal shown');
+    }
+
+    function closeCourseActionModal() {
+        console.log('Closing modal');
+        document.getElementById('courseActionModal').classList.remove('active');
+        currentCourseAction = null;
+    }
+
+    function confirmCourseAction() {
+        console.log('confirmCourseAction called');
+        console.log('currentCourseAction:', currentCourseAction);
+        
+        if (!currentCourseAction) {
+            console.error('currentCourseAction is null or undefined');
+            alert('Error: No course selected. Please try again.');
+            return;
+        }
+        
+        try {
+            const courseId = currentCourseAction.courseId;
+            console.log('Course ID:', courseId);
+            
+            if (!courseId) {
+                console.error('courseId is empty');
+                alert('Error: Course ID is missing');
+                return;
+            }
+            
+            closeCourseActionModal();
+            
+            // Build URL and navigate
+            const url = `infoSec.html?course=${encodeURIComponent(courseId)}`;
+            console.log('Navigating to URL:', url);
+            
+            // Use multiple methods to ensure navigation works
+            setTimeout(() => {
+                window.location.href = url;
+                // Fallback
+                window.location = url;
+            }, 100);
+            
+        } catch (error) {
+            console.error('Error in confirmCourseAction:', error);
+            console.error('Error stack:', error.stack);
+            alert('Error navigating to course: ' + error.message);
+        }
+    } 
+
+    function simulateProgress() {
+        // Get the first enrolled course or use default
+        const enrolledCourse = window.coursesData && window.coursesData.myCourses && window.coursesData.myCourses[0];
+        if (enrolledCourse) {
+            console.log(`Continuing to course: ${enrolledCourse.id}`);
+            window.location.href = `infoSec.html?course=${enrolledCourse.id}`;
+        } else {
+            // Fallback to info-security course
+            console.log('No enrolled course, using default');
+            window.location.href = 'infoSec.html?course=information-security';
+        }
+    }
+
+    /**
+     * Update course progress (for future backend integration)
+     */
+    function updateCourseProgress(courseId, newPercentage) {
+        const course = window.coursesData && window.coursesData.myCourses ? 
+            window.coursesData.myCourses.find(c => c.id === courseId) : null;
+        
+        if (course) {
+            course.progress.percentage = newPercentage;
+            
+            if (newPercentage > 0 && newPercentage < 100) {
+                course.progress.status = 'in-progress';
+            } else if (newPercentage === 100) {
+                course.progress.status = 'completed';
+            }
+            
+            window.initializeMyCoursesPage?.();
+        }
+    }
+    
+    // DEBUG FUNCTION: Type in browser console to debug course rendering
+    window.debugCourses = function() {
+        console.log('=== COURSES DEBUG INFO ===');
+        console.log('coursesData exists:', !!window.coursesData);
+        console.log('coursesData.myCourses:', window.coursesData?.myCourses);
+        console.log('Number of courses:', window.coursesData?.myCourses?.length);
+        window.coursesData?.myCourses?.forEach((c, i) => {
+            console.log(`[${i}] ${c.id}: ${c.title} (${c.category})`);
+        });
+        console.log('renderCoursesByCategory:', typeof renderCoursesByCategory);
+        console.log('handleCourseAction:', typeof handleCourseAction);
+        console.log('=========================');
+    };
+</script>
+
+    <!-- My Courses Backend Integration -->
+    <script src="my-courses.js"></script>
+
+    <!-- (Keep all inline scripts and DOMContentLoaded after all modules are loaded) -->
+
+>>>>>>> feature/login-ui
 </body>
 </html>
+
+
+

@@ -1,0 +1,879 @@
+/* ============================================================
+   SENTINEL LMS — REUSABLE COMPONENTS
+   components.css
+
+   Every visual component shared across 2+ pages lives here.
+   Organized alphabetically by component for easy lookup.
+   ============================================================ */
+
+
+/* =========================
+   BADGES
+   ========================= */
+
+.badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-card);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.badge-accent {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.badge-success {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.badge-warning {
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.badge-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.beta-badge {
+    padding: var(--space-xs) 0.75rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.category-badge {
+    padding: 0.3rem 0.8rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+/* Base button */
+.btn {
+    padding: 0.8rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all var(--transition-base);
+    font-family: var(--font-primary);
+    text-align: center;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Primary (accent fill) */
+.btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #fff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+}
+
+/* Outline */
+.btn-outline {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+    border-color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Secondary */
+.btn-secondary {
+    padding: 0.8rem var(--space-xl);
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: var(--font-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+/* Continue / CTA */
+.btn-continue {
+    padding: 0.8rem var(--space-xl);
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: var(--font-primary);
+}
+
+.btn-continue:hover:not(:disabled) {
+    background: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Save */
+.btn-save {
+    padding: 0.8rem 2.5rem;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+}
+
+.btn-save:hover:not(:disabled) {
+    background: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Danger */
+.btn-danger {
+    padding: 0.8rem var(--space-xl);
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: var(--font-primary);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: var(--danger);
+    color: #000;
+}
+
+
+/* =========================
+   CARDS
+   ========================= */
+
+/* Base card */
+.card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transition: all var(--transition-base);
+    position: relative;
+}
+
+.card:hover {
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-card), 0 0 30px var(--accent-glow);
+    transform: translateY(-5px);
+}
+
+.card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card h3 {
+    padding: var(--space-lg) var(--space-lg) var(--space-sm) var(--space-lg);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.card > p {
+    padding: 0 var(--space-lg);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: var(--space-md);
+}
+
+.card-footer {
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Dashboard-style card */
+.dashboard-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    transition: all var(--transition-base);
+}
+
+.dashboard-card:hover {
+    border-color: var(--accent-border);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.card-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Difficulty badge on cards */
+.difficulty {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    padding: 0.3rem var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 10;
+}
+
+
+/* =========================
+   FORMS
+   ========================= */
+
+.form-group {
+    margin-bottom: var(--space-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-sm);
+    color: #ccc;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.8rem var(--space-md);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    transition: all var(--transition-base);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.form-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+
+/* =========================
+   MODALS
+   ========================= */
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn var(--transition-base);
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background: var(--bg-surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: var(--shadow-modal);
+    animation: slideUp var(--transition-base);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.modal-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--danger-soft);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.modal h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.modal p {
+    color: #aaa;
+    line-height: 1.6;
+    margin-bottom: var(--space-xl);
+}
+
+.modal-actions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 0.9rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    border: none;
+}
+
+.modal-btn-cancel {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.modal-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+}
+
+.modal-btn-confirm {
+    background: var(--danger);
+    color: var(--text-primary);
+}
+
+.modal-btn-confirm:hover {
+    background: #ff6666;
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+}
+
+
+/* =========================
+   PROGRESS BARS
+   ========================= */
+
+/* Linear progress bar */
+.progress-bar-container {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #00ff88);
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+/* Thin progress track (used in curriculum modules) */
+.progress-track {
+    width: 100%;
+    height: 4px;
+    background: #222;
+    margin-top: 10px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width var(--transition-slow);
+}
+
+
+/* =========================
+   SETTINGS COMPONENTS
+   ========================= */
+
+.settings-container {
+    padding: var(--space-3xl);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.settings-tabs {
+    display: flex;
+    gap: var(--space-md);
+    margin-bottom: var(--space-2xl);
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-tab {
+    padding: var(--space-md) var(--space-xl);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border-bottom: 2px solid transparent;
+}
+
+.settings-tab:hover {
+    color: var(--text-primary);
+}
+
+.settings-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.settings-panel {
+    display: none;
+}
+
+.settings-panel.active {
+    display: block;
+}
+
+.settings-group {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+}
+
+.settings-group h3 {
+    font-size: 1.3rem;
+    margin-bottom: var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.setting-row:last-child {
+    border-bottom: none;
+}
+
+.setting-info h4 {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+}
+
+.setting-info p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+
+/* =========================
+   SPINNERS & LOADING
+   ========================= */
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid rgba(0, 0, 0, 0.3);
+    border-top: 3px solid #000;
+    border-radius: var(--radius-full);
+    animation: spin 0.8s linear infinite;
+}
+
+.spinner-light {
+    border-color: rgba(255, 255, 255, 0.2);
+    border-top-color: var(--accent);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+/* =========================
+   STATUS BOXES
+   ========================= */
+
+.status-box {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid transparent;
+    transition: all var(--transition-base);
+}
+
+.status-box.success {
+    background: rgba(0, 255, 170, 0.1);
+    border-color: #00ffaa;
+    color: #00ffaa;
+    box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
+}
+
+.status-box.error {
+    background: rgba(255, 0, 60, 0.1);
+    border-color: #ff003c;
+    color: #ff003c;
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
+}
+
+
+/* =========================
+   TOAST NOTIFICATIONS
+   ========================= */
+
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #111;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: var(--space-md) var(--space-xl);
+    border-radius: var(--radius-lg);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 2000;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+
+/* =========================
+   TOGGLE SWITCHES
+   ========================= */
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: #333;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    flex-shrink: 0;
+}
+
+.toggle-switch.active {
+    background: var(--accent);
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-full);
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: all var(--transition-base);
+}
+
+.toggle-switch.active::after {
+    left: 27px;
+}
+
+
+/* =========================
+   HERO SECTION
+   Shared by: landing.html (home), index.html (dead CSS kept for parity)
+   ========================= */
+
+.hero {
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    padding: 0 2rem;
+}
+
+.hero h1 {
+    font-size: 4.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    max-width: 600px;
+    font-size: 1.15rem;
+    color: #999;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.status-pill {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 15px var(--accent-glow);
+}
+
+
+/* =========================
+   SECTION LAYOUT
+   Shared by: landing.html, index.html
+   ========================= */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.section-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+
+/* =========================
+   PRACTICE SECTION & TERMINAL
+   Shared by: landing.html, index.html
+   ========================= */
+
+.practice-section {
+    background: rgba(8, 8, 8, 0.6);
+    display: flex;
+    gap: 4rem;
+    padding: 6rem;
+    border-top: 1px solid var(--border);
+}
+
+.practice-content { flex: 1; }
+
+.terminal {
+    flex: 1;
+    background: #090909;
+    border: 1px solid #222;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-header {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.terminal-body {
+    color: #00ff00;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.red    { background: #ff5f56; }
+.yellow { background: #ffbd2e; }
+.green  { background: #27c93f; }
+.command { color: #fff; }
+
+
+/* =========================
+   SKELETON LOADING
+   ========================= */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 242, 255, 0.05) 0%,
+        rgba(0, 242, 255, 0.15) 50%,
+        rgba(0, 242, 255, 0.05) 100%
+    );
+    background-size: 200% 100%;
+    border-radius: var(--radius-sm);
+    height: 16px;
+    animation: shimmer 2s infinite;
+    backdrop-filter: blur(2px);
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 8px;
+}
+
+.skeleton-badge {
+    height: 20px;
+    width: 100px;
+}
+
+.skeleton-card {
+    opacity: 0.8;
+    animation: fadeInUp 0.6s ease-out backwards;
+}
+
+.skeleton-card .card-header-courses {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+}
+
+.skeleton-card .card-header-courses > :first-child {
+    flex: 1;
+}
+
+.skeleton-card .skeleton {
+    margin-bottom: 10px;
+}
+
+.skeleton-card .skeleton:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================
+   RESPONSIVE COMPONENTS
+   ========================= */
+
+@media (max-width: 1200px) {
+    .hero h1     { font-size: 3.5rem; }
+    .grid-cards  { grid-template-columns: repeat(2, 1fr); }
+    .form-row    { grid-template-columns: 1fr; }
+}

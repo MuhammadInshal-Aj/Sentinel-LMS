@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Shared Stylesheets (order matters: tokens â†’ structure â†’ components â†’ helpers) -->
+    <!-- Shared Stylesheets (order matters: tokens → structure → components → helpers) -->
     <link rel="stylesheet" href="styles/theme.css">
     <link rel="stylesheet" href="styles/layout.css">
     <link rel="stylesheet" href="styles/components.css">
@@ -410,7 +410,7 @@
                         </div>
                         <div class="path-info">
                             <div class="path-name" id="courseName">Penetration Tester</div>
-                            <div class="path-meta">Current Path Ã¢â‚¬Â¢ <span id="courseProgress">0%</span> Progress</div>
+                            <div class="path-meta">Current Path â€¢ <span id="courseProgress">0%</span> Progress</div>
                             <div class="path-actions">
                                 <button class="btn-continue" onclick="simulateProgress()">Continue Learning</button>
                                 <button class="btn-secondary">View Details</button>
@@ -552,7 +552,7 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <h4>Current Session</h4>
-                                <p id="sessionInfo">Chrome on Windows Ã¢â‚¬Â¢ Last active: Just now</p>
+                                <p id="sessionInfo">Chrome on Windows â€¢ Last active: Just now</p>
                             </div>
                             <button class="btn-secondary" disabled>Current</button>
                         </div>
@@ -1232,7 +1232,22 @@
     });
 
     // === MY COURSES FUNCTIONALITY ===
-    
+
+    // Course slug → dedicated page mapping
+    // Add entries here when a course gets its own page
+    window.COURSE_PAGES = {
+        'information-security': 'infoSec.html',
+        'infosec': 'infoSec.html'
+    };
+
+    // Canonical slug mapping (frontend display ID → backend DB slug)
+    window.COURSE_SLUG_MAP = {
+        'information-security': 'information-security',
+        'infosec': 'information-security',
+        'computer-networking': 'computer-networking',
+        'ethical-hacking': 'ethical-hacking'
+    };
+
     // Course Data Structure (MUST be global for my-courses.js)
     window.coursesData = {
         "myCourses": [
@@ -1404,8 +1419,7 @@
 
     function handleCourseAction(courseId, status) {
         console.log('handleCourseAction called with:', { courseId, status });
-        console.log('window.coursesData available:', !!window.coursesData);
-        
+
         if (!window.coursesData || !window.coursesData.myCourses) {
             console.error('coursesData not initialized');
             alert('Error: Course data not loaded. Please refresh the page.');
@@ -1419,11 +1433,20 @@
             return;
         }
 
-        // Store the action details
-        currentCourseAction = { courseId, status };
-        console.log('currentCourseAction set to:', currentCourseAction);
+        // Check if this course has a dedicated page
+        const dedicatedPage = window.COURSE_PAGES?.[courseId];
+        if (dedicatedPage) {
+            // Resolve to backend slug for the query param
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            const directUrl = `${dedicatedPage}?course=${encodeURIComponent(backendSlug)}`;
+            console.log('Navigating directly to course page:', directUrl);
+            window.location.href = directUrl;
+            return;
+        }
 
-        // Update modal content based on status
+        // No dedicated page — show confirmation modal
+        currentCourseAction = { courseId, status };
+
         const modal = document.getElementById('courseActionModal');
         const title = document.getElementById('courseActionTitle');
         const message = document.getElementById('courseActionMessage');
@@ -1439,12 +1462,8 @@
             icon.setAttribute('data-lucide', 'play-circle');
         }
 
-        // Re-render the icon
         lucide.createIcons();
-
-        // Show modal
         modal.classList.add('active');
-        console.log('Modal shown');
     }
 
     function closeCourseActionModal() {
@@ -1454,54 +1473,40 @@
     }
 
     function confirmCourseAction() {
-        console.log('confirmCourseAction called');
-        console.log('currentCourseAction:', currentCourseAction);
-        
         if (!currentCourseAction) {
-            console.error('currentCourseAction is null or undefined');
             alert('Error: No course selected. Please try again.');
             return;
         }
-        
-        try {
-            const courseId = currentCourseAction.courseId;
-            console.log('Course ID:', courseId);
-            
-            if (!courseId) {
-                console.error('courseId is empty');
-                alert('Error: Course ID is missing');
-                return;
-            }
-            
-            closeCourseActionModal();
-            
-            // Build URL and navigate
-            const url = `infoSec.html?course=${encodeURIComponent(courseId)}`;
-            console.log('Navigating to URL:', url);
-            
-            // Use multiple methods to ensure navigation works
-            setTimeout(() => {
-                window.location.href = url;
-                // Fallback
-                window.location = url;
-            }, 100);
-            
-        } catch (error) {
-            console.error('Error in confirmCourseAction:', error);
-            console.error('Error stack:', error.stack);
-            alert('Error navigating to course: ' + error.message);
+
+        const courseId = currentCourseAction.courseId;
+        if (!courseId) {
+            alert('Error: Course ID is missing');
+            return;
         }
-    } 
+
+        closeCourseActionModal();
+
+        // Check if this course has a dedicated page
+        const dedicatedPage = window.COURSE_PAGES?.[courseId];
+        if (dedicatedPage) {
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            window.location.href = `${dedicatedPage}?course=${encodeURIComponent(backendSlug)}`;
+        } else {
+            // Generic fallback — navigate to infoSec.html (placeholder)
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            window.location.href = `infoSec.html?course=${encodeURIComponent(backendSlug)}`;
+        }
+    }
 
     function simulateProgress() {
         // Get the first enrolled course or use default
         const enrolledCourse = window.coursesData && window.coursesData.myCourses && window.coursesData.myCourses[0];
         if (enrolledCourse) {
-            console.log(`Continuing to course: ${enrolledCourse.id}`);
-            window.location.href = `infoSec.html?course=${enrolledCourse.id}`;
+            const courseId = enrolledCourse.id;
+            const page = window.COURSE_PAGES?.[courseId] || 'infoSec.html';
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            window.location.href = `${page}?course=${encodeURIComponent(backendSlug)}`;
         } else {
-            // Fallback to info-security course
-            console.log('No enrolled course, using default');
             window.location.href = 'infoSec.html?course=information-security';
         }
     }

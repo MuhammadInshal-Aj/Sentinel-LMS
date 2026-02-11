@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson | Sentinel-LMS</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Markdown renderer + syntax highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Shared modules -->
+    <link rel="stylesheet" href="Styles/theme.css">
+    <link rel="stylesheet" href="Styles/layout.css">
+    <link rel="stylesheet" href="Styles/components.css">
+    <link rel="stylesheet" href="Styles/utilities.css">
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="toast.js"></script>
+    <script src="navigation.js"></script>
+
+    <!-- Immediate auth guard -->
+    <script>
+        (function() {
+            if (!Auth.getToken()) {
+                window.location.replace('login.html');
+                document.documentElement.style.display = 'none';
+                throw new Error('AUTH_REDIRECT');
+            }
+        })();
+    </script>
+
+    <style>
+        body { display: flex; }
+
+        /* ── MAIN LAYOUT ────────────────────────────────── */
+        .lesson-page {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        /* ── TOP BAR ─────────────────────────────────────── */
+        .lesson-topbar {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .lesson-breadcrumbs { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+        .lesson-breadcrumbs a { color: var(--text-muted); text-decoration: none; cursor: pointer; transition: color 0.2s; }
+        .lesson-breadcrumbs a:hover { color: var(--accent); }
+        .lesson-topbar-actions { display: flex; align-items: center; gap: 1rem; }
+
+        /* ── LESSON CONTENT AREA ─────────────────────────── */
+        .lesson-content-area {
+            padding: 3rem 3.5rem;
+            max-width: 860px;
+        }
+
+        .lesson-header { margin-bottom: 2.5rem; }
+        .lesson-meta-row { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+        .lesson-number { font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; color: var(--accent); text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+        .lesson-title-main { font-size: 2.2rem; font-weight: 700; line-height: 1.15; color: #fff; margin-bottom: 1rem; }
+        .lesson-time-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-muted); }
+
+        .objectives-box {
+            background: rgba(0,242,255,0.04);
+            border: 1px solid rgba(0,242,255,0.12);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .objectives-box h4 { font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; margin-bottom: 0.8rem; }
+        .objectives-box ul { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+        .objectives-box li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.9rem; color: #ccc; line-height: 1.5; }
+        .objectives-box li::before { content: '›'; color: var(--accent); font-weight: 700; margin-top: 1px; flex-shrink: 0; }
+
+        /* ── MARKDOWN RENDERED CONTENT ───────────────────── */
+        .lesson-body { line-height: 1.85; color: #d4d4d4; font-size: 1rem; }
+        .lesson-body h1 { font-size: 1.8rem; font-weight: 700; color: #fff; margin: 2.5rem 0 1rem; }
+        .lesson-body h2 { font-size: 1.35rem; font-weight: 600; color: #fff; margin: 2.2rem 0 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+        .lesson-body h3 { font-size: 1.1rem; font-weight: 600; color: var(--accent); margin: 1.8rem 0 0.6rem; }
+        .lesson-body h4 { font-size: 0.95rem; font-weight: 600; color: #e0e0e0; text-transform: uppercase; letter-spacing: 0.5px; margin: 1.5rem 0 0.5rem; }
+        .lesson-body p { margin: 0 0 1.2rem; }
+        .lesson-body ul, .lesson-body ol { padding-left: 1.5rem; margin-bottom: 1.2rem; }
+        .lesson-body li { margin-bottom: 0.4rem; }
+        .lesson-body strong { color: #fff; font-weight: 600; }
+        .lesson-body em { color: #b0b0b0; }
+        .lesson-body blockquote { border-left: 3px solid var(--accent); padding: 0.8rem 1.2rem; margin: 1.5rem 0; background: rgba(0,242,255,0.04); border-radius: 0 6px 6px 0; color: #b0b0b0; font-style: italic; }
+        .lesson-body blockquote p { margin: 0; }
+        .lesson-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: rgba(255,255,255,0.07); padding: 0.15em 0.4em; border-radius: 3px; color: var(--accent); }
+        .lesson-body pre { background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; overflow-x: auto; }
+        .lesson-body pre code { background: none; padding: 0; color: inherit; font-size: 0.875rem; }
+        .lesson-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        .lesson-body th { background: rgba(255,255,255,0.05); color: var(--accent); padding: 0.6rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .lesson-body td { padding: 0.6rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #ccc; }
+        .lesson-body tr:last-child td { border-bottom: none; }
+        .lesson-body hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        .lesson-body a { color: var(--accent); text-decoration: none; }
+        .lesson-body a:hover { text-decoration: underline; }
+
+        /* Skeleton loader */
+        .lesson-skeleton { animation: shimmer 1.5s infinite; }
+        .skeleton-line { height: 18px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 12px; }
+        .skeleton-line.wide { width: 85%; }
+        .skeleton-line.medium { width: 65%; }
+        .skeleton-line.narrow { width: 40%; }
+        @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+        /* ── RIGHT PANEL ─────────────────────────────────── */
+        .lesson-panel {
+            padding: 2.5rem 2rem;
+            border-left: 1px solid var(--border);
+            position: sticky;
+            top: 61px;
+            height: calc(100vh - 61px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-section { }
+        .panel-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.8rem; }
+
+        /* Progress in panel */
+        .panel-progress-value { font-size: 1.8rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+        .panel-progress-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Outline in panel */
+        .outline-list { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
+        .outline-item { font-size: 0.85rem; color: var(--text-muted); cursor: pointer; padding: 0.3rem 0.5rem; border-radius: 4px; transition: all 0.2s; display: flex; gap: 0.5rem; align-items: center; }
+        .outline-item:hover { color: var(--accent); background: rgba(0,242,255,0.05); }
+        .outline-item.h3 { padding-left: 1.2rem; font-size: 0.8rem; }
+        .outline-item::before { content: '·'; color: var(--accent); flex-shrink: 0; }
+
+        /* Complete button */
+        .complete-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--accent);
+            color: #000;
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .complete-btn:hover { background: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.3); }
+        .complete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .complete-btn.done { background: rgba(0,255,157,0.15); color: var(--success); border: 1px solid rgba(0,255,157,0.3); box-shadow: none; cursor: default; }
+
+        /* Hint box */
+        .hint-form { display: flex; flex-direction: column; gap: 0.6rem; }
+        .hint-input { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem; color: #e0e0e0; font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; resize: none; height: 60px; }
+        .hint-input:focus { outline: none; border-color: var(--accent); }
+        .hint-btn { padding: 0.5rem; background: rgba(0,242,255,0.1); border: 1px solid rgba(0,242,255,0.2); color: var(--accent); border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; }
+        .hint-btn:hover { background: rgba(0,242,255,0.15); }
+        .hint-result { background: rgba(0,242,255,0.05); border: 1px solid rgba(0,242,255,0.15); border-radius: 6px; padding: 0.8rem; font-size: 0.85rem; color: #ccc; line-height: 1.6; display: none; }
+
+        /* ── BOTTOM NAV ──────────────────────────────────── */
+        .lesson-footnav {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            gap: 1rem;
+        }
+        .footnav-lesson-info { text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+        .footnav-lesson-info strong { display: block; color: #fff; font-size: 0.9rem; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="logo">
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS">
+            SENTINEL<span>LMS</span>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" onclick="goBackToCourse()">
+                    <i data-lucide="arrow-left" size="20"></i>
+                    <span>Back to Course</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="goBackToDashboard()">
+                    <i data-lucide="layout-dashboard" size="20"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link">
+                    <i data-lucide="terminal-square" size="20"></i>
+                    <span>Labs & CTFs</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-status" style="font-size:0.75rem; color:var(--text-muted); padding:0.5rem 0.8rem;">
+                <i data-lucide="zap" size="12" style="display:inline;vertical-align:middle;color:var(--accent)"></i>
+                <span id="sidebar-tokens" style="font-family:'JetBrains Mono',monospace; color:var(--accent)">0</span> tokens
+            </div>
+            <div class="profile-popup" id="profilePopup">
+                <div class="popup-item logout" onclick="handleLogout()">
+                    <i data-lucide="log-out" size="18"></i><span>Logout</span>
+                </div>
+            </div>
+            <button class="profile-btn" id="profileBtn">
+                <div class="profile-avatar" id="display-avatar">??</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="display-name">Loading...</div>
+                    <div class="profile-email" id="display-email">Please wait...</div>
+                </div>
+                <i data-lucide="chevron-up" size="18"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN LESSON PAGE -->
+    <div class="lesson-page">
+
+        <!-- TOP BAR -->
+        <div class="lesson-topbar">
+            <div class="lesson-breadcrumbs">
+                <a onclick="goBackToDashboard()"><i data-lucide="home" size="14"></i></a> /
+                <a onclick="goBackToCourse()" id="breadcrumb-course">Information Security</a> /
+                <span id="breadcrumb-lesson">Lesson</span>
+            </div>
+            <div class="lesson-topbar-actions">
+                <span id="topbar-status" style="font-size:0.8rem; color:var(--text-muted);"></span>
+            </div>
+        </div>
+
+        <!-- LESSON READING AREA -->
+        <div class="lesson-content-area">
+            <div class="lesson-header">
+                <div class="lesson-meta-row">
+                    <span class="lesson-number" id="lesson-number">LESSON</span>
+                    <span class="lesson-time-badge">
+                        <i data-lucide="clock" size="13"></i>
+                        <span id="lesson-time">-- min</span>
+                    </span>
+                </div>
+                <h1 class="lesson-title-main" id="lesson-title">Loading lesson...</h1>
+            </div>
+
+            <div class="objectives-box" id="objectivesBox" style="display:none">
+                <h4>Learning Objectives</h4>
+                <ul id="objectivesList"></ul>
+            </div>
+
+            <!-- Markdown content renders here -->
+            <div class="lesson-body" id="lessonBody">
+                <div class="lesson-skeleton">
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line narrow"></div>
+                    <br>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line narrow"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <aside class="lesson-panel">
+            <div class="panel-section">
+                <div class="panel-label">Module Progress</div>
+                <div class="panel-progress-value" id="panel-progress">–</div>
+                <div class="panel-progress-label">lessons completed</div>
+            </div>
+
+            <div class="panel-section">
+                <button class="complete-btn" id="completeBtn" onclick="markComplete()">
+                    <i data-lucide="check-circle" size="18"></i>
+                    Mark as Complete
+                </button>
+            </div>
+
+            <div class="panel-section" id="outlineSection" style="display:none">
+                <div class="panel-label">On This Page</div>
+                <ul class="outline-list" id="outlineList"></ul>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-label">Need a Hint?</div>
+                <div class="hint-form">
+                    <textarea class="hint-input" id="hintInput" placeholder="What are you stuck on? e.g. 'explain the CIA Triad in simple terms'"></textarea>
+                    <button class="hint-btn" onclick="getHint()">ASK AI MENTOR</button>
+                    <div class="hint-result" id="hintResult"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- BOTTOM NAVIGATION -->
+        <div class="lesson-footnav">
+            <button class="btn-outline" id="prevBtn" onclick="navigateLesson('prev')" style="min-width:140px">
+                <i data-lucide="arrow-left" size="16"></i> Previous
+            </button>
+            <div class="footnav-lesson-info" id="footnav-info">
+                <strong id="footnav-title">–</strong>
+                <span id="footnav-course">Information Security · Module 01</span>
+            </div>
+            <button class="btn-primary" id="nextBtn" onclick="navigateLesson('next')" style="min-width:140px">
+                Next <i data-lucide="arrow-right" size="16"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // LESSON VIEWER — CONFIGURATION
+        // ============================================
+
+        // Ordered lesson sequence for Module 1
+        // Simulations and checkpoints are handled in infoSec.html, not here
+        const DEFAULT_TRACK_SLUG = 'information-security';
+        const TRACK_SLUG_ALIASES = {
+            'information-security': 'information-security',
+            'infosec': 'information-security'
+        };
+
+        function normalizeTrackSlug(slug) {
+            if (!slug) return DEFAULT_TRACK_SLUG;
+            return TRACK_SLUG_ALIASES[slug] || DEFAULT_TRACK_SLUG;
+        }
+
+        const COURSE_SEQUENCE = {
+            'infosec': {
+                slug: 'infosec',
+                title: 'Information Security',
+                courseUrl: 'infoSec.html',
+                lessons: [
+                    { id: 'infosec-m01-l01', label: '1.1 What Is Information Security?' },
+                    { id: 'infosec-m01-l02', label: '1.3 The CIA Triad' },
+                    { id: 'infosec-m01-l03', label: '1.4 Threats, Vulnerabilities, and Risk' },
+                    { id: 'infosec-m01-l04', label: '1.6 Secure by Design' },
+                    { id: 'infosec-m01-l05', label: '1.7 Defense in Depth' }
+                ]
+            },
+            'information-security': {
+                slug: 'information-security',
+                title: 'Information Security',
+                courseUrl: 'infoSec.html',
+                lessons: [
+                    { id: 'infosec-m01-l01', label: '1.1 What Is Information Security?' },
+                    { id: 'infosec-m01-l02', label: '1.3 The CIA Triad' },
+                    { id: 'infosec-m01-l03', label: '1.4 Threats, Vulnerabilities, and Risk' },
+                    { id: 'infosec-m01-l04', label: '1.6 Secure by Design' },
+                    { id: 'infosec-m01-l05', label: '1.7 Defense in Depth' }
+                ]
+            }
+        };
+
+        // ── PAGE STATE ───────────────────────────────
+        const LESSON = {
+            id: null,
+            courseSlug: DEFAULT_TRACK_SLUG,
+            isCompleted: false,
+            sequence: [],
+            currentIndex: -1
+        };
+
+        // ── INIT ─────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            Navigation.initProfilePopup();
+            loadUserProfile();
+            window.history.pushState({ page: 'lesson' }, '', window.location.href);
+
+            const params = new URLSearchParams(window.location.search);
+            LESSON.id = params.get('id');
+            LESSON.courseSlug = normalizeTrackSlug(params.get('course'));
+
+            const courseData = COURSE_SEQUENCE[LESSON.courseSlug] || COURSE_SEQUENCE[DEFAULT_TRACK_SLUG];
+            if (courseData) {
+                LESSON.courseSlug = courseData.slug;
+                LESSON.sequence = courseData.lessons;
+                LESSON.currentIndex = courseData.lessons.findIndex(l => l.id === LESSON.id);
+            }
+
+            // Set up breadcrumb and footnav
+            const course = COURSE_SEQUENCE[LESSON.courseSlug];
+            if (course) document.getElementById('breadcrumb-course').textContent = course.title;
+            updateNavButtons();
+
+            // Load token balance
+            try {
+                const t = await Api.getUserTokens();
+                document.getElementById('sidebar-tokens').textContent = t.tokens?.tokens_available ?? 0;
+            } catch (_) {}
+
+            if (!LESSON.id) {
+                document.getElementById('lessonBody').innerHTML = '<p style="color:var(--danger)">No lesson ID specified in the URL.</p>';
+                return;
+            }
+
+            await loadLesson(LESSON.id);
+        });
+
+        // ── LOAD & RENDER LESSON ─────────────────────
+        async function loadLesson(lessonId) {
+            try {
+                const data = await Api.getLessonContent(lessonId);
+
+                // Update page title
+                document.title = `${data.title} | Sentinel-LMS`;
+                document.getElementById('lesson-title').textContent = data.title;
+                document.getElementById('breadcrumb-lesson').textContent = data.title;
+
+                const seq = LESSON.sequence[LESSON.currentIndex];
+                document.getElementById('lesson-number').textContent = seq ? seq.label.split(' ')[0] : 'LESSON';
+                document.getElementById('lesson-time').textContent = `${data.estimatedTime || '--'} min`;
+
+                // Objectives
+                if (data.objectives?.length) {
+                    const list = document.getElementById('objectivesList');
+                    list.innerHTML = data.objectives.map(o => `<li>${o}</li>`).join('');
+                    document.getElementById('objectivesBox').style.display = 'block';
+                }
+
+                // Render markdown
+                marked.setOptions({ gfm: true, breaks: false });
+                const html = marked.parse(data.content || '');
+                document.getElementById('lessonBody').innerHTML = html;
+
+                // Syntax highlight
+                document.querySelectorAll('.lesson-body pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+
+                // Build outline from headings
+                buildOutline();
+
+                // Restore completion state
+                try {
+                    const progress = await Api.getTrackProgress(LESSON.courseSlug);
+                    const lp = progress.lessonProgress || [];
+                    const entry = lp.find(l => l.lesson_id === lessonId);
+                    if (entry?.status === 'completed') markAsAlreadyDone();
+                    const done = lp.filter(l => l.status === 'completed').length;
+                    document.getElementById('panel-progress').textContent = `${done}/${LESSON.sequence.length}`;
+                } catch (_) {}
+
+                // Update footnav
+                const current = LESSON.sequence[LESSON.currentIndex];
+                if (current) {
+                    document.getElementById('footnav-title').textContent = current.label;
+                    document.getElementById('footnav-course').textContent = `Information Security · Module 01`;
+                }
+
+                // Update topbar status
+                document.getElementById('topbar-status').textContent = `${data.estimatedTime || 0} min read`;
+
+            } catch (err) {
+                document.getElementById('lessonBody').innerHTML = `<p style="color:var(--danger)">Failed to load lesson: ${err.message}</p>`;
+                console.error('Lesson load error:', err);
+            }
+        }
+
+        // ── OUTLINE ───────────────────────────────────
+        function buildOutline() {
+            const headings = document.querySelectorAll('.lesson-body h2, .lesson-body h3');
+            if (headings.length < 2) return;
+
+            const list = document.getElementById('outlineList');
+            list.innerHTML = '';
+            headings.forEach((h, i) => {
+                const id = `heading-${i}`;
+                h.id = id;
+                const li = document.createElement('li');
+                li.className = `outline-item ${h.tagName === 'H3' ? 'h3' : ''}`;
+                li.textContent = h.textContent;
+                li.onclick = () => h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                list.appendChild(li);
+            });
+            document.getElementById('outlineSection').style.display = 'block';
+        }
+
+        // ── MARK COMPLETE ────────────────────────────
+        async function markComplete() {
+            const btn = document.getElementById('completeBtn');
+            if (btn.classList.contains('done') || btn.disabled) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite" size="18"></i> Saving...';
+            lucide.createIcons();
+
+            try {
+                const result = await Api.completeLesson(LESSON.id);
+                markAsAlreadyDone();
+                const tokens = result.tokensEarned || 20;
+                const newBalance = result.newBalance || result.tokens_available;
+
+                Toast.success(`+${tokens} Tokens · Lesson Complete!`);
+
+                // Update token display
+                if (newBalance) document.getElementById('sidebar-tokens').textContent = newBalance;
+
+                // Auto-navigate to next after short delay
+                setTimeout(() => navigateLesson('next'), 1800);
+
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="check-circle" size="18"></i> Mark as Complete';
+                lucide.createIcons();
+                if (err.message?.includes('already')) {
+                    markAsAlreadyDone();
+                } else {
+                    Toast.error(err.message || 'Could not save progress. Try again.');
+                }
+            }
+        }
+
+        function markAsAlreadyDone() {
+            const btn = document.getElementById('completeBtn');
+            btn.classList.add('done');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="check-circle" size="18"></i> Completed';
+            lucide.createIcons();
+            document.getElementById('topbar-status').textContent = '✓ Completed';
+            document.getElementById('topbar-status').style.color = 'var(--success)';
+            LESSON.isCompleted = true;
+        }
+
+        // ── NAVIGATION ────────────────────────────────
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (LESSON.currentIndex <= 0) {
+                prevBtn.textContent = '← Back to Course';
+                prevBtn.onclick = goBackToCourse;
+            }
+            if (LESSON.currentIndex >= LESSON.sequence.length - 1) {
+                nextBtn.innerHTML = 'Back to Course <i data-lucide="arrow-right" size="16"></i>';
+                nextBtn.onclick = goBackToCourse;
+                lucide.createIcons();
+            }
+        }
+
+        function navigateLesson(direction) {
+            const newIndex = direction === 'next' ? LESSON.currentIndex + 1 : LESSON.currentIndex - 1;
+
+            if (newIndex < 0 || newIndex >= LESSON.sequence.length) {
+                goBackToCourse();
+                return;
+            }
+
+            const nextLesson = LESSON.sequence[newIndex];
+            window.location.href = `lesson.html?id=${nextLesson.id}&course=${LESSON.courseSlug}`;
+        }
+
+        // ── AI HINT ───────────────────────────────────
+        async function getHint() {
+            const input = document.getElementById('hintInput');
+            const result = document.getElementById('hintResult');
+            const question = input.value.trim();
+
+            if (!question) { Toast.info('Type what you are stuck on first.'); return; }
+
+            const btn = document.querySelector('.hint-btn');
+            btn.textContent = 'THINKING...';
+            btn.disabled = true;
+            result.style.display = 'none';
+
+            try {
+                const data = await Api.getHint(LESSON.id, question);
+                result.textContent = data.hint;
+                result.style.display = 'block';
+            } catch (err) {
+                Toast.error(err.message || 'Could not get hint right now.');
+            } finally {
+                btn.textContent = 'ASK AI MENTOR';
+                btn.disabled = false;
+            }
+        }
+
+        // ── HELPERS ───────────────────────────────────
+        function goBackToCourse() {
+            const course = COURSE_SEQUENCE[LESSON.courseSlug];
+            window.location.href = course ? course.courseUrl : 'index.html';
+        }
+        function goBackToDashboard() { window.location.href = 'index.html'; }
+        function handleLogout() { Auth.clearAuth(); Auth.logout('login.html'); }
+
+        function loadUserProfile() {
+            try {
+                const user = Auth.getUser();
+                if (!user) return;
+                document.getElementById('display-name').textContent = user.display_name || user.name || 'Agent';
+                document.getElementById('display-email').textContent = user.email || '';
+                const initials = (user.display_name || user.name || 'A').split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
+            } catch (e) {}
+        }
+
+        window.addEventListener('popstate', () => {
+            if (!Auth.getToken()) window.location.replace('login.html');
+        });
+    </script>
+</body>
+</html>

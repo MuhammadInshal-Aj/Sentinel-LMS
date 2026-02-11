@@ -1,7 +1,47 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+
+// ===== CURRICULUM CONTENT PATHS =====
+const CURRICULUM_ROOT = path.join(__dirname, '../../curriculum');
+
+const LESSON_CONTENT_MAP = {
+    'infosec-m01-l01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_1.md'),
+    'infosec-m01-l02': null,
+    'infosec-m01-l03': null,
+    'infosec-m01-l04': null,
+    'infosec-m01-l05': null
+};
+
+const SIMULATION_CONTENT_MAP = {
+    'infosec-m01-sim01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/simulations/sim-01-interactive.json'),
+    'infosec-m01-sim02': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/simulations/sim-02-interactive.json')
+};
+
+const CHECKPOINT_MAP = {
+    'infosec-m01-checkpoint': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/checkpoint-questions.json')
+};
+
+const LESSON_META_MAP = {
+    'infosec-m01-l01': { title: 'What Is Information Security?', estimatedTime: 10, objectives: ['Define information security', 'Explain security controls', 'Understand attacker vs defender mindset'] },
+    'infosec-m01-l02': { title: 'The CIA Triad', estimatedTime: 10, objectives: ['Explain Confidentiality, Integrity, Availability', 'Apply CIA Triad to real scenarios'] },
+    'infosec-m01-l03': { title: 'Threats, Vulnerabilities, and Risk', estimatedTime: 15, objectives: ['Distinguish threats from vulnerabilities', 'Define risk in security context', 'Apply threat modelling basics'] },
+    'infosec-m01-l04': { title: 'Secure by Design', estimatedTime: 10, objectives: ['Apply security-first design principles', 'Understand least privilege and fail-safe defaults'] },
+    'infosec-m01-l05': { title: 'Defense in Depth', estimatedTime: 15, objectives: ['Explain layered security strategy', 'Design overlapping controls for resilience'] }
+};
+
+const TRACK_SLUG_ALIASES = {
+    'information-security': 'information-security',
+    'infosec': 'information-security'
+};
+
+function normalizeTrackSlug(slug) {
+    if (!slug) return slug;
+    return TRACK_SLUG_ALIASES[slug] || slug;
+}
 
 const app = express();
 
@@ -147,7 +187,7 @@ app.get('/api/tracks', async (req, res) => {
 // Get single track by slug with modules and user enrollment status
 app.get('/api/tracks/:slug', authenticateUser, async (req, res) => {
     try {
-        const { slug } = req.params;
+        const slug = normalizeTrackSlug(req.params.slug);
 
         // Get track
         const { data: track, error: trackError } = await supabase
@@ -243,7 +283,8 @@ app.get('/api/modules/:moduleId', authenticateUser, async (req, res) => {
 // Enroll in a track
 app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
     try {
-        const { slug } = req.params;
+        const requestedSlug = req.params.slug;
+        const slug = normalizeTrackSlug(requestedSlug);
 
         // Get track
         const { data: track, error: trackError } = await supabase
@@ -253,11 +294,13 @@ app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
             .eq('is_published', true)
             .single();
 
-        if (trackError) throw trackError;
+        if (trackError || !track) {
+            console.error('Track lookup failed for slug:', requestedSlug, 'normalized:', slug, trackError?.message);
+            return res.status(404).json({ error: `Track "${requestedSlug}" not found or not published` });
+        }
 
         // Check if track requires tokens
         if (track.is_locked_by_default && track.token_cost > 0) {
-            // Get user's token balance
             const { data: tokens } = await supabase
                 .from('user_tokens')
                 .select('tokens_available')
@@ -265,14 +308,13 @@ app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
                 .single();
 
             if (!tokens || tokens.tokens_available < track.token_cost) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     error: 'Insufficient tokens',
                     required: track.token_cost,
                     available: tokens?.tokens_available || 0
                 });
             }
 
-            // Spend tokens
             const { data: spendResult, error: spendError } = await supabase
                 .rpc('spend_user_tokens', {
                     p_user_id: req.user.id,
@@ -284,8 +326,8 @@ app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
             }
         }
 
-        // Get first module
-        const firstModuleId = track.modules[0];
+        // Get first module (handle missing modules array)
+        const firstModuleId = track.modules?.[0];
 
         // Create enrollment
         const { data: enrollment, error: enrollmentError } = await supabase
@@ -293,59 +335,66 @@ app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
             .insert([{
                 user_id: req.user.id,
                 track_id: track.id,
-                current_module_id: firstModuleId,
+                current_module_id: firstModuleId || null,
                 status: 'in-progress',
-                unlocked_with_tokens: track.token_cost > 0,
-                tokens_spent: track.token_cost
+                unlocked_with_tokens: (track.token_cost || 0) > 0,
+                tokens_spent: track.token_cost || 0
             }])
             .select()
             .single();
 
         if (enrollmentError) {
-            // Check if already enrolled
             if (enrollmentError.code === '23505') {
-                return res.status(200).json({ 
+                return res.status(200).json({
                     message: 'Already enrolled',
-                    alreadyEnrolled: true 
+                    alreadyEnrolled: true
                 });
             }
-            throw enrollmentError;
+            console.error('Enrollment insert error:', enrollmentError);
+            return res.status(500).json({ error: 'Database error during enrollment' });
         }
 
-        // Get first module lesson count
-        const { data: moduleData } = await supabase
-            .from('modules')
-            .select('lessons')
-            .eq('id', firstModuleId)
-            .single();
+        // Unlock first module (non-critical — don't fail enrollment if this errors)
+        if (firstModuleId) {
+            try {
+                const { data: moduleData } = await supabase
+                    .from('modules')
+                    .select('lessons')
+                    .eq('id', firstModuleId)
+                    .single();
 
-        // Unlock first module
-        await supabase
-            .from('user_module_progress')
-            .insert([{
-                user_id: req.user.id,
-                module_id: firstModuleId,
-                is_unlocked: true,
-                unlocked_at: new Date().toISOString(),
-                total_lessons: moduleData.lessons.length
-            }]);
+                if (moduleData) {
+                    await supabase
+                        .from('user_module_progress')
+                        .insert([{
+                            user_id: req.user.id,
+                            module_id: firstModuleId,
+                            is_unlocked: true,
+                            unlocked_at: new Date().toISOString(),
+                            total_lessons: moduleData.lessons?.length || 0
+                        }]);
+                }
+            } catch (moduleErr) {
+                console.warn('Module unlock failed (non-critical):', moduleErr.message);
+            }
+        }
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'Enrollment successful',
             enrollment,
-            tokensSpent: track.token_cost
+            tokensSpent: track.token_cost || 0
         });
 
     } catch (error) {
         console.error('Enrollment error:', error);
-        res.status(500).json({ error: 'Failed to enroll' });
+        res.status(500).json({ error: error.message || 'Failed to enroll' });
     }
 });
 
 // Check enrollment status (for infoSec.html)
 app.get('/api/tracks/:slug/enrollment', authenticateUser, async (req, res) => {
     try {
-        const { slug } = req.params;
+        const slug = normalizeTrackSlug(req.params.slug);
 
         // Get track
         const { data: track } = await supabase
@@ -355,7 +404,8 @@ app.get('/api/tracks/:slug/enrollment', authenticateUser, async (req, res) => {
             .single();
 
         if (!track) {
-            return res.status(404).json({ error: 'Track not found' });
+            // Track not in DB yet — return unenrolled (don't 404, let the page load)
+            return res.json({ isEnrolled: false, enrollment: null, trackMissing: true });
         }
 
         // Get enrollment
@@ -366,7 +416,7 @@ app.get('/api/tracks/:slug/enrollment', authenticateUser, async (req, res) => {
             .eq('track_id', track.id)
             .single();
 
-        res.json({ 
+        res.json({
             isEnrolled: !!enrollment,
             enrollment: enrollment || null
         });
@@ -491,7 +541,7 @@ app.get('/api/user/courses', authenticateUser, async (req, res) => {
 // Get user's progress for a specific track
 app.get('/api/user/tracks/:slug/progress', authenticateUser, async (req, res) => {
     try {
-        const { slug } = req.params;
+        const slug = normalizeTrackSlug(req.params.slug);
 
         // Get track
         const { data: track } = await supabase
@@ -651,9 +701,13 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
             p_track_id: lesson.modules.track_id
         });
 
-        res.json({ 
+        const { data: updatedTokens } = await supabase
+            .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+
+        res.json({
             message: 'Lesson completed successfully',
             tokensEarned: lesson.token_reward,
+            newBalance: updatedTokens?.tokens_available || 0,
             moduleProgress: percentage,
             moduleCompleted: percentage === 100,
             unlockedModule: unlockedModule
@@ -678,17 +732,309 @@ app.get('/api/user/tokens', authenticateUser, async (req, res) => {
 
         if (error && error.code !== 'PGRST116') throw error;
 
-        res.json({ 
-            tokens: data || { 
-                total_tokens: 0, 
+        res.json({
+            tokens: data || {
+                total_tokens: 0,
                 tokens_spent: 0,
-                tokens_available: 0 
-            } 
+                tokens_available: 0
+            }
         });
 
     } catch (error) {
         console.error('Error fetching tokens:', error);
         res.status(500).json({ error: 'Failed to fetch tokens' });
+    }
+});
+
+// ===== CONTENT DELIVERY ENDPOINTS =====
+
+// GET /api/lessons/:lessonId/content — serve lesson markdown from filesystem
+app.get('/api/lessons/:lessonId/content', authenticateUser, (req, res) => {
+    const { lessonId } = req.params;
+    const filePath = LESSON_CONTENT_MAP[lessonId];
+    const meta = LESSON_META_MAP[lessonId];
+
+    if (!meta) {
+        return res.status(404).json({ error: `Lesson '${lessonId}' not found` });
+    }
+
+    let content = null;
+    if (filePath) {
+        try {
+            content = fs.readFileSync(filePath, 'utf-8');
+        } catch (err) {
+            console.warn(`Could not read lesson file for ${lessonId}:`, err.message);
+        }
+    }
+
+    if (!content) {
+        content = `# ${meta.title}\n\n> This lesson content is being prepared. Check back soon.\n\n**Objectives:**\n${meta.objectives.map(o => `- ${o}`).join('\n')}`;
+    }
+
+    res.json({
+        id: lessonId,
+        title: meta.title,
+        estimatedTime: meta.estimatedTime,
+        objectives: meta.objectives,
+        content
+    });
+});
+
+// GET /api/simulations/:simId — serve simulation scenario with interactive choices
+app.get('/api/simulations/:simId', authenticateUser, (req, res) => {
+    const { simId } = req.params;
+    const filePath = SIMULATION_CONTENT_MAP[simId];
+
+    if (!filePath) {
+        return res.status(404).json({ error: `Simulation '${simId}' not found` });
+    }
+
+    try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const sim = JSON.parse(raw);
+        res.json(sim);
+    } catch (err) {
+        console.error(`Error loading simulation ${simId}:`, err.message);
+        res.status(500).json({ error: 'Failed to load simulation content' });
+    }
+});
+
+// POST /api/simulations/:simId/submit — record completion and award tokens
+app.post('/api/simulations/:simId/submit', authenticateUser, async (req, res) => {
+    const { simId } = req.params;
+    const { choiceId } = req.body;
+
+    const filePath = SIMULATION_CONTENT_MAP[simId];
+    if (!filePath) {
+        return res.status(404).json({ error: `Simulation '${simId}' not found` });
+    }
+
+    try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const sim = JSON.parse(raw);
+        const tokensEarned = sim.tokens || 5;
+
+        // Check if already completed
+        const { data: existing } = await supabase
+            .from('user_lesson_progress')
+            .select('status')
+            .eq('user_id', req.user.id)
+            .eq('lesson_id', simId)
+            .single();
+
+        if (existing?.status === 'completed') {
+            const { data: tokenData } = await supabase
+                .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+            return res.json({ message: 'Already completed', alreadyCompleted: true, tokensEarned: 0, newBalance: tokenData?.tokens_available || 0 });
+        }
+
+        // Record completion
+        await supabase.from('user_lesson_progress').upsert({
+            user_id: req.user.id,
+            lesson_id: simId,
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            tokens_earned: tokensEarned,
+            exam_score: null,
+            attempts_count: 1
+        }, { onConflict: 'user_id,lesson_id' });
+
+        // Award tokens
+        await supabase.rpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
+
+        const { data: tokenData } = await supabase
+            .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+
+        res.json({ message: 'Simulation completed', tokensEarned, newBalance: tokenData?.tokens_available || 0 });
+
+    } catch (err) {
+        console.error(`Error submitting simulation ${simId}:`, err.message);
+        res.status(500).json({ error: 'Failed to record simulation completion' });
+    }
+});
+
+// GET /api/checkpoints/:checkpointId — serve checkpoint questions
+app.get('/api/checkpoints/:checkpointId', authenticateUser, (req, res) => {
+    const { checkpointId } = req.params;
+    const filePath = CHECKPOINT_MAP[checkpointId];
+
+    if (!filePath) {
+        return res.status(404).json({ error: `Checkpoint '${checkpointId}' not found` });
+    }
+
+    try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const checkpoint = JSON.parse(raw);
+        res.json(checkpoint);
+    } catch (err) {
+        console.error(`Error loading checkpoint ${checkpointId}:`, err.message);
+        res.status(500).json({ error: 'Failed to load checkpoint' });
+    }
+});
+
+// POST /api/checkpoints/:checkpointId/submit — grade answers, award tokens if passed
+app.post('/api/checkpoints/:checkpointId/submit', authenticateUser, async (req, res) => {
+    const { checkpointId } = req.params;
+    const { answers } = req.body; // [{questionIdx, selectedIdx}]
+
+    const filePath = CHECKPOINT_MAP[checkpointId];
+    if (!filePath) {
+        return res.status(404).json({ error: `Checkpoint '${checkpointId}' not found` });
+    }
+
+    try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const checkpoint = JSON.parse(raw);
+
+        // Grade answers
+        let correct = 0;
+        answers.forEach(({ questionIdx, selectedIdx }) => {
+            const q = checkpoint.questions[questionIdx];
+            if (q && q.choices[selectedIdx]?.isCorrect) correct++;
+        });
+
+        const score = Math.round((correct / checkpoint.questions.length) * 100);
+        const passed = score >= (checkpoint.passing_score || 70);
+        const tokensEarned = passed ? (checkpoint.tokens || 100) : 0;
+
+        // Record attempt in user_lesson_progress
+        const { data: existing } = await supabase
+            .from('user_lesson_progress')
+            .select('attempts_count, status')
+            .eq('user_id', req.user.id)
+            .eq('lesson_id', checkpointId)
+            .single();
+
+        const attempts = (existing?.attempts_count || 0) + 1;
+
+        await supabase.from('user_lesson_progress').upsert({
+            user_id: req.user.id,
+            lesson_id: checkpointId,
+            status: passed ? 'completed' : 'attempted',
+            completed_at: passed ? new Date().toISOString() : null,
+            tokens_earned: passed ? tokensEarned : 0,
+            exam_score: score,
+            attempts_count: attempts
+        }, { onConflict: 'user_id,lesson_id' });
+
+        // Award tokens if passed
+        if (passed && tokensEarned > 0) {
+            await supabase.rpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
+        }
+
+        const { data: tokenData } = await supabase
+            .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+
+        res.json({ score, passed, correct, total: checkpoint.questions.length, tokensEarned, newBalance: tokenData?.tokens_available || 0 });
+
+    } catch (err) {
+        console.error(`Error submitting checkpoint ${checkpointId}:`, err.message);
+        res.status(500).json({ error: 'Failed to submit checkpoint' });
+    }
+});
+
+// ===== AI ENDPOINTS (Groq — free tier) =====
+// Free API key: https://console.groq.com  (no credit card required)
+
+function getGroqClient() {
+    if (!process.env.GROQ_API_KEY) return null;
+    const Groq = require('groq-sdk');
+    return new Groq({ apiKey: process.env.GROQ_API_KEY });
+}
+
+// POST /api/ai/hint — contextual learning hint (Llama 3 8B)
+app.post('/api/ai/hint', authenticateUser, async (req, res) => {
+    const { lessonId, question } = req.body;
+    if (!lessonId || !question) {
+        return res.status(400).json({ error: 'lessonId and question are required' });
+    }
+
+    const groq = getGroqClient();
+    if (!groq) return res.status(503).json({ error: 'AI not configured — add GROQ_API_KEY to .env (free at console.groq.com)' });
+
+    try {
+        const meta = LESSON_META_MAP[lessonId];
+        const filePath = LESSON_CONTENT_MAP[lessonId];
+        let lessonContext = meta ? `Lesson: ${meta.title}\nObjectives: ${meta.objectives.join(', ')}` : '';
+        if (filePath) {
+            try { lessonContext = fs.readFileSync(filePath, 'utf-8').slice(0, 2000); } catch (_) {}
+        }
+
+        const completion = await groq.chat.completions.create({
+            model: 'llama3-8b-8192',
+            max_tokens: 180,
+            messages: [
+                { role: 'system', content: 'You are a patient cybersecurity instructor. Give concise hints (1-2 sentences) that guide thinking without giving away answers. Be encouraging.' },
+                { role: 'user', content: `Student studying "${meta?.title || lessonId}" asked: "${question}"\n\nContext:\n${lessonContext}` }
+            ]
+        });
+
+        res.json({ hint: completion.choices[0].message.content });
+    } catch (err) {
+        console.error('AI hint error:', err.message);
+        res.status(500).json({ error: 'Failed to generate hint' });
+    }
+});
+
+// POST /api/ai/generate-quiz — generate MCQ questions (Llama 3.3 70B)
+app.post('/api/ai/generate-quiz', authenticateUser, async (req, res) => {
+    const { lessonId } = req.body;
+    if (!lessonId) return res.status(400).json({ error: 'lessonId is required' });
+
+    const groq = getGroqClient();
+    if (!groq) return res.status(503).json({ error: 'AI not configured — add GROQ_API_KEY to .env (free at console.groq.com)' });
+
+    const meta = LESSON_META_MAP[lessonId];
+    if (!meta) return res.status(404).json({ error: 'Lesson not found' });
+
+    const filePath = LESSON_CONTENT_MAP[lessonId];
+    let content = `Lesson: ${meta.title}\nObjectives: ${meta.objectives.join(', ')}`;
+    if (filePath) {
+        try { content = fs.readFileSync(filePath, 'utf-8').slice(0, 3500); } catch (_) {}
+    }
+
+    try {
+        const completion = await groq.chat.completions.create({
+            model: 'llama-3.3-70b-versatile',
+            max_tokens: 1200,
+            response_format: { type: 'json_object' },
+            messages: [
+                { role: 'system', content: 'You generate cybersecurity quiz questions as JSON only. No markdown, no explanation outside the JSON.' },
+                { role: 'user', content: `Generate 5 MCQs for this lesson. Format: {"questions":[{"question":"...","topic":"...","choices":[{"text":"...","isCorrect":false},{"text":"...","isCorrect":true},{"text":"...","isCorrect":false},{"text":"...","isCorrect":false}],"explanation":"..."}]}\n\nLesson:\n${content}` }
+            ]
+        });
+
+        const parsed = JSON.parse(completion.choices[0].message.content);
+        res.json(parsed);
+    } catch (err) {
+        console.error('AI quiz gen error:', err.message);
+        res.status(500).json({ error: 'Failed to generate quiz questions' });
+    }
+});
+
+// POST /api/ai/feedback — personalized progress feedback (Llama 3.3 70B)
+app.post('/api/ai/feedback', authenticateUser, async (req, res) => {
+    const { checkpointId, score, incorrectTopics } = req.body;
+
+    const groq = getGroqClient();
+    if (!groq) return res.status(503).json({ error: 'AI not configured — add GROQ_API_KEY to .env (free at console.groq.com)' });
+
+    try {
+        const topicsText = incorrectTopics?.length ? incorrectTopics.join(', ') : 'general concepts';
+
+        const completion = await groq.chat.completions.create({
+            model: 'llama-3.3-70b-versatile',
+            max_tokens: 250,
+            messages: [
+                { role: 'system', content: 'You are a cybersecurity educator. Give direct, professional feedback in 2-3 sentences. Acknowledge the score, mention what to review, and motivate without being cheerful.' },
+                { role: 'user', content: `Student scored ${score}% on "${checkpointId}". Struggled with: ${topicsText}.` }
+            ]
+        });
+
+        res.json({ feedback: completion.choices[0].message.content });
+    } catch (err) {
+        console.error('AI feedback error:', err.message);
+        res.status(500).json({ error: 'Failed to generate feedback' });
     }
 });
 

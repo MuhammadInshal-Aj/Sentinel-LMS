@@ -40,21 +40,22 @@
         /* PAGE LAYOUT - sidebar flex layout */
         body { display: flex; }
 
-        /* Main content area */
+        /* Main content area — single flat grid */
         .main-content {
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
-            padding: 3rem 4rem;
+            padding: 2rem 2.5rem;
             display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 3rem;
+            grid-template-columns: 1fr 280px;
+            gap: 2rem;
             min-height: 100vh;
+            align-content: start;
         }
 
         /* COURSE HEADER */
-        .course-header { 
+        .course-header {
             grid-column: 1 / -1;
-            margin-bottom: 2rem; 
+            margin-bottom: 1rem;
         }
 
         .breadcrumbs { 
@@ -77,18 +78,18 @@
             color: var(--accent);
         }
 
-        .course-title { 
-            font-size: 3rem; 
-            font-weight: 700; 
-            line-height: 1.1; 
-            margin-bottom: 1.5rem; 
+        .course-title {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
         }
 
-        .course-meta { 
-            display: flex; 
-            gap: 1rem; 
-            flex-wrap: wrap; 
-            margin-bottom: 2rem; 
+        .course-meta {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
         }
 
         .badge {
@@ -113,17 +114,17 @@
         }
 
         /* SECTION BOXES */
-        .section-box { 
-            margin-bottom: 3rem; 
+        .section-box {
+            margin-bottom: 2rem;
         }
 
-        .section-title { 
-            font-size: 1.2rem; 
-            margin-bottom: 1.5rem; 
-            display: flex; 
-            align-items: center; 
-            gap: 0.8rem; 
-            color: #fff; 
+        .section-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: #fff;
         }
 
         .section-title i { 
@@ -492,9 +493,86 @@
             z-index: 2000;
         }
 
-        .toast.show { 
-            transform: translateY(0); 
-            opacity: 1; 
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ── MODAL ACTIVE STATE ─────────────────────── */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 2rem; position: relative; }
+        .sim-modal-content { max-width: 680px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; display: flex; }
+        .modal-close:hover { color: #fff; }
+
+        /* ── SIMULATION MODAL ───────────────────────── */
+        .sim-loading, .sim-error { text-align: center; padding: 3rem; color: var(--text-muted); }
+        .sim-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); border: 1px solid rgba(0,242,255,0.3); border-radius: 4px; padding: 2px 8px; margin-bottom: 1rem; }
+        .sim-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; color: #fff; }
+        .sim-scenario { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; color: #ccc; line-height: 1.6; }
+        .sim-assets { margin: 0.8rem 0 0; padding-left: 1.2rem; color: var(--accent); }
+        .sim-constraints { margin-top: 0.8rem; color: var(--warning); font-size: 0.9rem; }
+        .sim-question p { font-weight: 600; color: #fff; margin-bottom: 1rem; font-size: 1.05rem; }
+        .sim-choices { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
+        .sim-choice-btn { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.2rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: #e0e0e0; cursor: pointer; text-align: left; font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; transition: all 0.2s; }
+        .sim-choice-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0,242,255,0.05); color: #fff; }
+        .sim-choice-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .choice-label { min-width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+        .sim-feedback { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5; }
+        .sim-feedback.hidden { display: none; }
+        .feedback-success { background: rgba(0,255,157,0.08); border: 1px solid rgba(0,255,157,0.2); color: var(--success); }
+        .feedback-info { background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.2); color: var(--accent); }
+        .feedback-error { background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.2); color: var(--danger); }
+        .sim-feedback i { flex-shrink: 0; margin-top: 3px; }
+        .sim-feedback p { margin: 0.3rem 0 0; color: #ccc; font-size: 0.9rem; }
+        .sim-insight { margin-top: 0.8rem; padding: 0.8rem; background: rgba(255,255,255,0.03); border-left: 3px solid var(--accent); color: #888; font-style: italic; font-size: 0.85rem; }
+        .sim-footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .sim-tokens { font-size: 0.85rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .text-success { color: var(--success) !important; }
+        .sim-step-indicator { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+        /* ── CHECKPOINT QUIZ MODAL ──────────────────── */
+        .quiz-progress-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; font-size: 0.85rem; color: var(--text-muted); }
+        .quiz-progress-bar { flex: 1; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+        .quiz-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+        .quiz-q-text { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1.5rem; line-height: 1.5; }
+        .quiz-options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
+        .quiz-option { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.2rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: #e0e0e0; cursor: pointer; text-align: left; font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; transition: all 0.2s; }
+        .quiz-option:hover:not(:disabled) { border-color: var(--accent); background: rgba(0,242,255,0.05); }
+        .quiz-option:disabled { cursor: not-allowed; }
+        .quiz-option.correct { border-color: var(--success); background: rgba(0,255,157,0.08); color: var(--success); }
+        .quiz-option.incorrect { border-color: var(--danger); background: rgba(255,71,87,0.08); color: var(--danger); }
+        .quiz-feedback { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.5; color: #ccc; }
+        .quiz-feedback.hidden { display: none; }
+        .quiz-footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .quiz-results { text-align: center; padding: 1rem 0; }
+        .result-score { margin: 1.5rem auto; }
+        .score-number { display: block; font-size: 3rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .score-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; }
+        .result-score.passed .score-number, .result-score.passed .score-label { color: var(--success); }
+        .result-score.failed .score-number, .result-score.failed .score-label { color: var(--danger); }
+        .quiz-results > p { color: var(--text-muted); margin-bottom: 1.5rem; }
+        .ai-feedback { display: flex; gap: 1rem; background: rgba(0,242,255,0.05); border: 1px solid rgba(0,242,255,0.15); border-radius: 8px; padding: 1rem; text-align: left; color: #ccc; font-size: 0.9rem; margin: 1rem 0; line-height: 1.6; }
+        .ai-feedback i { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+        .result-actions { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── RESPONSIVE ──────────────────────────────── */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+            .course-header { grid-column: 1; }
+            .sticky-card { position: static; }
+        }
+
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .course-title { font-size: 1.5rem; }
+            .outcomes-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -523,7 +601,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link">
+                <a class="nav-link" onclick="window.location.href='labs.html'">
                     <i data-lucide="terminal-square" size="20"></i>
                     <span>Labs & CTFs</span>
                 </a>
@@ -565,7 +643,7 @@
                 <span id="courseBreadcrumb">Information Security</span>
             </div>
             <h1 class="course-title">Information Security</h1>
-            <p style="font-size: 1.1rem; color: #aaa; margin-bottom: 1.5rem; max-width: 600px;">
+            <p style="font-size: 0.95rem; color: #aaa; margin-bottom: 0.75rem; max-width: 600px;">
                 Core principles of information security and defensive thinking.
             </p>
             <div class="course-meta">
@@ -575,7 +653,6 @@
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 320px; gap: 3rem; padding: 0 4rem;">
             <section>
                 <div class="section-box">
                     <h3 class="section-title"><i data-lucide="target"></i> Acquired Capabilities</h3>
@@ -614,7 +691,7 @@
                             </div>
                             <div class="module-body">
                                 
-                                <div class="lesson-row">
+                                    <div class="lesson-row" data-lesson-id="infosec-m01-l01">
                                     <div class="lesson-left">
                                         <i data-lucide="circle" class="lesson-icon"></i>
                                         <span class="lesson-title">1.1 What Is Information Security?</span>
@@ -624,17 +701,17 @@
                                     </div>
                                 </div>
 
-                                <div class="lesson-row simulation\">
-                                    <div class=\"lesson-left\">
-                                        <i data-lucide=\"crosshair\" class=\"lesson-icon\"></i>
-                                        <span class=\"lesson-title\">1.2 SIMULATION: Attacker vs Defender</span>
+                                <div class="lesson-row simulation" data-sim-id="infosec-m01-sim01">
+                                    <div class="lesson-left">
+                                        <i data-lucide="crosshair" class="lesson-icon"></i>
+                                        <span class="lesson-title">1.2 SIMULATION: Attacker vs Defender</span>
                                     </div>
                                     <div class="lesson-right">
                                         <span class="lesson-tag">Optional</span>
                                     </div>
                                 </div>
 
-                                <div class="lesson-row">
+                                <div class="lesson-row" data-lesson-id="infosec-m01-l02">
                                     <div class="lesson-left">
                                         <i data-lucide="circle" class="lesson-icon"></i>
                                         <span class="lesson-title">1.3 The CIA Triad</span>
@@ -644,7 +721,7 @@
                                     </div>
                                 </div>
 
-                                <div class="lesson-row">
+                                <div class="lesson-row" data-lesson-id="infosec-m01-l03">
                                     <div class="lesson-left">
                                         <i data-lucide="circle" class="lesson-icon"></i>
                                         <span class="lesson-title">1.4 Threats, Vulnerabilities, and Risk</span>
@@ -654,17 +731,17 @@
                                     </div>
                                 </div>
 
-                                <div class=\"lesson-row simulation\">
-                                    <div class=\"lesson-left\">
-                                        <i data-lucide=\"crosshair\" class=\"lesson-icon\"></i>
-                                        <span class=\"lesson-title\">1.5 SIMULATION: Threat or Risk?</span>
+                                <div class="lesson-row simulation" data-sim-id="infosec-m01-sim02">
+                                    <div class="lesson-left">
+                                        <i data-lucide="crosshair" class="lesson-icon"></i>
+                                        <span class="lesson-title">1.5 SIMULATION: Threat or Risk?</span>
                                     </div>
                                     <div class="lesson-right">
                                         <span class="lesson-tag required">Required</span>
                                     </div>
                                 </div>
 
-                                <div class="lesson-row">
+                                <div class="lesson-row" data-lesson-id="infosec-m01-l04">
                                     <div class="lesson-left">
                                         <i data-lucide="circle" class="lesson-icon"></i>
                                         <span class="lesson-title">1.6 Secure by Design</span>
@@ -674,7 +751,7 @@
                                     </div>
                                 </div>
 
-                                <div class="lesson-row">
+                                <div class="lesson-row" data-lesson-id="infosec-m01-l05">
                                     <div class="lesson-left">
                                         <i data-lucide="circle" class="lesson-icon"></i>
                                         <span class="lesson-title">1.7 Defense in Depth</span>
@@ -684,8 +761,8 @@
                                     </div>
                                 </div>
 
-                                <div class=\"lesson-row checkpoint\">
-                                    <div class=\"lesson-left\">
+                                <div class="lesson-row checkpoint" data-checkpoint-id="infosec-m01-checkpoint">
+                                    <div class="lesson-left">
                                         <i data-lucide="shield" class="lesson-icon" style="color: var(--warning)"></i>
                                         <span class="lesson-title" style="color: var(--warning)">1.8 CHECKPOINT: Security Mindset</span>
                                     </div>
@@ -719,17 +796,7 @@
 
                         </div> </div>
                     </div>
-                </div>
             </section>
-
-            <div class="toast" id="toast">
-                <i data-lucide="check-circle"></i>
-                <div>
-                    <strong style="color:#fff">Lesson Complete</strong><br>
-                    <span style="font-size:0.8rem">+20 Tokens Added</span>
-                </div>
-            </div>
-        </div>
 
         <!-- STICKY COURSE INFO CARD (Right side) -->
         <aside>
@@ -766,271 +833,572 @@
         </aside>
     </main>
 
+    <!-- Toast notification (fixed position, outside grid) -->
+    <div class="toast" id="toast">
+        <i data-lucide="check-circle"></i>
+        <div>
+            <strong style="color:#fff">Lesson Complete</strong><br>
+            <span style="font-size:0.8rem">+20 Tokens Added</span>
+        </div>
+    </div>
+
+    <!-- SIMULATION MODAL -->
+    <div class="modal-overlay" id="simModal" role="dialog" aria-modal="true" aria-labelledby="simModalTitle">
+        <div class="modal sim-modal-content">
+            <button class="modal-close" onclick="closeSimModal()" aria-label="Close simulation">
+                <i data-lucide="x" size="20"></i>
+            </button>
+            <div id="simModalBody">
+                <!-- Populated dynamically by openSimulation() -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKPOINT QUIZ MODAL -->
+    <div class="modal-overlay" id="quizModal" role="dialog" aria-modal="true" aria-labelledby="quizModalTitle">
+        <div class="modal sim-modal-content">
+            <button class="modal-close" onclick="closeQuizModal()" aria-label="Close checkpoint">
+                <i data-lucide="x" size="20"></i>
+            </button>
+            <div id="quizModalBody">
+                <!-- Populated dynamically by openCheckpoint() -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
-        // APPLICATION CONFIGURATION
+        // INFOSEC COURSE PAGE — API-DRIVEN STATE
         // ============================================
-        const CONFIG = {
-            TOKENS_PER_LESSON: 20,
-            TOAST_DURATION: 2000,
-            UNLOCK_DELAY: 500,
-            MODULE_CONFIG: {
-                module1: { totalItems: 8, name: 'Security Mindset & Core Principles' },
-                module2: { name: 'Risk Management', prerequisite: 'module1', description: 'Risk assessment frameworks and calculation.' },
-                module3: { name: 'Defensive Architecture', prerequisite: 'module2', description: 'Building secure infrastructure.' }
-            }
+
+        // Backend slug for this course page (used in API calls)
+        const DEFAULT_TRACK_SLUG = 'information-security';
+        const TRACK_SLUG_ALIASES = {
+            'information-security': 'information-security',
+            'infosec': 'information-security'
         };
 
-        // ============================================
-        // APPLICATION STATE
-        // ============================================
-        const APP = {
+        const PAGE_STATE = {
+            courseSlug: DEFAULT_TRACK_SLUG,
             isEnrolled: false,
-            totalTokens: 0,
-            moduleProgress: {
-                module1: 0
-            },
-            completedLessons: new Set(),
-            unlockedModules: new Set(),
-
-            init() {
-                this.registerEventListeners();
-                lucide.createIcons();
-            },
-
-            registerEventListeners() {
-                // Event delegation for lesson rows
-                document.addEventListener('click', (e) => {
-                    const lessonRow = e.target.closest('.lesson-row');
-                    if (lessonRow) this.completeLesson(lessonRow);
-                });
-
-                // Module header accordion toggle with keyboard support
-                document.addEventListener('click', (e) => {
-                    const moduleHeader = e.target.closest('.module-header');
-                    if (moduleHeader) {
-                        const moduleId = moduleHeader.dataset.moduleId;
-                        if (moduleId) toggleAccordion(moduleId);
-                    }
-                });
-
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        const moduleHeader = e.target.closest('.module-header');
-                        if (moduleHeader) {
-                            e.preventDefault();
-                            const moduleId = moduleHeader.dataset.moduleId;
-                            if (moduleId) toggleAccordion(moduleId);
-                        }
-                    }
-                });
-            }
+            completedIds: new Set()
         };
 
-        // ============================================
-        // ENROLLMENT SYSTEM
-        // ============================================
-        function enrollUser() {
-            if (APP.isEnrolled) return;
-
-            APP.isEnrolled = true;
-            const curriculum = document.getElementById('lockedOverlay');
-            const btn = document.getElementById('enrollBtn');
-            const pTrack = document.getElementById('m1-track');
-
-            // Visual updates
-            curriculum.classList.remove('curriculum-locked');
-            btn.textContent = 'CONTINUE LEARNING';
-            btn.classList.add('enrolled');
-            pTrack.style.display = 'block';
-
-            // Auto-open Module 1
-            document.getElementById('module1').classList.add('active');
+        function normalizeTrackSlug(slug) {
+            if (!slug) return DEFAULT_TRACK_SLUG;
+            return TRACK_SLUG_ALIASES[slug] || DEFAULT_TRACK_SLUG;
         }
 
-        // ============================================
-        // ACCORDION TOGGLE
-        // ============================================
-        function toggleAccordion(moduleId) {
-            if (!APP.isEnrolled) {
-                showNotification('Please enroll to access course content.', 'info');
-                return;
-            }
-            const module = document.getElementById(moduleId);
-            if (module) module.classList.toggle('active');
-        }
-
-        // ============================================
-        // LESSON COMPLETION
-        // ============================================
-        function completeLesson(lessonElement) {
-            if (!APP.isEnrolled) {
-                showNotification('Please enroll to access lessons.', 'info');
-                return;
-            }
-
-            // Prevent duplicate completion
-            if (lessonElement.classList.contains('completed')) return;
-
-            // Mark lesson as completed
-            lessonElement.classList.add('completed');
-
-            // Get lesson identifier (use data-lesson-id if available, fallback to text)
-            const lessonId = lessonElement.dataset.lessonId || lessonElement.textContent.trim();
-            APP.completedLessons.add(lessonId);
-
-            // Award tokens
-            APP.totalTokens += CONFIG.TOKENS_PER_LESSON;
-            updateTokenDisplay();
-            showToast(`+${CONFIG.TOKENS_PER_LESSON} Tokens`);
-
-            // Update progress for Module 1
-            APP.moduleProgress.module1 = APP.completedLessons.size;
-            updateModuleProgress('module1', CONFIG.MODULE_CONFIG.module1.totalItems);
-        }
-
-        // ============================================
-        // PROGRESS TRACKING
-        // ============================================
-        function updateModuleProgress(moduleId, totalItems) {
-            const progressFill = document.getElementById(moduleId + '-fill');
-            if (!progressFill) return;
-
-            const percentage = (APP.moduleProgress[moduleId] / totalItems) * 100;
-            progressFill.style.width = percentage + '%';
-
-            // Check unlock conditions
-            if (moduleId === 'module1' && APP.moduleProgress.module1 === totalItems) {
-                unlockModule('module2');
-            } else if (moduleId === 'module2' && APP.moduleProgress.module2 === CONFIG.MODULE_CONFIG.module2.totalItems) {
-                unlockModule('module3');
-            }
-        }
-
-        // ============================================
-        // MODULE UNLOCK SYSTEM
-        // ============================================
-        function unlockModule(moduleId) {
-            if (APP.unlockedModules.has(moduleId)) return; // Already unlocked
-
-            const module = document.getElementById(moduleId);
-            if (!module) return;
-
-            setTimeout(() => {
-                // Update classes
-                module.classList.remove('locked');
-                module.classList.add('unlocked');
-                APP.unlockedModules.add(moduleId);
-
-                // Update UI elements
-                const moduleConfig = CONFIG.MODULE_CONFIG[moduleId];
-                const title = module.querySelector('.module-info h3');
-                const description = module.querySelector('.module-info p');
-                const lockIcon = module.querySelector('[data-lucide="lock"]');
-
-                if (title) title.style.color = '#fff';
-                if (description) description.textContent = moduleConfig.description;
-                if (lockIcon) {
-                    lockIcon.setAttribute('data-lucide', 'unlock');
-                    lockIcon.style.color = 'var(--accent)';
-                    lucide.createIcons(); // Re-render Lucide icons
-                }
-
-                // Show notification
-                showNotification(`${moduleConfig.name} unlocked!`, 'success');
-            }, CONFIG.UNLOCK_DELAY);
-        }
-
-        // ============================================
-        // UI UPDATES
-        // ============================================
-        function updateTokenDisplay() {
-            const counter = document.getElementById('tokenCount');
-            if (!counter) return;
-            counter.textContent = APP.totalTokens;
-            counter.style.color = 'var(--success)';
-            setTimeout(() => { counter.style.color = '#fff'; }, 300);
-        }
-
-        function showToast(message = 'Lesson Complete') {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            const messageEl = toast.querySelector('div');
-            if (messageEl) {
-                messageEl.innerHTML = `<strong style="color:#fff">${message}</strong>`;
-            }
-            toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, CONFIG.TOAST_DURATION);
-        }
-
-        function showNotification(message, type = 'info') {
-            // Simple notification - can be enhanced with toast system
-            console.log(`[${type.toUpperCase()}] ${message}`);
-        }
-
-        // ============================================
-        // NAVIGATION FUNCTIONS
-        // ============================================
-        function goBackToDashboard() {
-            window.location.href = 'index.html';
-        }
-
-        function goToMyCourses() {
-            window.location.href = 'index.html#my-courses';
-        }
-
-        function handleLogout() {
-            Auth.clearAuth();
-            Auth.logout('login.html');
-        }
-
-        // ============================================
-        // PAGE INITIALIZATION
-        // ============================================
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize shared modules
+        // ── PAGE INIT ────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
             Navigation.initProfilePopup();
-            
-            // Push a history state so back navigation is detected
-            window.history.pushState({authenticated: true, page: 'infoSec'}, '', window.location.href);
-            
-            // Load user profile info from session storage
-            try {
-                const user = Auth.getUser();
-                if (user) {
-                    document.getElementById('display-name').textContent = user.name || 'User';
-                    document.getElementById('display-email').textContent = user.email || 'user@sentinel.local';
-                    const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
-                    document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
+            loadUserProfile();
+            window.history.pushState({ authenticated: true, page: 'infoSec' }, '', window.location.href);
+
+            // Lesson row clicks (event delegation)
+            const area = document.getElementById('curriculumArea');
+            if (area) {
+                area.addEventListener('click', (e) => {
+                    const row = e.target.closest('.lesson-row');
+                    if (row) handleItemClick(row);
+                });
+            }
+
+            // Module accordion (keyboard + click)
+            document.addEventListener('click', (e) => {
+                const header = e.target.closest('.module-header');
+                if (header && header.dataset.moduleId) toggleAccordion(header.dataset.moduleId);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    const header = e.target.closest('.module-header');
+                    if (header && header.dataset.moduleId) {
+                        e.preventDefault();
+                        toggleAccordion(header.dataset.moduleId);
+                    }
                 }
-            } catch (e) {
-                console.error('Failed to load user profile:', e);
-            }
+            });
 
-            // Parse course slug from URL
+            // Close modals on backdrop click
+            document.getElementById('simModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('simModal')) closeSimModal();
+            });
+            document.getElementById('quizModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('quizModal')) closeQuizModal();
+            });
+
+            // Parse ?course= query param and normalize to backend canonical slug
             const params = new URLSearchParams(window.location.search);
-            const courseSlug = params.get('course');
-            if (courseSlug) {
-                document.getElementById('courseBreadcrumb').textContent = courseSlug.replace('-', ' ').toUpperCase();
+            const rawSlug = params.get('course');
+            if (rawSlug) {
+                document.getElementById('courseBreadcrumb').textContent = 'INFORMATION SECURITY';
             }
+            PAGE_STATE.courseSlug = normalizeTrackSlug(rawSlug);
 
-            // Initialize course state
-            APP.init();
+            await initCourseState();
         });
 
-        // === PREVENT BACK NAVIGATION WITHOUT RE-AUTHENTICATION ===
-        window.addEventListener('popstate', (event) => {
-            console.log('popstate event detected on infoSec page');
-            
-            // Check if still authenticated
-            const token = Auth.getToken();
-            if (!token) {
-                console.warn('User not authenticated, redirecting to login...');
-                window.location.replace('login.html');
-            } else {
-                console.log('User still authenticated, allowing navigation');
+        // ── LOAD STATE FROM BACKEND ──────────────────
+        async function initCourseState() {
+            // Fetch enrollment and tokens independently so one failing doesn't block the other
+            let enrollmentData = null;
+            let tokenData = null;
+
+            try {
+                [enrollmentData, tokenData] = await Promise.allSettled([
+                    Api.getEnrollment(PAGE_STATE.courseSlug),
+                    Api.getUserTokens()
+                ]).then(results => [
+                    results[0].status === 'fulfilled' ? results[0].value : null,
+                    results[1].status === 'fulfilled' ? results[1].value : null
+                ]);
+            } catch (err) {
+                console.warn('[InfoSec] Could not load course state:', err.message);
+                return;
             }
+
+            if (tokenData) {
+                updateTokenDisplay(tokenData.tokens?.tokens_available ?? 0);
+            }
+
+            if (enrollmentData?.isEnrolled) {
+                PAGE_STATE.isEnrolled = true;
+                unlockCurriculumUI();
+                const btn = document.getElementById('enrollBtn');
+                if (btn) { btn.textContent = 'CONTINUE LEARNING'; btn.classList.add('enrolled'); }
+
+                try {
+                    const progress = await Api.getTrackProgress(PAGE_STATE.courseSlug);
+                    restoreProgressUI(progress);
+                } catch (err) {
+                    console.warn('[InfoSec] Could not restore progress:', err.message);
+                }
+            }
+        }
+
+        function restoreProgressUI(data) {
+            const { lessonProgress = [] } = data;
+            lessonProgress.forEach(lp => {
+                if (lp.status === 'completed') {
+                    PAGE_STATE.completedIds.add(lp.lesson_id);
+                    const row = document.querySelector(
+                        `[data-lesson-id="${lp.lesson_id}"], [data-sim-id="${lp.lesson_id}"], [data-checkpoint-id="${lp.lesson_id}"]`
+                    );
+                    if (row) row.classList.add('completed');
+                }
+            });
+            // Update module 1 progress bar based on completed required lessons
+            const requiredIds = ['infosec-m01-l01','infosec-m01-l02','infosec-m01-l03','infosec-m01-l04','infosec-m01-l05'];
+            const completedRequired = requiredIds.filter(id => PAGE_STATE.completedIds.has(id)).length;
+            const pct = Math.round((completedRequired / requiredIds.length) * 100);
+            const fill = document.getElementById('m1-fill');
+            const track = document.getElementById('m1-track');
+            if (fill) fill.style.width = pct + '%';
+            if (track) track.style.display = 'block';
+        }
+
+        // ── ENROLLMENT ───────────────────────────────
+        async function enrollUser() {
+            const btn = document.getElementById('enrollBtn');
+
+            if (PAGE_STATE.isEnrolled) {
+                const first = document.querySelector('.lesson-row:not(.completed)[data-lesson-id]');
+                if (first) handleItemClick(first);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'ENROLLING...';
+
+            try {
+                const result = await Api.enrollInTrack(PAGE_STATE.courseSlug);
+                PAGE_STATE.isEnrolled = true;
+                unlockCurriculumUI();
+                btn.textContent = 'CONTINUE LEARNING';
+                btn.classList.add('enrolled');
+                btn.disabled = false;
+
+                if (result.alreadyEnrolled) {
+                    Toast.info('You are already enrolled.');
+                } else {
+                    Toast.success('Enrolled! Begin your security journey.');
+                }
+
+                try {
+                    const t = await Api.getUserTokens();
+                    updateTokenDisplay(t.tokens?.tokens_available ?? 0);
+                } catch (_) {}
+            } catch (err) {
+                btn.disabled = false;
+                const msg = err.message || '';
+
+                if (msg.toLowerCase().includes('already')) {
+                    PAGE_STATE.isEnrolled = true;
+                    unlockCurriculumUI();
+                    btn.textContent = 'CONTINUE LEARNING';
+                    btn.classList.add('enrolled');
+                } else if (msg.toLowerCase().includes('not found')) {
+                    btn.textContent = 'INITIATE PROTOCOL';
+                    Toast.error('Course not found in database. Contact your instructor.');
+                    console.error('[Enroll] Track slug used:', PAGE_STATE.courseSlug, '— Error:', msg);
+                } else {
+                    btn.textContent = 'INITIATE PROTOCOL';
+                    Toast.error(msg || 'Enrollment failed. Try again.');
+                    console.error('[Enroll] Error:', msg);
+                }
+            }
+        }
+
+        function unlockCurriculumUI() {
+            const overlay = document.getElementById('lockedOverlay');
+            const track = document.getElementById('m1-track');
+            if (overlay) overlay.classList.remove('curriculum-locked');
+            if (track) track.style.display = 'block';
+            document.getElementById('module1')?.classList.add('active');
+        }
+
+        // ── LESSON / SIM / CHECKPOINT ROUTING ────────
+        function handleItemClick(row) {
+            if (!PAGE_STATE.isEnrolled) {
+                Toast.info('Enroll to access course content.');
+                return;
+            }
+
+            const lessonId = row.dataset.lessonId;
+            const simId = row.dataset.simId;
+            const checkpointId = row.dataset.checkpointId;
+
+            if (simId) {
+                openSimulation(simId, row);
+            } else if (checkpointId) {
+                openCheckpoint(checkpointId, row);
+            } else if (lessonId) {
+                window.location.href = `lesson.html?id=${lessonId}&course=${PAGE_STATE.courseSlug}`;
+            }
+        }
+
+        // ── ACCORDION ────────────────────────────────
+        function toggleAccordion(moduleId) {
+            if (!PAGE_STATE.isEnrolled) { Toast.info('Enroll to access course content.'); return; }
+            const el = document.getElementById(moduleId);
+            if (el) el.classList.toggle('active');
+        }
+
+        // ── TOKEN DISPLAY ────────────────────────────
+        function updateTokenDisplay(amount) {
+            const el = document.getElementById('tokenCount');
+            if (!el) return;
+            el.textContent = amount;
+            el.style.color = 'var(--success)';
+            setTimeout(() => { el.style.color = 'var(--accent)'; }, 800);
+        }
+
+        // ============================================
+        // SIMULATION MODAL
+        // ============================================
+        let SIM_STATE = {};
+
+        async function openSimulation(simId, row) {
+            const modal = document.getElementById('simModal');
+            const body = document.getElementById('simModalBody');
+            body.innerHTML = '<div class="sim-loading"><i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> &nbsp;Loading simulation...</div>';
+            modal.classList.add('active');
+            lucide.createIcons();
+
+            try {
+                const sim = await Api.getSimulation(simId);
+                SIM_STATE = { simId, row, sim, completed: false, stepIndex: 0 };
+                if (sim.type === 'multi-step') {
+                    renderMultiStepSim(sim);
+                } else {
+                    renderSimulation(sim);
+                }
+            } catch (err) {
+                body.innerHTML = `<div class="sim-error"><p style="color:var(--danger)">Failed to load: ${err.message}</p><button class="btn-outline" onclick="closeSimModal()">Close</button></div>`;
+            }
+        }
+
+        function renderSimulation(sim) {
+            const body = document.getElementById('simModalBody');
+            const choicesHTML = sim.choices.map((c, i) => `
+                <button class="sim-choice-btn" data-choice-id="${c.id}" onclick="selectSimChoice('${c.id}')">
+                    <span class="choice-label">${String.fromCharCode(65 + i)}</span>${c.text}
+                </button>`).join('');
+
+            body.innerHTML = `
+                <div class="sim-badge">SIMULATION</div>
+                <h2 class="sim-title">${sim.title}</h2>
+                <div class="sim-scenario">
+                    <p>${sim.scenario}</p>
+                    ${sim.assets ? `<ul class="sim-assets">${sim.assets.map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
+                    ${sim.constraints ? `<div class="sim-constraints"><strong>Constraints:</strong> ${sim.constraints.join(' &middot; ')}</div>` : ''}
+                </div>
+                <div class="sim-question"><p>${sim.question}</p></div>
+                <div class="sim-choices">${choicesHTML}</div>
+                <div class="sim-feedback hidden" id="simFeedback"></div>
+                <div class="sim-footer">
+                    <span class="sim-tokens">+${sim.tokens} tokens on completion</span>
+                    <button class="btn-outline" onclick="closeSimModal()">Cancel</button>
+                </div>`;
+            lucide.createIcons();
+        }
+
+        function renderMultiStepSim(sim) {
+            const step = sim.steps[SIM_STATE.stepIndex];
+            const total = sim.steps.length;
+            const body = document.getElementById('simModalBody');
+
+            const choicesHTML = step.choices.map((c, i) => `
+                <button class="quiz-option" data-idx="${i}" onclick="selectMultiStepChoice(${i})">
+                    <span class="choice-label">${String.fromCharCode(65 + i)}</span>${c.text}
+                </button>`).join('');
+
+            body.innerHTML = `
+                <div class="sim-badge">SIMULATION</div>
+                <h2 class="sim-title">${sim.title}</h2>
+                <div class="quiz-progress-header">
+                    <span>Scenario ${SIM_STATE.stepIndex + 1} of ${total}</span>
+                    <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${(SIM_STATE.stepIndex/total)*100}%"></div></div>
+                </div>
+                <div class="sim-scenario"><p>${step.scenario}</p></div>
+                <div class="sim-question"><p>${step.question}</p></div>
+                <div class="quiz-options" id="stepOptions">${choicesHTML}</div>
+                <div class="sim-feedback hidden" id="stepFeedback"></div>
+                <div class="sim-footer">
+                    <span class="sim-tokens">+${sim.tokens} tokens on completion</span>
+                    <button class="btn-outline" onclick="closeSimModal()">Cancel</button>
+                </div>`;
+            lucide.createIcons();
+        }
+
+        function selectSimChoice(choiceId) {
+            if (SIM_STATE.completed) return;
+            const sim = SIM_STATE.sim;
+            const choice = sim.choices.find(c => c.id === choiceId);
+            if (!choice) return;
+
+            document.querySelectorAll('.sim-choice-btn').forEach(b => b.disabled = true);
+
+            const fb = document.getElementById('simFeedback');
+            fb.className = `sim-feedback ${choice.isPreferred ? 'feedback-success' : 'feedback-info'}`;
+            fb.innerHTML = `<i data-lucide="${choice.isPreferred ? 'check-circle' : 'info'}"></i><div><strong>${choice.isPreferred ? 'Solid reasoning.' : 'That works too.'}</strong><p>${choice.feedback}</p></div>`;
+            lucide.createIcons();
+
+            SIM_STATE.completed = true;
+            finishSimulation(choiceId);
+        }
+
+        function selectMultiStepChoice(idx) {
+            const step = SIM_STATE.sim.steps[SIM_STATE.stepIndex];
+            const choice = step.choices[idx];
+
+            document.querySelectorAll('.quiz-option').forEach((b, i) => {
+                b.disabled = true;
+                if (step.choices[i].isCorrect) b.classList.add('correct');
+                if (i === idx && !choice.isCorrect) b.classList.add('incorrect');
+            });
+
+            const fb = document.getElementById('stepFeedback');
+            fb.className = `sim-feedback ${choice.isCorrect ? 'feedback-success' : 'feedback-error'}`;
+            fb.innerHTML = `<i data-lucide="${choice.isCorrect ? 'check-circle' : 'x-circle'}"></i><p>${choice.explanation}</p>`;
+            lucide.createIcons();
+
+            const isLast = SIM_STATE.stepIndex === SIM_STATE.sim.steps.length - 1;
+            document.querySelector('.sim-footer').innerHTML = `
+                <span></span>
+                <button class="btn-primary" onclick="${isLast ? 'finishMultiStepSim()' : 'nextSimStep()'}">
+                    ${isLast ? 'Finish →' : 'Next →'}
+                </button>`;
+        }
+
+        function nextSimStep() {
+            SIM_STATE.stepIndex++;
+            renderMultiStepSim(SIM_STATE.sim);
+        }
+
+        async function finishMultiStepSim() {
+            SIM_STATE.completed = true;
+            await finishSimulation(null);
+        }
+
+        async function finishSimulation(choiceId) {
+            try {
+                const result = await Api.submitSimulation(SIM_STATE.simId, choiceId || 'completed');
+                updateTokenDisplay(result.newBalance || 0);
+                const tokens = result.tokensEarned || SIM_STATE.sim.tokens;
+
+                if (SIM_STATE.sim.insight) {
+                    const fb = document.getElementById('simFeedback') || document.getElementById('stepFeedback');
+                    if (fb) fb.innerHTML += `<div class="sim-insight">"${SIM_STATE.sim.insight}"</div>`;
+                }
+
+                document.querySelector('.sim-footer').innerHTML = `
+                    <span class="sim-tokens text-success">+${tokens} Tokens Earned!</span>
+                    <button class="btn-primary" onclick="completeSimAndClose()">Done ✓</button>`;
+                lucide.createIcons();
+            } catch (err) {
+                console.error('Sim submit error:', err);
+                document.querySelector('.sim-footer').innerHTML = `
+                    <span></span>
+                    <button class="btn-primary" onclick="completeSimAndClose()">Done ✓</button>`;
+            }
+        }
+
+        function completeSimAndClose() {
+            if (SIM_STATE.row) SIM_STATE.row.classList.add('completed');
+            Toast.success(`Simulation Complete · +${SIM_STATE.sim?.tokens || 5} Tokens`);
+            closeSimModal();
+        }
+
+        function closeSimModal() {
+            document.getElementById('simModal').classList.remove('active');
+            SIM_STATE = {};
+        }
+
+        // ============================================
+        // CHECKPOINT QUIZ MODAL
+        // ============================================
+        let QUIZ_STATE = {};
+
+        async function openCheckpoint(checkpointId, row) {
+            const modal = document.getElementById('quizModal');
+            const body = document.getElementById('quizModalBody');
+            body.innerHTML = '<div class="sim-loading"><i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> &nbsp;Loading checkpoint...</div>';
+            modal.classList.add('active');
+            lucide.createIcons();
+
+            try {
+                const checkpoint = await Api.getCheckpoint(checkpointId);
+                QUIZ_STATE = { checkpointId, row, questions: checkpoint.questions, currentQ: 0, answers: [] };
+                renderQuestion();
+            } catch (err) {
+                body.innerHTML = `<div class="sim-error"><p style="color:var(--danger)">Failed to load: ${err.message}</p><button class="btn-outline" onclick="closeQuizModal()">Close</button></div>`;
+            }
+        }
+
+        function renderQuestion() {
+            const { questions, currentQ } = QUIZ_STATE;
+            const q = questions[currentQ];
+            const total = questions.length;
+            const body = document.getElementById('quizModalBody');
+
+            const opts = q.choices.map((c, i) => `
+                <button class="quiz-option" data-idx="${i}" onclick="selectQuizAnswer(${i})">
+                    <span class="choice-label">${String.fromCharCode(65 + i)}</span>${c.text}
+                </button>`).join('');
+
+            body.innerHTML = `
+                <div class="quiz-progress-header">
+                    <span style="white-space:nowrap">Question ${currentQ + 1} of ${total}</span>
+                    <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${(currentQ/total)*100}%"></div></div>
+                </div>
+                <p class="quiz-q-text">${q.question}</p>
+                <div class="quiz-options">${opts}</div>
+                <div class="quiz-feedback hidden" id="quizFeedback"></div>
+                <div class="quiz-footer">
+                    <span></span>
+                    <button class="btn-outline" onclick="closeQuizModal()">Quit</button>
+                </div>`;
+            lucide.createIcons();
+        }
+
+        function selectQuizAnswer(idx) {
+            const { questions, currentQ } = QUIZ_STATE;
+            const q = questions[currentQ];
+            const isCorrect = q.choices[idx].isCorrect;
+            QUIZ_STATE.answers.push({ questionIdx: currentQ, selectedIdx: idx, isCorrect, topic: q.topic });
+
+            document.querySelectorAll('.quiz-option').forEach((b, i) => {
+                b.disabled = true;
+                if (q.choices[i].isCorrect) b.classList.add('correct');
+                if (i === idx && !isCorrect) b.classList.add('incorrect');
+            });
+
+            const fb = document.getElementById('quizFeedback');
+            fb.className = `quiz-feedback ${isCorrect ? 'feedback-success' : 'feedback-error'}`;
+            fb.innerHTML = `<i data-lucide="${isCorrect ? 'check-circle' : 'x-circle'}"></i><p>${isCorrect ? 'Correct! ' : 'Not quite. '}${q.explanation}</p>`;
+            lucide.createIcons();
+
+            const isLast = currentQ === questions.length - 1;
+            document.querySelector('.quiz-footer').innerHTML = `
+                <span></span>
+                <button class="btn-primary" onclick="${isLast ? 'submitQuiz()' : 'nextQuestion()'}">
+                    ${isLast ? 'Submit →' : 'Next →'}
+                </button>`;
+        }
+
+        function nextQuestion() {
+            QUIZ_STATE.currentQ++;
+            renderQuestion();
+        }
+
+        async function submitQuiz() {
+            const { checkpointId, questions, answers, row } = QUIZ_STATE;
+            const body = document.getElementById('quizModalBody');
+            body.innerHTML = '<div class="sim-loading"><i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> &nbsp;Calculating results...</div>';
+            lucide.createIcons();
+
+            try {
+                const result = await Api.submitCheckpoint(checkpointId, answers.map(a => ({ questionIdx: a.questionIdx, selectedIdx: a.selectedIdx })));
+                updateTokenDisplay(result.newBalance || 0);
+
+                let aiFeedback = '';
+                try {
+                    const incorrectTopics = answers.filter(a => !a.isCorrect).map(a => a.topic || questions[a.questionIdx].question.slice(0, 40));
+                    const fbRes = await Api.getProgressFeedback(checkpointId, result.score, incorrectTopics);
+                    aiFeedback = fbRes.feedback || '';
+                } catch (_) { /* AI feedback optional */ }
+
+                body.innerHTML = `
+                    <div class="quiz-results">
+                        <div class="result-score ${result.passed ? 'passed' : 'failed'}">
+                            <span class="score-number">${result.score}%</span>
+                            <span class="score-label">${result.passed ? 'PASSED' : 'FAILED'}</span>
+                        </div>
+                        <p>${result.correct}/${result.total} correct${result.passed ? ` &middot; +${result.tokensEarned} Tokens Earned` : ' &middot; Score &ge;70% required to pass'}</p>
+                        ${aiFeedback ? `<div class="ai-feedback"><i data-lucide="bot"></i><p>${aiFeedback}</p></div>` : ''}
+                        <div class="result-actions">
+                            ${!result.passed ? `<button class="btn-outline" onclick="retryCheckpoint()">Retry</button>` : ''}
+                            <button class="btn-primary" onclick="closeQuizModal()">Done</button>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+                if (result.passed && row) row.classList.add('completed');
+            } catch (err) {
+                body.innerHTML = `<div class="sim-error"><p style="color:var(--danger)">Submission failed: ${err.message}</p><button class="btn-outline" onclick="closeQuizModal()">Close</button></div>`;
+            }
+        }
+
+        function retryCheckpoint() {
+            openCheckpoint(QUIZ_STATE.checkpointId, QUIZ_STATE.row);
+        }
+
+        function closeQuizModal() {
+            document.getElementById('quizModal').classList.remove('active');
+            QUIZ_STATE = {};
+        }
+
+        // ============================================
+        // NAVIGATION & PROFILE
+        // ============================================
+        function goBackToDashboard() { window.location.href = 'index.html'; }
+        function goToMyCourses() { window.location.href = 'index.html#my-courses'; }
+        function handleLogout() { Auth.clearAuth(); Auth.logout('login.html'); }
+
+        function loadUserProfile() {
+            try {
+                const user = Auth.getUser();
+                if (!user) return;
+                document.getElementById('display-name').textContent = user.display_name || user.name || 'Agent';
+                document.getElementById('display-email').textContent = user.email || '';
+                const initials = (user.display_name || user.name || 'A').split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
+            } catch (e) { console.error('Profile load error:', e); }
+        }
+
+        window.addEventListener('popstate', () => {
+            if (!Auth.getToken()) window.location.replace('login.html');
         });
     </script>
 </body>

@@ -151,6 +151,40 @@
         }
         .courses-page-title i { color: var(--accent); filter: drop-shadow(0 0 10px var(--accent-glow)); }
         .courses-page-subtitle { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+        .courses-overview {
+            margin-top: var(--space-lg);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+        .overview-pill {
+            min-width: 150px;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+        .overview-pill.upcoming {
+            border-color: rgba(255, 193, 7, 0.45);
+            background: rgba(255, 193, 7, 0.08);
+        }
+        .overview-label {
+            font-size: 0.78rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        .overview-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
 
         .course-category { margin-bottom: var(--space-2xl); }
         .category-header {
@@ -184,6 +218,36 @@
             font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
             border-radius: var(--radius-sm); box-shadow: var(--shadow-glow);
         }
+        .course-card.upcoming-course {
+            border-color: rgba(255, 193, 7, 0.35);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.06) 0%, var(--bg-surface) 85%);
+            cursor: default;
+            box-shadow: none;
+        }
+        .course-card.upcoming-course:hover {
+            border-color: rgba(255, 193, 7, 0.5);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.09) 0%, var(--bg-surface) 85%);
+            transform: none;
+            box-shadow: none;
+        }
+        .course-card.upcoming-course::before {
+            opacity: 1;
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.95), rgba(255, 193, 7, 0.1));
+        }
+        .course-card.upcoming-course::after {
+            content: 'UPCOMING';
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 193, 7, 0.18);
+            color: #ffd666;
+            border: 1px solid rgba(255, 193, 7, 0.45);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: var(--radius-sm);
+        }
 
         .card-header-courses { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-lg); }
         .course-title-wrapper { flex: 1; }
@@ -196,9 +260,28 @@
             font-family: var(--font-mono);
         }
         .course-card.active-course .course-category-badge { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .course-card.upcoming-course .course-category-badge {
+            background: rgba(255, 193, 7, 0.12);
+            border-color: rgba(255, 193, 7, 0.4);
+            color: #ffd666;
+        }
 
         .card-content-courses { margin-bottom: var(--space-lg); }
         .course-description { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: var(--space-lg); }
+        .upcoming-note {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+            padding: 0.55rem 0.75rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 193, 7, 0.35);
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffd666;
+            font-size: 0.82rem;
+            font-family: var(--font-mono);
+        }
+        .upcoming-note i { width: 15px; height: 15px; }
         .course-meta { display: flex; gap: var(--space-lg); flex-wrap: wrap; margin-bottom: var(--space-lg); }
         .meta-item { display: flex; align-items: center; gap: var(--space-sm); font-size: 0.85rem; color: var(--text-muted); }
         .meta-item i { width: 16px; height: 16px; color: var(--accent); }
@@ -225,6 +308,13 @@
         }
         .progress-status-courses { font-size: 0.8rem; color: var(--text-muted); margin-top: var(--space-sm); font-style: italic; }
         .course-card.active-course .progress-status-courses { color: var(--accent); }
+        .course-card.upcoming-course .progress-percentage-courses,
+        .course-card.upcoming-course .progress-status-courses {
+            color: #ffd666;
+        }
+        .course-card.upcoming-course .progress-label-courses {
+            color: #f6d67a;
+        }
 
         .card-actions-courses { display: flex; gap: var(--space-md); }
         .btn-course-primary {
@@ -236,6 +326,19 @@
             box-shadow: 0 4px 15px rgba(0, 242, 255, 0.3);
         }
         .btn-course-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0, 242, 255, 0.5); }
+        .btn-course-primary:disabled,
+        .btn-course-primary.is-upcoming {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.65), rgba(194, 129, 5, 0.6));
+            color: #1e1400;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+        .btn-course-primary:disabled:hover,
+        .btn-course-primary.is-upcoming:hover {
+            transform: none;
+            box-shadow: none;
+        }
 
         .current-lesson {
             display: flex; align-items: center; gap: var(--space-sm);
@@ -686,6 +789,20 @@
                         My Courses
                     </h1>
                     <p class="courses-page-subtitle">Track your learning journey and continue where you left off</p>
+                    <div class="courses-overview" id="coursesOverview">
+                        <div class="overview-pill">
+                            <span class="overview-label">Active</span>
+                            <span class="overview-value" id="activeCoursesCount">0</span>
+                        </div>
+                        <div class="overview-pill">
+                            <span class="overview-label">Available</span>
+                            <span class="overview-value" id="availableCoursesCount">0</span>
+                        </div>
+                        <div class="overview-pill upcoming">
+                            <span class="overview-label">Upcoming</span>
+                            <span class="overview-value" id="upcomingCoursesCount">0</span>
+                        </div>
+                    </div>
                 </header>
 
                 <!-- Fundamentals Category -->
@@ -1248,6 +1365,15 @@
         'ethical-hacking': 'ethical-hacking'
     };
 
+    // Course rollout controls for My Courses cards
+    const UPCOMING_COURSE_IDS = new Set(['computer-networking', 'ethical-hacking']);
+    const COURSE_CARD_PRIORITY = {
+        'information-security': 0,
+        'infosec': 0,
+        'computer-networking': 10,
+        'ethical-hacking': 20
+    };
+
     // Course Data Structure (MUST be global for my-courses.js)
     window.coursesData = {
         "myCourses": [
@@ -1306,14 +1432,19 @@
      * Render a single course card
      */
     function renderCourseCard(course) {
+        const isUpcoming = UPCOMING_COURSE_IDS.has(course.id);
         const isActive = course.progress.status === 'in-progress';
         const progressText = course.progress.percentage === 0 
             ? 'Not started' 
             : `${course.progress.percentage}% completed`;
-        const buttonText = course.progress.status === 'not-started' 
+        const buttonText = isUpcoming
+            ? 'Upcomming'
+            : course.progress.status === 'not-started' 
             ? 'Start Course' 
             : 'Resume Course';
-        const buttonIcon = course.progress.status === 'not-started' 
+        const buttonIcon = isUpcoming
+            ? 'clock-3'
+            : course.progress.status === 'not-started' 
             ? 'play-circle' 
             : 'arrow-right';
 
@@ -1366,7 +1497,7 @@
                 </div>
 
                 <div class="card-actions-courses">
-                    <button class="btn-course-primary" onclick="handleCourseAction('${course.id}', '${course.progress.status}')">
+                    <button class="btn-course-primary ${isUpcoming ? 'is-upcoming' : ''}" ${isUpcoming ? 'disabled aria-disabled="true" title="Coming soon"' : `onclick="handleCourseAction('${course.id}', '${course.progress.status}')"`}>
                         <i data-lucide="${buttonIcon}"></i>
                         ${buttonText}
                     </button>
@@ -1381,7 +1512,14 @@
     function renderCoursesByCategory(courses, category) {
         console.log(`renderCoursesByCategory called with category: ${category}, courses:`, courses);
         
-        const filteredCourses = courses.filter(course => course.category === category);
+        const filteredCourses = courses
+            .filter(course => course.category === category)
+            .sort((a, b) => {
+                const priorityA = COURSE_CARD_PRIORITY[a.id] ?? 999;
+                const priorityB = COURSE_CARD_PRIORITY[b.id] ?? 999;
+                if (priorityA !== priorityB) return priorityA - priorityB;
+                return (a.title || '').localeCompare(b.title || '');
+            });
         console.log(`Filtered courses for ${category}:`, filteredCourses);
         
         const gridElement = document.getElementById(`${category}-grid`);

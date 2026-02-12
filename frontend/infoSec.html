@@ -527,6 +527,9 @@
         .sim-feedback i { flex-shrink: 0; margin-top: 3px; }
         .sim-feedback p { margin: 0.3rem 0 0; color: #ccc; font-size: 0.9rem; }
         .sim-insight { margin-top: 0.8rem; padding: 0.8rem; background: rgba(255,255,255,0.03); border-left: 3px solid var(--accent); color: #888; font-style: italic; font-size: 0.85rem; }
+        .sim-ai-tools { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+        .sim-ai-btn { padding: 0.45rem 0.8rem; font-size: 0.75rem; letter-spacing: 0.5px; align-self: flex-start; }
+        .sim-ai-hint, .quiz-ai-hint { background: rgba(0,242,255,0.05); border: 1px solid rgba(0,242,255,0.15); border-radius: 8px; padding: 0.8rem 1rem; color: #cfd8dc; font-size: 0.88rem; line-height: 1.6; }
         .sim-footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
         .sim-tokens { font-size: 0.85rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
         .text-success { color: var(--success) !important; }
@@ -884,9 +887,76 @@
             completedIds: new Set()
         };
 
+        const AI_CONTEXT_LESSON_MAP = {
+            'infosec-m01-sim01': 'infosec-m01-l01',
+            'infosec-m01-sim02': 'infosec-m01-l03',
+            'infosec-m01-checkpoint': 'infosec-m01-l05'
+        };
+
+        function resolveAiContextLesson(resourceId, fallbackLessonId = 'infosec-m01-l01') {
+            return AI_CONTEXT_LESSON_MAP[resourceId] || fallbackLessonId;
+        }
+
         function normalizeTrackSlug(slug) {
             if (!slug) return DEFAULT_TRACK_SLUG;
             return TRACK_SLUG_ALIASES[slug] || DEFAULT_TRACK_SLUG;
+        }
+
+        async function resolveInfoSecTrackSlug(preferredSlug = PAGE_STATE.courseSlug) {
+            const fallbackSlug = normalizeTrackSlug(preferredSlug);
+
+            try {
+                const data = await Api.getTracks();
+                const tracks = Array.isArray(data?.tracks) ? data.tracks : [];
+                const track = tracks.find(t =>
+                    t?.id === 'infosec' ||
+                    t?.slug === 'information-security' ||
+                    t?.slug === 'infosec' ||
+                    (t?.title || '').trim().toLowerCase() === 'information security'
+                );
+
+                if (track?.slug) {
+                    PAGE_STATE.courseSlug = track.slug;
+                    return PAGE_STATE.courseSlug;
+                }
+            } catch (err) {
+                console.warn('[InfoSec] Track discovery failed, using fallback slug:', fallbackSlug, err.message);
+            }
+
+            PAGE_STATE.courseSlug = fallbackSlug;
+            return PAGE_STATE.courseSlug;
+        }
+
+        async function enrollWithFallback() {
+            const candidates = [PAGE_STATE.courseSlug, DEFAULT_TRACK_SLUG, 'infosec'];
+            const attempted = new Set();
+            let lastNotFoundError = null;
+
+            for (const candidate of candidates) {
+                if (!candidate || attempted.has(candidate)) continue;
+                attempted.add(candidate);
+
+                try {
+                    const result = await Api.enrollInTrack(candidate);
+                    PAGE_STATE.courseSlug = normalizeTrackSlug(candidate);
+                    return result;
+                } catch (err) {
+                    const msg = (err.message || '').toLowerCase();
+                    if (msg.includes('not found')) {
+                        lastNotFoundError = err;
+                        continue;
+                    }
+                    throw err;
+                }
+            }
+
+            // One final attempt after refreshing available tracks from backend
+            const discovered = await resolveInfoSecTrackSlug(PAGE_STATE.courseSlug);
+            if (!attempted.has(discovered)) {
+                return await Api.enrollInTrack(discovered);
+            }
+
+            throw lastNotFoundError || new Error('Enrollment failed');
         }
 
         // ── PAGE INIT ────────────────────────────────
@@ -935,12 +1005,15 @@
                 document.getElementById('courseBreadcrumb').textContent = 'INFORMATION SECURITY';
             }
             PAGE_STATE.courseSlug = normalizeTrackSlug(rawSlug);
+            await resolveInfoSecTrackSlug(PAGE_STATE.courseSlug);
 
             await initCourseState();
         });
 
         // ── LOAD STATE FROM BACKEND ──────────────────
         async function initCourseState() {
+            await resolveInfoSecTrackSlug(PAGE_STATE.courseSlug);
+
             // Fetch enrollment and tokens independently so one failing doesn't block the other
             let enrollmentData = null;
             let tokenData = null;
@@ -956,6 +1029,17 @@
             } catch (err) {
                 console.warn('[InfoSec] Could not load course state:', err.message);
                 return;
+            }
+
+            if (enrollmentData?.trackMissing) {
+                // Legacy fallback for environments still using "infosec" as primary identifier
+                try {
+                    const legacy = await Api.getEnrollment('infosec');
+                    if (legacy && !legacy.trackMissing) {
+                        PAGE_STATE.courseSlug = 'infosec';
+                        enrollmentData = legacy;
+                    }
+                } catch (_) {}
             }
 
             if (tokenData) {
@@ -1012,7 +1096,7 @@
             btn.textContent = 'ENROLLING...';
 
             try {
-                const result = await Api.enrollInTrack(PAGE_STATE.courseSlug);
+                const result = await enrollWithFallback();
                 PAGE_STATE.isEnrolled = true;
                 unlockCurriculumUI();
                 btn.textContent = 'CONTINUE LEARNING';
@@ -1042,6 +1126,23 @@
                     btn.textContent = 'INITIATE PROTOCOL';
                     Toast.error('Course not found in database. Contact your instructor.');
                     console.error('[Enroll] Track slug used:', PAGE_STATE.courseSlug, '— Error:', msg);
+                } else if (msg.toLowerCase().includes('database error')) {
+                    // Recovery path: if enrollment row already exists but insert failed, unlock UI anyway.
+                    try {
+                        const fallback = await Api.getEnrollment(PAGE_STATE.courseSlug);
+                        if (fallback?.isEnrolled) {
+                            PAGE_STATE.isEnrolled = true;
+                            unlockCurriculumUI();
+                            btn.textContent = 'CONTINUE LEARNING';
+                            btn.classList.add('enrolled');
+                            Toast.info('Enrollment already active. Continuing your course.');
+                            return;
+                        }
+                    } catch (_) {}
+
+                    btn.textContent = 'INITIATE PROTOCOL';
+                    Toast.error('Database mismatch detected. Please sync track/modules in Supabase.');
+                    console.error('[Enroll] Database mismatch while enrolling:', msg);
                 } else {
                     btn.textContent = 'INITIATE PROTOCOL';
                     Toast.error(msg || 'Enrollment failed. Try again.');
@@ -1094,6 +1195,20 @@
             setTimeout(() => { el.style.color = 'var(--accent)'; }, 800);
         }
 
+        async function syncTokenDisplay(preferredBalance = null) {
+            if (preferredBalance !== null && preferredBalance !== undefined) {
+                updateTokenDisplay(preferredBalance);
+                return;
+            }
+
+            try {
+                const t = await Api.getUserTokens();
+                updateTokenDisplay(t.tokens?.tokens_available ?? 0);
+            } catch (_) {
+                // Keep existing display if balance refresh fails.
+            }
+        }
+
         // ============================================
         // SIMULATION MODAL
         // ============================================
@@ -1108,7 +1223,7 @@
 
             try {
                 const sim = await Api.getSimulation(simId);
-                SIM_STATE = { simId, row, sim, completed: false, stepIndex: 0 };
+                SIM_STATE = { simId, row, sim, completed: false, stepIndex: 0, submitSucceeded: false, tokensAwarded: 0, lastChoiceId: null };
                 if (sim.type === 'multi-step') {
                     renderMultiStepSim(sim);
                 } else {
@@ -1135,6 +1250,10 @@
                     ${sim.constraints ? `<div class="sim-constraints"><strong>Constraints:</strong> ${sim.constraints.join(' &middot; ')}</div>` : ''}
                 </div>
                 <div class="sim-question"><p>${sim.question}</p></div>
+                <div class="sim-ai-tools">
+                    <button class="btn-outline sim-ai-btn" id="simHintBtn" onclick="askSimulationHint()">Ask AI Mentor</button>
+                    <div class="sim-ai-hint hidden" id="simAiHint"></div>
+                </div>
                 <div class="sim-choices">${choicesHTML}</div>
                 <div class="sim-feedback hidden" id="simFeedback"></div>
                 <div class="sim-footer">
@@ -1163,6 +1282,10 @@
                 </div>
                 <div class="sim-scenario"><p>${step.scenario}</p></div>
                 <div class="sim-question"><p>${step.question}</p></div>
+                <div class="sim-ai-tools">
+                    <button class="btn-outline sim-ai-btn" id="simHintBtn" onclick="askSimulationHint()">Ask AI Mentor</button>
+                    <div class="sim-ai-hint hidden" id="simAiHint"></div>
+                </div>
                 <div class="quiz-options" id="stepOptions">${choicesHTML}</div>
                 <div class="sim-feedback hidden" id="stepFeedback"></div>
                 <div class="sim-footer">
@@ -1170,6 +1293,36 @@
                     <button class="btn-outline" onclick="closeSimModal()">Cancel</button>
                 </div>`;
             lucide.createIcons();
+        }
+
+        async function askSimulationHint() {
+            if (!SIM_STATE?.simId || !SIM_STATE?.sim) return;
+
+            const hintBtn = document.getElementById('simHintBtn');
+            const hintBox = document.getElementById('simAiHint');
+            if (!hintBtn || !hintBox) return;
+
+            hintBtn.disabled = true;
+            hintBtn.textContent = 'THINKING...';
+
+            const lessonId = resolveAiContextLesson(SIM_STATE.simId, 'infosec-m01-l01');
+            const prompt = SIM_STATE.sim.type === 'multi-step'
+                ? (() => {
+                    const step = SIM_STATE.sim.steps?.[SIM_STATE.stepIndex] || {};
+                    return `I am in a simulation.\nScenario: ${step.scenario || ''}\nQuestion: ${step.question || ''}\nGive me a short conceptual hint. Do NOT reveal the exact answer.`;
+                })()
+                : `I am in a simulation.\nScenario: ${SIM_STATE.sim.scenario || ''}\nQuestion: ${SIM_STATE.sim.question || ''}\nGive me a short conceptual hint. Do NOT reveal the exact answer.`;
+
+            try {
+                const data = await Api.getHint(lessonId, prompt);
+                hintBox.textContent = data.hint || 'No hint available right now.';
+                hintBox.classList.remove('hidden');
+            } catch (err) {
+                Toast.error(err.message || 'Could not get AI hint right now.');
+            } finally {
+                hintBtn.disabled = false;
+                hintBtn.textContent = 'Ask AI Mentor';
+            }
         }
 
         function selectSimChoice(choiceId) {
@@ -1223,10 +1376,16 @@
         }
 
         async function finishSimulation(choiceId) {
+            const selectedChoice = choiceId || 'completed';
+            SIM_STATE.lastChoiceId = selectedChoice;
+
             try {
-                const result = await Api.submitSimulation(SIM_STATE.simId, choiceId || 'completed');
-                updateTokenDisplay(result.newBalance || 0);
-                const tokens = result.tokensEarned || SIM_STATE.sim.tokens;
+                const result = await Api.submitSimulation(SIM_STATE.simId, selectedChoice);
+                await syncTokenDisplay(result.newBalance ?? null);
+
+                const tokens = Number(result.tokensEarned || 0);
+                SIM_STATE.submitSucceeded = true;
+                SIM_STATE.tokensAwarded = tokens;
 
                 if (SIM_STATE.sim.insight) {
                     const fb = document.getElementById('simFeedback') || document.getElementById('stepFeedback');
@@ -1234,20 +1393,36 @@
                 }
 
                 document.querySelector('.sim-footer').innerHTML = `
-                    <span class="sim-tokens text-success">+${tokens} Tokens Earned!</span>
+                    <span class="sim-tokens text-success">${tokens > 0 ? `+${tokens} Tokens Earned!` : 'Completion saved'}</span>
                     <button class="btn-primary" onclick="completeSimAndClose()">Done ✓</button>`;
                 lucide.createIcons();
             } catch (err) {
                 console.error('Sim submit error:', err);
+                SIM_STATE.submitSucceeded = false;
+                SIM_STATE.tokensAwarded = 0;
+                Toast.error(`Could not record simulation completion: ${err.message || 'unknown error'}`);
                 document.querySelector('.sim-footer').innerHTML = `
-                    <span></span>
-                    <button class="btn-primary" onclick="completeSimAndClose()">Done ✓</button>`;
+                    <button class="btn-outline" onclick="closeSimModal()">Close</button>
+                    <button class="btn-primary" onclick="retrySimSubmission()">Retry Save</button>`;
             }
         }
 
+        async function retrySimSubmission() {
+            await finishSimulation(SIM_STATE.lastChoiceId || 'completed');
+        }
+
         function completeSimAndClose() {
+            if (!SIM_STATE.submitSucceeded) {
+                Toast.error('Simulation progress was not saved. Please retry before closing.');
+                return;
+            }
+
             if (SIM_STATE.row) SIM_STATE.row.classList.add('completed');
-            Toast.success(`Simulation Complete · +${SIM_STATE.sim?.tokens || 5} Tokens`);
+            if ((SIM_STATE.tokensAwarded || 0) > 0) {
+                Toast.success(`Simulation Complete · +${SIM_STATE.tokensAwarded} Tokens`);
+            } else {
+                Toast.success('Simulation completion recorded.');
+            }
             closeSimModal();
         }
 
@@ -1296,8 +1471,9 @@
                 <p class="quiz-q-text">${q.question}</p>
                 <div class="quiz-options">${opts}</div>
                 <div class="quiz-feedback hidden" id="quizFeedback"></div>
+                <div class="quiz-ai-hint hidden" id="quizAiHint"></div>
                 <div class="quiz-footer">
-                    <span></span>
+                    <button class="btn-outline sim-ai-btn" id="quizHintBtn" onclick="askQuizHint()">Ask AI Hint</button>
                     <button class="btn-outline" onclick="closeQuizModal()">Quit</button>
                 </div>`;
             lucide.createIcons();
@@ -1328,6 +1504,36 @@
                 </button>`;
         }
 
+        async function askQuizHint() {
+            if (!QUIZ_STATE?.questions?.length) return;
+
+            const { checkpointId, questions, currentQ } = QUIZ_STATE;
+            const current = questions[currentQ];
+            const hintBtn = document.getElementById('quizHintBtn');
+            const hintBox = document.getElementById('quizAiHint');
+            if (!current || !hintBtn || !hintBox) return;
+
+            hintBtn.disabled = true;
+            hintBtn.textContent = 'THINKING...';
+
+            const lessonId = resolveAiContextLesson(checkpointId, 'infosec-m01-l05');
+            const choicesText = (current.choices || [])
+                .map((choice, i) => `${String.fromCharCode(65 + i)}. ${choice.text}`)
+                .join('\n');
+            const prompt = `Checkpoint question: ${current.question}\nChoices:\n${choicesText}\nGive me a conceptual hint only. Do NOT reveal the exact answer option.`;
+
+            try {
+                const data = await Api.getHint(lessonId, prompt);
+                hintBox.textContent = data.hint || 'No hint available right now.';
+                hintBox.classList.remove('hidden');
+            } catch (err) {
+                Toast.error(err.message || 'Could not get AI hint right now.');
+            } finally {
+                hintBtn.disabled = false;
+                hintBtn.textContent = 'Ask AI Hint';
+            }
+        }
+
         function nextQuestion() {
             QUIZ_STATE.currentQ++;
             renderQuestion();
@@ -1341,7 +1547,7 @@
 
             try {
                 const result = await Api.submitCheckpoint(checkpointId, answers.map(a => ({ questionIdx: a.questionIdx, selectedIdx: a.selectedIdx })));
-                updateTokenDisplay(result.newBalance || 0);
+                await syncTokenDisplay(result.newBalance ?? null);
 
                 let aiFeedback = '';
                 try {

@@ -1,0 +1,82 @@
+{
+  "id": "infosec-m01-sim02",
+  "title": "Threat, Vulnerability, or Risk?",
+  "description": "Classify each scenario as a Threat, Vulnerability, or Risk.",
+  "tokens": 5,
+  "type": "multi-step",
+  "steps": [
+    {
+      "scenario": "A known hacker group called APT-41 is actively targeting financial institutions in your region.",
+      "question": "Classify this statement:",
+      "choices": [
+        {
+          "id": "A",
+          "text": "Threat",
+          "isCorrect": true,
+          "explanation": "Correct. A threat is an actor, event, or circumstance with the potential to cause harm. APT-41 is an active adversary — they represent the intention and capability to attack, making them a threat."
+        },
+        {
+          "id": "B",
+          "text": "Vulnerability",
+          "isCorrect": false,
+          "explanation": "Not quite. A vulnerability is a weakness in your system that can be exploited. APT-41 itself is not a weakness — they are an external actor that exploits weaknesses."
+        },
+        {
+          "id": "C",
+          "text": "Risk",
+          "isCorrect": false,
+          "explanation": "Close, but not exactly. Risk is the potential for harm when a threat exploits a vulnerability. The hacker group alone is a threat — risk would be the probability and impact of them successfully attacking you."
+        }
+      ]
+    },
+    {
+      "scenario": "Your company's web application is running an unpatched version of Apache with a known CVE (Common Vulnerability Exposure).",
+      "question": "Classify this statement:",
+      "choices": [
+        {
+          "id": "A",
+          "text": "Threat",
+          "isCorrect": false,
+          "explanation": "Not exactly. A threat is an external actor or event. An unpatched CVE is a weakness in your own system, not an adversary."
+        },
+        {
+          "id": "B",
+          "text": "Vulnerability",
+          "isCorrect": true,
+          "explanation": "Correct! An unpatched CVE is a textbook vulnerability — a known weakness in a system that has not yet been remediated. CVEs are catalogued precisely because they represent exploitable weaknesses."
+        },
+        {
+          "id": "C",
+          "text": "Risk",
+          "isCorrect": false,
+          "explanation": "You're partially right — a known CVE increases risk. But the CVE itself is the vulnerability. Risk would be the combined probability of exploitation and its business impact."
+        }
+      ]
+    },
+    {
+      "scenario": "A public-facing login portal with weak password requirements could be accessed by a motivated attacker, potentially exposing 50,000 customer records.",
+      "question": "Classify this statement:",
+      "choices": [
+        {
+          "id": "A",
+          "text": "Threat",
+          "isCorrect": false,
+          "explanation": "The 'motivated attacker' is the threat. But this statement describes the full picture — a weakness (vulnerability) that can be exploited by someone (threat), resulting in a potential harm (risk)."
+        },
+        {
+          "id": "B",
+          "text": "Vulnerability",
+          "isCorrect": false,
+          "explanation": "The weak password requirement is indeed a vulnerability. But the statement goes further — it describes the probability of exploitation AND the potential impact (50,000 records), which makes it a risk statement."
+        },
+        {
+          "id": "C",
+          "text": "Risk",
+          "isCorrect": true,
+          "explanation": "Correct. This is a risk statement. Risk = Threat (motivated attacker) × Vulnerability (weak passwords) × Impact (50,000 records). When you describe the likelihood of harm AND the consequence, you're defining risk."
+        }
+      ]
+    }
+  ],
+  "insight": "A vulnerability without a threat is harmless. A threat without a vulnerability is ineffective. Risk only exists when both meet — and understanding this distinction is fundamental to security prioritization."
+}

@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labs & CTFs | Sentinel-LMS</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Shared modules -->
+    <link rel="stylesheet" href="Styles/theme.css">
+    <link rel="stylesheet" href="Styles/layout.css">
+    <link rel="stylesheet" href="Styles/components.css">
+    <link rel="stylesheet" href="Styles/utilities.css">
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="toast.js"></script>
+    <script src="navigation.js"></script>
+
+    <!-- Immediate auth guard -->
+    <script>
+        (function() {
+            if (!Auth.getToken()) {
+                window.location.replace('login.html');
+                document.documentElement.style.display = 'none';
+                throw new Error('AUTH_REDIRECT');
+            }
+        })();
+    </script>
+
+    <style>
+        body { display: flex; }
+
+        /* ── MAIN LAYOUT ─────────────────────────────── */
+        .labs-page {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── TOP BAR ─────────────────────────────────── */
+        .labs-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .labs-topbar h1 { font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.6rem; }
+        .labs-topbar h1 i { color: var(--accent); }
+
+        /* ── LAB SELECTOR ────────────────────────────── */
+        .labs-selector {
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.01);
+        }
+        .lab-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lab-tab:hover { border-color: var(--accent); color: var(--accent); }
+        .lab-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(0,242,255,0.08); }
+        .lab-tab .difficulty-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .difficulty-dot.easy { background: var(--success); }
+        .difficulty-dot.medium { background: var(--warning); }
+        .difficulty-dot.hard { background: var(--danger); }
+
+        /* ── SPLIT LAYOUT ────────────────────────────── */
+        .labs-split {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* ── INSTRUCTIONS PANEL ──────────────────────── */
+        .lab-instructions {
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            height: calc(100vh - 120px);
+        }
+        .instructions-header {
+            padding: 1.5rem 1.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 10;
+        }
+        .lab-badge { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); border: 1px solid rgba(0,242,255,0.3); border-radius: 3px; padding: 2px 7px; margin-bottom: 0.6rem; text-transform: uppercase; }
+        .lab-title { font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem; }
+        .lab-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+        .instructions-body { padding: 1.5rem 1.8rem; flex: 1; }
+
+        /* Tasks */
+        .task-list { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+        .task-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .task-item:hover { border-color: rgba(0,242,255,0.2); }
+        .task-item.completed { border-color: rgba(0,255,157,0.3); background: rgba(0,255,157,0.04); }
+        .task-item.active-task { border-color: var(--accent); background: rgba(0,242,255,0.06); }
+        .task-check {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            font-size: 0;
+            transition: all 0.2s;
+        }
+        .task-item.completed .task-check { background: var(--success); border-color: var(--success); font-size: 12px; color: #000; }
+        .task-item.active-task .task-check { border-color: var(--accent); }
+        .task-content h4 { font-size: 0.9rem; font-weight: 600; color: #fff; margin-bottom: 0.3rem; }
+        .task-content p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin: 0; }
+        .task-content code { font-family: 'JetBrains Mono', monospace; font-size: 0.8em; background: rgba(255,255,255,0.07); padding: 1px 4px; border-radius: 3px; color: var(--accent); }
+
+        /* Hint block */
+        .lab-hint {
+            background: rgba(255,189,46,0.06);
+            border: 1px solid rgba(255,189,46,0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: #ccc;
+            line-height: 1.6;
+            display: none;
+        }
+        .lab-hint.visible { display: block; }
+        .hint-toggle { background: none; border: none; color: var(--warning); font-size: 0.8rem; cursor: pointer; padding: 0; font-family: 'Space Grotesk', sans-serif; margin-bottom: 0.8rem; }
+        .hint-toggle:hover { text-decoration: underline; }
+
+        /* ── TERMINAL PANEL ──────────────────────────── */
+        .lab-terminal-panel {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            background: #080808;
+        }
+        .terminal-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1.2rem;
+            border-bottom: 1px solid #1a1a1a;
+            background: #0c0c0c;
+        }
+        .terminal-toolbar-left { display: flex; align-items: center; gap: 0.8rem; }
+        .terminal-dots { display: flex; gap: 6px; }
+        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #febc2e; }
+        .terminal-dot.green { background: #28c840; }
+        .terminal-label { font-size: 0.75rem; color: #555; font-family: 'JetBrains Mono', monospace; }
+        .lang-selector {
+            display: flex;
+            gap: 0.3rem;
+        }
+        .lang-btn {
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid #2a2a2a;
+            background: transparent;
+            color: #555;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lang-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,242,255,0.08); }
+        .clear-btn { background: none; border: none; color: #444; font-size: 0.75rem; cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
+        .clear-btn:hover { color: #888; }
+
+        /* Terminal output display */
+        .terminal-output {
+            flex: 1;
+            padding: 1.2rem 1.5rem;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            color: #00d2aa;
+        }
+        .terminal-output .output-line { margin-bottom: 2px; word-break: break-all; white-space: pre-wrap; }
+        .terminal-output .output-line.command { color: var(--accent); }
+        .terminal-output .output-line.command::before { content: '$ '; opacity: 0.6; }
+        .terminal-output .output-line.stdout { color: #c8c8c8; }
+        .terminal-output .output-line.stderr { color: var(--danger); }
+        .terminal-output .output-line.system { color: #555; font-style: italic; }
+        .terminal-output .output-line.success { color: var(--success); }
+
+        /* Input area */
+        .terminal-input-area {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.8rem 1.5rem;
+            border-top: 1px solid #1a1a1a;
+            background: #0c0c0c;
+        }
+        .terminal-prompt { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; flex-shrink: 0; }
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            outline: none;
+            caret-color: var(--accent);
+        }
+        .terminal-run-btn {
+            padding: 0.4rem 0.9rem;
+            background: rgba(0,242,255,0.1);
+            border: 1px solid rgba(0,242,255,0.2);
+            color: var(--accent);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .terminal-run-btn:hover { background: rgba(0,242,255,0.2); }
+        .terminal-run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Multi-line editor */
+        .code-editor-area {
+            flex: 1;
+            background: #0a0a0a;
+            border: none;
+            color: #c8c8c8;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            padding: 1.2rem 1.5rem;
+            resize: none;
+            outline: none;
+            line-height: 1.7;
+        }
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1.2rem;
+            border-top: 1px solid #1a1a1a;
+            background: #0c0c0c;
+        }
+        .run-code-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 1rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .run-code-btn:hover { background: #fff; }
+        .run-code-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .editor-mode-label { font-size: 0.75rem; color: #444; font-family: 'JetBrains Mono', monospace; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="logo">
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS">
+            SENTINEL<span>LMS</span>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" onclick="window.location.href='index.html'">
+                    <i data-lucide="arrow-left" size="20"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active">
+                    <i data-lucide="terminal-square" size="20"></i>
+                    <span>Labs & CTFs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="window.location.href='infoSec.html'">
+                    <i data-lucide="book-open" size="20"></i>
+                    <span>Info Security</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="profile-popup" id="profilePopup">
+                <div class="popup-item logout" onclick="handleLogout()">
+                    <i data-lucide="log-out" size="18"></i><span>Logout</span>
+                </div>
+            </div>
+            <button class="profile-btn" id="profileBtn">
+                <div class="profile-avatar" id="display-avatar">??</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="display-name">Loading...</div>
+                    <div class="profile-email" id="display-email">Please wait...</div>
+                </div>
+                <i data-lucide="chevron-up" size="18"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN LABS PAGE -->
+    <div class="labs-page">
+        <!-- TOP BAR -->
+        <div class="labs-topbar">
+            <h1><i data-lucide="terminal-square" size="22"></i> Labs & CTFs</h1>
+            <span style="font-size:0.8rem; color:var(--text-muted)">Powered by Piston API · Sandboxed Execution</span>
+        </div>
+
+        <!-- LAB SELECTOR TABS -->
+        <div class="labs-selector">
+            <button class="lab-tab active" onclick="selectLab('hash-intro')" id="tab-hash-intro">
+                <span class="difficulty-dot easy"></span> Lab 01 · Hash Basics
+            </button>
+            <button class="lab-tab" onclick="selectLab('file-inspect')" id="tab-file-inspect">
+                <span class="difficulty-dot easy"></span> Lab 02 · File Inspection
+            </button>
+            <button class="lab-tab" onclick="selectLab('password-audit')" id="tab-password-audit">
+                <span class="difficulty-dot medium"></span> Lab 03 · Password Audit
+            </button>
+        </div>
+
+        <!-- SPLIT: INSTRUCTIONS + TERMINAL -->
+        <div class="labs-split">
+
+            <!-- LEFT: INSTRUCTIONS -->
+            <div class="lab-instructions">
+                <div class="instructions-header">
+                    <div class="lab-badge" id="lab-badge">LAB</div>
+                    <div class="lab-title" id="lab-title">Hash Basics</div>
+                    <div class="lab-desc" id="lab-desc">Learn how cryptographic hash functions work.</div>
+                </div>
+                <div class="instructions-body">
+                    <div class="task-list" id="taskList">
+                        <!-- Tasks rendered by JS -->
+                    </div>
+                    <button class="hint-toggle" onclick="toggleHint()">
+                        <i data-lucide="lightbulb" size="13" style="display:inline;vertical-align:middle"></i>
+                        Show Hint
+                    </button>
+                    <div class="lab-hint" id="labHint"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT: TERMINAL -->
+            <div class="lab-terminal-panel">
+                <div class="terminal-toolbar">
+                    <div class="terminal-toolbar-left">
+                        <div class="terminal-dots">
+                            <div class="terminal-dot red"></div>
+                            <div class="terminal-dot yellow"></div>
+                            <div class="terminal-dot green"></div>
+                        </div>
+                        <span class="terminal-label" id="terminal-label">sentinel-lab ~ python3</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <div class="lang-selector">
+                            <button class="lang-btn" id="lang-bash" onclick="setLang('bash')">bash</button>
+                            <button class="lang-btn active" id="lang-python" onclick="setLang('python')">python3</button>
+                        </div>
+                        <button class="clear-btn" onclick="clearTerminal()">clear</button>
+                    </div>
+                </div>
+
+                <!-- OUTPUT DISPLAY -->
+                <div class="terminal-output" id="terminalOutput">
+                    <div class="output-line system">[ Sentinel Lab Environment · Piston API v2 ]</div>
+                    <div class="output-line system">[ Type code below and press Run or Enter to execute ]</div>
+                    <div class="output-line system">─────────────────────────────────────────────────</div>
+                </div>
+
+                <!-- MULTI-LINE CODE EDITOR -->
+                <textarea class="code-editor-area" id="codeEditor" placeholder="# Write your code here and click Run...
+# Example: print('Hello, Security World!')" spellcheck="false"></textarea>
+
+                <div class="editor-toolbar">
+                    <span class="editor-mode-label" id="editorModeLabel">python3 · sandbox</span>
+                    <button class="run-code-btn" id="runBtn" onclick="runCode()">
+                        <i data-lucide="play" size="15"></i> Run
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // LABS PAGE — PISTON API TERMINAL
+        // ============================================
+
+        const PISTON_API = 'https://emkc.org/api/v2/piston';
+
+        // ── LAB DEFINITIONS ──────────────────────────
+        const LABS = {
+            'hash-intro': {
+                id: 'hash-intro',
+                badge: 'MODULE 01 · LAB',
+                title: 'Hash Basics',
+                desc: 'Learn how cryptographic hash functions work and why they are fundamental to information security.',
+                defaultLang: 'python',
+                hint: 'Hash functions are one-way — you can hash a value but cannot reverse it. Two different inputs should never produce the same hash (collision resistance). Try hashing the same string twice to confirm determinism.',
+                starterCode: {
+                    python: `import hashlib
+
+# ── TASK 1: Hash a password string ──────────────────
+password = "sentinel123"
+hashed = hashlib.sha256(password.encode()).hexdigest()
+print(f"SHA-256 of '{password}':")
+print(hashed)
+print()
+
+# ── TASK 2: Hash is deterministic ───────────────────
+hash2 = hashlib.sha256(password.encode()).hexdigest()
+print("Same input, same hash?", hashed == hash2)
+print()
+
+# ── TASK 3: Different input = different hash ─────────
+other = "Sentinel123"  # capital S
+hash3 = hashlib.sha256(other.encode()).hexdigest()
+print(f"SHA-256 of '{other}':")
+print(hash3)
+print()
+print("Hashes match?", hashed == hash3)
+`,
+                    bash: `# Hash a string using SHA-256
+echo -n "sentinel123" | sha256sum
+
+# Hash with MD5 (deprecated but common)
+echo -n "sentinel123" | md5sum
+
+# Show hash is deterministic
+echo -n "sentinel123" | sha256sum
+echo -n "sentinel123" | sha256sum`
+                },
+                tasks: [
+                    { id: 't1', title: 'Run the hash demo', desc: 'Execute the starter code to see SHA-256 hashing in action.', verifyKeyword: 'sha-256' },
+                    { id: 't2', title: 'Verify determinism', desc: 'Confirm that hashing the same input twice produces identical output.', verifyKeyword: 'same input' },
+                    { id: 't3', title: 'Observe avalanche effect', desc: 'Change just one character (capital S) and see how the entire hash changes dramatically.', verifyKeyword: 'match' }
+                ]
+            },
+            'file-inspect': {
+                id: 'file-inspect',
+                badge: 'MODULE 01 · LAB',
+                title: 'File Inspection',
+                desc: 'Practice reading and analyzing file-like data structures — a fundamental skill for log analysis and forensics.',
+                defaultLang: 'python',
+                hint: 'In real security work, you often parse log files or config files. This lab simulates that with in-memory data. Look for patterns, split on delimiters, and filter based on conditions.',
+                starterCode: {
+                    python: `# Simulated /etc/passwd-style data (sanitized, not real)
+passwd_data = """root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+agent47:x:1000:1000:Agent 47:/home/agent47:/bin/bash
+service_account:x:999:999:Service:/var/lib/service:/bin/false
+analyst:x:1001:1001:Security Analyst:/home/analyst:/bin/bash"""
+
+print("=== All Users ===")
+for line in passwd_data.strip().split('\\n'):
+    parts = line.split(':')
+    username = parts[0]
+    shell = parts[-1]
+    print(f"  {username:<20} shell: {shell}")
+
+print()
+print("=== Users with interactive shells ===")
+for line in passwd_data.strip().split('\\n'):
+    parts = line.split(':')
+    if parts[-1] in ['/bin/bash', '/bin/sh']:
+        uid = int(parts[2])
+        status = "ADMIN" if uid == 0 else "user"
+        print(f"  [{status}] {parts[0]} (UID: {uid})")
+`,
+                    bash: `# Print each user with their UID
+echo "=== User accounts ==="
+echo "root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+agent47:x:1000:1000::/home/agent47:/bin/bash
+analyst:x:1001:1001::/home/analyst:/bin/bash" | awk -F: '{print $1, "UID:", $3}'`
+                },
+                tasks: [
+                    { id: 't1', title: 'List all users', desc: 'Run the script to enumerate all accounts and their shells.', verifyKeyword: 'users' },
+                    { id: 't2', title: 'Identify interactive accounts', desc: 'Filter for accounts with /bin/bash or /bin/sh shells — these can log in interactively.', verifyKeyword: 'interactive' },
+                    { id: 't3', title: 'Flag the admin account', desc: 'Identify which account has UID 0 (root/admin) — highest privilege.', verifyKeyword: 'admin' }
+                ]
+            },
+            'password-audit': {
+                id: 'password-audit',
+                badge: 'MODULE 01 · LAB',
+                title: 'Password Strength Audit',
+                desc: 'Build a basic password strength checker — understanding what makes a password weak is the first step to enforcing strong policies.',
+                defaultLang: 'python',
+                hint: 'A strong password needs length, mixed case, numbers, AND special characters. Think about what attackers do: they try common passwords, dictionary words, and simple patterns first. Your checker should flag these weaknesses.',
+                starterCode: {
+                    python: `import re
+
+def audit_password(password):
+    """Return a strength score and list of issues."""
+    issues = []
+    score = 0
+
+    if len(password) >= 12:
+        score += 2
+    elif len(password) >= 8:
+        score += 1
+    else:
+        issues.append("Too short (minimum 8 characters)")
+
+    if re.search(r'[A-Z]', password):
+        score += 1
+    else:
+        issues.append("Missing uppercase letter")
+
+    if re.search(r'[a-z]', password):
+        score += 1
+    else:
+        issues.append("Missing lowercase letter")
+
+    if re.search(r'[0-9]', password):
+        score += 1
+    else:
+        issues.append("Missing number")
+
+    if re.search(r'[!@#$%^&*()_+\\-=]', password):
+        score += 2
+    else:
+        issues.append("Missing special character")
+
+    common = ['password', '123456', 'qwerty', 'admin', 'letmein']
+    if password.lower() in common:
+        score = 0
+        issues.append("Common password — immediately crackable")
+
+    labels = {0: "CRITICAL", 1: "WEAK", 2: "WEAK", 3: "FAIR", 4: "FAIR", 5: "GOOD", 6: "STRONG", 7: "STRONG"}
+    return {"score": score, "label": labels.get(score, "UNKNOWN"), "issues": issues}
+
+# ── Test passwords ────────────────────────────────
+test_passwords = ["password", "Summer2024", "S3cr3t!", "X#9mK@pL2$vQ"]
+
+for pwd in test_passwords:
+    result = audit_password(pwd)
+    print(f"Password: {pwd!r:<20} [{result['label']:<8}] score={result['score']}/7")
+    for issue in result['issues']:
+        print(f"  ⚠  {issue}")
+    print()
+`
+                },
+                tasks: [
+                    { id: 't1', title: 'Run the audit', desc: 'Execute the password auditor to see ratings for each test password.', verifyKeyword: 'critical' },
+                    { id: 't2', title: 'Test a strong password', desc: 'Add a new test password that scores 7/7. What makes it strong?', verifyKeyword: 'strong' },
+                    { id: 't3', title: 'Modify the policy', desc: 'Change the minimum length requirement to 16 characters. Re-run and observe which passwords now fail.', verifyKeyword: 'too short' }
+                ]
+            }
+        };
+
+        // ── TERMINAL STATE ────────────────────────────
+        const TERMINAL = {
+            currentLab: 'hash-intro',
+            currentLang: 'python',
+            history: [],
+            historyIdx: -1,
+            completedTasks: new Set()
+        };
+
+        // Piston language version cache
+        const LANG_VERSIONS = { python: '3.10.0', bash: '5.2.0' };
+
+        // ── INIT ──────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            Navigation.initProfilePopup();
+            loadUserProfile();
+
+            // Keyboard: Enter in single-line mode (we use code editor, but handle Enter in terminal input if needed)
+            document.getElementById('codeEditor').addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    runCode();
+                }
+            });
+
+            selectLab('hash-intro');
+
+            // Load Piston versions dynamically
+            try {
+                const resp = await fetch(`${PISTON_API}/runtimes`);
+                const runtimes = await resp.json();
+                const py = runtimes.find(r => r.language === 'python3' || r.language === 'python');
+                const sh = runtimes.find(r => r.language === 'bash');
+                if (py) LANG_VERSIONS.python = py.version;
+                if (sh) LANG_VERSIONS.bash = sh.version;
+            } catch (_) { /* use defaults */ }
+        });
+
+        // ── LAB SELECTION ─────────────────────────────
+        function selectLab(labId) {
+            const lab = LABS[labId];
+            if (!lab) return;
+
+            TERMINAL.currentLab = labId;
+            TERMINAL.completedTasks = new Set();
+
+            // Update tab styles
+            document.querySelectorAll('.lab-tab').forEach(t => t.classList.remove('active'));
+            const tab = document.getElementById(`tab-${labId}`);
+            if (tab) tab.classList.add('active');
+
+            // Update instructions
+            document.getElementById('lab-badge').textContent = lab.badge;
+            document.getElementById('lab-title').textContent = lab.title;
+            document.getElementById('lab-desc').textContent = lab.desc;
+            document.getElementById('labHint').textContent = lab.hint;
+            document.getElementById('labHint').classList.remove('visible');
+
+            // Render tasks
+            renderTasks(lab);
+
+            // Set default language
+            setLang(lab.defaultLang);
+
+            // Clear terminal
+            clearTerminal(false);
+            appendLine('system', `[ Lab: ${lab.title} loaded ]`);
+            appendLine('system', `[ Language: ${TERMINAL.currentLang} · Ctrl+Enter to run ]`);
+        }
+
+        function renderTasks(lab) {
+            const list = document.getElementById('taskList');
+            list.innerHTML = lab.tasks.map((t, i) => `
+                <div class="task-item" id="task-${t.id}" onclick="setActiveTask(${i})">
+                    <div class="task-check" id="check-${t.id}"></div>
+                    <div class="task-content">
+                        <h4>${i + 1}. ${t.title}</h4>
+                        <p>${t.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setActiveTask(idx) {
+            document.querySelectorAll('.task-item').forEach(t => t.classList.remove('active-task'));
+            const lab = LABS[TERMINAL.currentLab];
+            if (lab?.tasks[idx]) {
+                const taskEl = document.getElementById(`task-${lab.tasks[idx].id}`);
+                if (taskEl) taskEl.classList.add('active-task');
+            }
+        }
+
+        function toggleHint() {
+            const hint = document.getElementById('labHint');
+            hint.classList.toggle('visible');
+            document.querySelector('.hint-toggle').textContent = hint.classList.contains('visible') ? '▲ Hide Hint' : '▼ Show Hint';
+        }
+
+        // ── LANGUAGE SELECTION ────────────────────────
+        function setLang(lang) {
+            TERMINAL.currentLang = lang;
+
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`lang-${lang === 'python' ? 'python' : 'bash'}`).classList.add('active');
+            document.getElementById('terminal-label').textContent = `sentinel-lab ~ ${lang === 'python' ? 'python3' : 'bash'}`;
+            document.getElementById('editorModeLabel').textContent = `${lang === 'python' ? 'python3' : 'bash'} · sandbox`;
+
+            // Load starter code
+            const lab = LABS[TERMINAL.currentLab];
+            if (lab?.starterCode?.[lang]) {
+                document.getElementById('codeEditor').value = lab.starterCode[lang];
+            }
+        }
+
+        // ── CODE EXECUTION (PISTON API) ──────────────
+        async function runCode() {
+            const code = document.getElementById('codeEditor').value.trim();
+            if (!code) return;
+
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite" size="15"></i> Running...';
+            lucide.createIcons();
+
+            appendLine('command', code.split('\n')[0] + (code.split('\n').length > 1 ? ' ...' : ''));
+
+            try {
+                const lang = TERMINAL.currentLang;
+                const langId = lang === 'python' ? 'python' : 'bash';
+                const version = LANG_VERSIONS[lang] || '*';
+
+                const response = await fetch(`${PISTON_API}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        language: langId,
+                        version: version,
+                        files: [{ name: lang === 'python' ? 'main.py' : 'main.sh', content: code }],
+                        stdin: '',
+                        args: [],
+                        compile_timeout: 10000,
+                        run_timeout: 5000
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.run?.stdout) {
+                    result.run.stdout.split('\n').forEach(line => {
+                        if (line) appendLine('stdout', line);
+                    });
+                }
+                if (result.run?.stderr) {
+                    result.run.stderr.split('\n').forEach(line => {
+                        if (line) appendLine('stderr', line);
+                    });
+                }
+                if (!result.run?.stdout && !result.run?.stderr) {
+                    appendLine('system', '(no output)');
+                }
+
+                // Check task completion based on output keywords
+                checkTaskCompletion(result.run?.stdout || '');
+
+            } catch (err) {
+                appendLine('stderr', `Execution error: ${err.message}`);
+                appendLine('system', 'Tip: Check your internet connection or try again in a moment.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="play" size="15"></i> Run';
+                lucide.createIcons();
+                scrollTerminalToBottom();
+            }
+        }
+
+        function checkTaskCompletion(output) {
+            const lab = LABS[TERMINAL.currentLab];
+            if (!lab) return;
+
+            lab.tasks.forEach(task => {
+                if (!TERMINAL.completedTasks.has(task.id) && task.verifyKeyword) {
+                    if (output.toLowerCase().includes(task.verifyKeyword.toLowerCase())) {
+                        TERMINAL.completedTasks.add(task.id);
+                        const taskEl = document.getElementById(`task-${task.id}`);
+                        const checkEl = document.getElementById(`check-${task.id}`);
+                        if (taskEl) { taskEl.classList.add('completed'); taskEl.classList.remove('active-task'); }
+                        if (checkEl) checkEl.textContent = '✓';
+                        appendLine('success', `✓ Task "${task.title}" completed!`);
+                    }
+                }
+            });
+
+            const allDone = lab.tasks.every(t => TERMINAL.completedTasks.has(t.id));
+            if (allDone) {
+                appendLine('success', '🎯 All tasks completed! Well done.');
+                Toast.success('Lab Complete! Great work.');
+            }
+        }
+
+        // ── TERMINAL HELPERS ──────────────────────────
+        function appendLine(type, text) {
+            const output = document.getElementById('terminalOutput');
+            const div = document.createElement('div');
+            div.className = `output-line ${type}`;
+            div.textContent = text;
+            output.appendChild(div);
+        }
+
+        function scrollTerminalToBottom() {
+            const output = document.getElementById('terminalOutput');
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearTerminal(addHeader = true) {
+            const output = document.getElementById('terminalOutput');
+            output.innerHTML = '';
+            if (addHeader) {
+                appendLine('system', '[ Terminal cleared ]');
+            }
+        }
+
+        // ── NAVIGATION & PROFILE ──────────────────────
+        function handleLogout() { Auth.clearAuth(); Auth.logout('login.html'); }
+
+        function loadUserProfile() {
+            try {
+                const user = Auth.getUser();
+                if (!user) return;
+                document.getElementById('display-name').textContent = user.display_name || user.name || 'Agent';
+                document.getElementById('display-email').textContent = user.email || '';
+                const initials = (user.display_name || user.name || 'A').split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
+            } catch (e) {}
+        }
+
+        window.addEventListener('popstate', () => {
+            if (!Auth.getToken()) window.location.replace('login.html');
+        });
+    </script>
+</body>
+</html>

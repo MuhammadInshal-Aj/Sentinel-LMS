@@ -22,15 +22,17 @@ async function fetchMyCourses() {
 
         let data = null;
 
-        try {
-            console.log('📡 Attempting API call to fetch courses...');
-            data = await Api.getUserCourses();
-            console.log('✅ API call succeeded, data:', data);
+        // Keep a copy of the catalog courses before the API call
+        const catalogCourses = [...(window.coursesData?.myCourses || [])];
 
-            // Transform API response into the coursesData format used by inline renderer
-            if (data.myCourses) {
-                console.log('Converting API courses to local format...');
-                window.coursesData.myCourses = data.myCourses.map(c => ({
+        try {
+            console.log('Attempting API call to fetch courses...');
+            data = await Api.getUserCourses();
+            console.log('API call succeeded, enrolled courses:', data?.myCourses?.length || 0);
+
+            // Transform API response and merge with catalog
+            if (data.myCourses && data.myCourses.length > 0) {
+                const enrolledCourses = data.myCourses.map(c => ({
                     id: c.slug || c.id,
                     title: c.title,
                     category: c.level === 'foundation' ? 'fundamentals' : (c.level || c.category || 'fundamentals'),
@@ -48,28 +50,43 @@ async function fetchMyCourses() {
                         lessonsCount: c.total_lessons || 0
                     }
                 }));
-                console.log('✅ Courses converted from API format');
+
+                // Merge: update catalog courses with API progress, keep unenrolled ones
+                const enrolledIds = new Set(enrolledCourses.map(c => c.id));
+                const unenrolledCatalog = catalogCourses.filter(c => {
+                    // Keep catalog course if its ID (or mapped slug) isn't in the enrolled set
+                    const mappedSlug = window.COURSE_SLUG_MAP?.[c.id] || c.id;
+                    return !enrolledIds.has(c.id) && !enrolledIds.has(mappedSlug);
+                });
+                window.coursesData.myCourses = [...enrolledCourses, ...unenrolledCatalog];
+                console.log(`Merged: ${enrolledCourses.length} enrolled + ${unenrolledCatalog.length} catalog = ${window.coursesData.myCourses.length} total`);
+            } else {
+                // API succeeded but user has no enrollments — keep catalog as-is
+                console.log('No enrolled courses from API, keeping catalog data');
             }
         } catch (apiError) {
-            console.warn('⚠️  API unavailable, falling back to local data:', apiError.message);
-            
-            // FALLBACK: Use the hardcoded window.coursesData from index.html
+            console.warn('API unavailable, falling back to local data:', apiError.message);
+            // Keep the original catalog courses
             if (!window.coursesData) {
-                console.error('❌ window.coursesData is undefined!');
                 throw new Error('Courses data not available (API failed and local data missing)');
             }
-            
             if (!window.coursesData.myCourses) {
-                console.error('❌ window.coursesData.myCourses is undefined!');
                 window.coursesData.myCourses = [];
             }
-            
-            console.log(`✅ Using local fallback data (${window.coursesData.myCourses.length} courses)`);
+            console.log(`Using local fallback data (${window.coursesData.myCourses.length} courses)`);
         }
 
         // Ensure we have valid data
         if (!window.coursesData || !window.coursesData.myCourses) {
             throw new Error('No course data available');
+        }
+
+        // Refresh token balance for My Courses header widgets.
+        try {
+            const tokenRes = await Api.getUserTokens();
+            CoursesState.tokenBalance = tokenRes.tokens?.tokens_available ?? 0;
+        } catch (tokenError) {
+            console.warn('Could not refresh token balance:', tokenError.message);
         }
 
         CoursesState.courses = window.coursesData.myCourses;
@@ -154,8 +171,10 @@ function updateTokenDisplay() {
 
 // Course navigation
 function navigateToCourse(slug) {
-    console.log('Navigating to:', slug);
-    window.location.href = `infoSec.html?course=${slug}`;
+    const page = window.COURSE_PAGES?.[slug] || 'infoSec.html';
+    const backendSlug = window.COURSE_SLUG_MAP?.[slug] || slug;
+    console.log('Navigating to:', backendSlug, 'via', page);
+    window.location.href = `${page}?course=${encodeURIComponent(backendSlug)}`;
 }
 
 // --- UI States ---

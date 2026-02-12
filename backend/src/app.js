@@ -3,7 +3,22 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
+function normalizeEnvValue(value) {
+    if (!value) return '';
+    return String(value).trim().replace(/^['"“”‘’]|['"“”‘’]$/g, '');
+}
+
+function decodeJwtRole(token) {
+    try {
+        const payload = token.split('.')[1];
+        const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        return parsed.role || null;
+    } catch (_) {
+        return null;
+    }
+}
 
 // ===== CURRICULUM CONTENT PATHS =====
 const CURRICULUM_ROOT = path.join(__dirname, '../../curriculum');
@@ -43,13 +58,139 @@ function normalizeTrackSlug(slug) {
     return TRACK_SLUG_ALIASES[slug] || slug;
 }
 
+function getTrackLookupCandidates(identifier) {
+    const normalized = normalizeTrackSlug(identifier);
+    return [...new Set([identifier, normalized].filter(Boolean))];
+}
+
+async function findTrackByIdentifier(identifier, selectColumns = '*', publishedOnly = false) {
+    const candidates = getTrackLookupCandidates(identifier);
+    if (candidates.length === 0) {
+        return { data: null, error: new Error('Track identifier is required') };
+    }
+
+    const orFilter = candidates
+        .flatMap((value) => [`slug.eq.${value}`, `id.eq.${value}`])
+        .join(',');
+
+    let query = supabase
+        .from('tracks')
+        .select(selectColumns)
+        .or(orFilter);
+
+    if (publishedOnly) {
+        query = query.eq('is_published', true);
+    }
+
+    return await query.limit(1).maybeSingle();
+}
+
 const app = express();
 
 // ===== SUPABASE INITIALIZATION =====
+const SUPABASE_URL = normalizeEnvValue(process.env.SUPABASE_URL);
+const SUPABASE_ANON_KEY = normalizeEnvValue(process.env.SUPABASE_ANON_KEY);
+const SUPABASE_SERVICE_ROLE_KEY = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
+const SUPABASE_DB_KEY = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+const SUPABASE_AUTH_KEY = SUPABASE_ANON_KEY || SUPABASE_SERVICE_ROLE_KEY;
+
 const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
+    SUPABASE_URL,
+    SUPABASE_DB_KEY,
+    {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false
+        }
+    }
 );
+
+const supabaseAuth = createClient(
+    SUPABASE_URL,
+    SUPABASE_AUTH_KEY,
+    {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false
+        }
+    }
+);
+
+const dbKeyRole = decodeJwtRole(SUPABASE_DB_KEY);
+if (dbKeyRole !== 'service_role') {
+    console.warn(`[DB] Supabase DB client is using role '${dbKeyRole || 'unknown'}'. Token writes may fail due to RLS.`);
+}
+
+function describeDbError(error) {
+    if (!error) return 'unknown database error';
+    const parts = [];
+    if (error.code) parts.push(`code ${error.code}`);
+    if (error.message) parts.push(error.message);
+    if (error.details) parts.push(error.details);
+    if (error.hint) parts.push(`hint: ${error.hint}`);
+    return parts.join(' | ');
+}
+
+function isMissingRpcFunctionError(error) {
+    if (!error) return false;
+    const code = String(error.code || '').toUpperCase();
+    const message = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
+    return (
+        code === '42883' ||
+        code === 'PGRST202' ||
+        message.includes('could not find the function') ||
+        (message.includes('function') && message.includes('does not exist'))
+    );
+}
+
+async function callRpc(rpcName, params, { expectTruthy = false } = {}) {
+    const { data, error } = await supabase.rpc(rpcName, params);
+
+    if (error) {
+        const message = isMissingRpcFunctionError(error)
+            ? `Database function '${rpcName}' is missing. Create it in Supabase SQL Editor.`
+            : `Database function '${rpcName}' failed: ${describeDbError(error)}`;
+        const wrapped = new Error(message);
+        wrapped.statusCode = 500;
+        throw wrapped;
+    }
+
+    if (expectTruthy && !data) {
+        const wrapped = new Error(`Database function '${rpcName}' returned no result.`);
+        wrapped.statusCode = 400;
+        throw wrapped;
+    }
+
+    return data;
+}
+
+async function ensureUserTokensRow(userId) {
+    const { data, error } = await supabase
+        .from('user_tokens')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (error) {
+        throw new Error(`Failed to read user token record: ${describeDbError(error)}`);
+    }
+
+    if (data) return data;
+
+    const { data: created, error: createError } = await supabase
+        .from('user_tokens')
+        .upsert({ user_id: userId }, { onConflict: 'user_id' })
+        .select('*')
+        .single();
+
+    if (createError) {
+        throw new Error(
+            `Failed to initialize user token record for user '${userId}': ${describeDbError(createError)}`
+        );
+    }
+
+    return created;
+}
 
 // ===== MIDDLEWARE =====
 app.use(cors());
@@ -72,7 +213,7 @@ async function authenticateUser(req, res, next) {
     }
 
     try {
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+        const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
         
         if (error || !user) {
             return res.status(401).json({ error: 'Invalid or expired token' });
@@ -101,7 +242,7 @@ app.post('/api/register', async (req, res) => {
     try {
         const username = `${first_name} ${last_name}`;
         
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
             email: email,
             password: password,
             options: {
@@ -114,6 +255,12 @@ app.post('/api/register', async (req, res) => {
         });
 
         if (authError) throw authError;
+
+        try {
+            await ensureUserTokensRow(authData.user.id);
+        } catch (tokenInitError) {
+            console.warn('Token row initialization failed after registration:', tokenInitError.message);
+        }
 
         res.status(201).json({ 
             message: "Clearance Granted! Registration successful.",
@@ -137,7 +284,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabaseAuth.auth.signInWithPassword({
             email,
             password,
         });
@@ -187,17 +334,18 @@ app.get('/api/tracks', async (req, res) => {
 // Get single track by slug with modules and user enrollment status
 app.get('/api/tracks/:slug', authenticateUser, async (req, res) => {
     try {
-        const slug = normalizeTrackSlug(req.params.slug);
+        const requestedSlug = req.params.slug;
 
         // Get track
-        const { data: track, error: trackError } = await supabase
-            .from('tracks')
-            .select('*')
-            .eq('slug', slug)
-            .eq('is_published', true)
-            .single();
+        const { data: track, error: trackError } = await findTrackByIdentifier(
+            requestedSlug,
+            '*',
+            true
+        );
 
-        if (trackError) throw trackError;
+        if (trackError || !track) {
+            return res.status(404).json({ error: `Track "${requestedSlug}" not found or not published` });
+        }
 
         // Get modules
         const { data: modules, error: modulesError } = await supabase
@@ -284,23 +432,24 @@ app.get('/api/modules/:moduleId', authenticateUser, async (req, res) => {
 app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
     try {
         const requestedSlug = req.params.slug;
-        const slug = normalizeTrackSlug(requestedSlug);
+        const normalized = normalizeTrackSlug(requestedSlug);
 
         // Get track
-        const { data: track, error: trackError } = await supabase
-            .from('tracks')
-            .select('id, modules, token_cost, is_locked_by_default')
-            .eq('slug', slug)
-            .eq('is_published', true)
-            .single();
+        const { data: track, error: trackError } = await findTrackByIdentifier(
+            requestedSlug,
+            'id, modules, token_cost, is_locked_by_default',
+            true
+        );
 
         if (trackError || !track) {
-            console.error('Track lookup failed for slug:', requestedSlug, 'normalized:', slug, trackError?.message);
+            console.error('Track lookup failed for slug:', requestedSlug, 'normalized:', normalized, trackError?.message);
             return res.status(404).json({ error: `Track "${requestedSlug}" not found or not published` });
         }
 
         // Check if track requires tokens
         if (track.is_locked_by_default && track.token_cost > 0) {
+            await ensureUserTokensRow(req.user.id);
+
             const { data: tokens } = await supabase
                 .from('user_tokens')
                 .select('tokens_available')
@@ -315,33 +464,62 @@ app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
                 });
             }
 
-            const { data: spendResult, error: spendError } = await supabase
-                .rpc('spend_user_tokens', {
-                    p_user_id: req.user.id,
-                    p_tokens: track.token_cost
-                });
+            await callRpc('spend_user_tokens', {
+                p_user_id: req.user.id,
+                p_tokens: track.token_cost
+            }, { expectTruthy: true });
+        }
 
-            if (spendError || !spendResult) {
-                return res.status(400).json({ error: 'Failed to spend tokens' });
+        // Resolve first valid module from the track's declared module IDs.
+        // This avoids FK failures if track.modules contains stale IDs.
+        let firstModuleId = null;
+        if (Array.isArray(track.modules) && track.modules.length > 0) {
+            const { data: firstModuleRows, error: firstModuleLookupError } = await supabase
+                .from('modules')
+                .select('id')
+                .in('id', track.modules)
+                .order('order_number', { ascending: true })
+                .limit(1);
+
+            if (firstModuleLookupError) {
+                console.warn('First module lookup failed for track:', track.id, firstModuleLookupError.message);
+            }
+
+            firstModuleId = firstModuleRows?.[0]?.id || null;
+
+            if (!firstModuleId) {
+                console.warn('No valid module found for track during enrollment:', track.id, 'declared modules:', track.modules);
             }
         }
 
-        // Get first module (handle missing modules array)
-        const firstModuleId = track.modules?.[0];
-
         // Create enrollment
-        const { data: enrollment, error: enrollmentError } = await supabase
+        const enrollmentPayload = {
+            user_id: req.user.id,
+            track_id: track.id,
+            current_module_id: firstModuleId,
+            status: 'in-progress',
+            unlocked_with_tokens: (track.token_cost || 0) > 0,
+            tokens_spent: track.token_cost || 0
+        };
+
+        let { data: enrollment, error: enrollmentError } = await supabase
             .from('user_track_enrollments')
-            .insert([{
-                user_id: req.user.id,
-                track_id: track.id,
-                current_module_id: firstModuleId || null,
-                status: 'in-progress',
-                unlocked_with_tokens: (track.token_cost || 0) > 0,
-                tokens_spent: track.token_cost || 0
-            }])
+            .insert([enrollmentPayload])
             .select()
             .single();
+
+        // If DB has strict FK and module references drifted, retry without current_module_id.
+        if (enrollmentError && enrollmentError.code === '23503' && firstModuleId) {
+            console.warn('Enrollment insert FK error. Retrying with null current_module_id for track:', track.id, enrollmentError.message);
+            const retry = await supabase
+                .from('user_track_enrollments')
+                .insert([{ ...enrollmentPayload, current_module_id: null }])
+                .select()
+                .single();
+            enrollment = retry.data;
+            enrollmentError = retry.error;
+            firstModuleId = null;
+        }
 
         if (enrollmentError) {
             if (enrollmentError.code === '23505') {
@@ -394,14 +572,10 @@ app.post('/api/tracks/:slug/enroll', authenticateUser, async (req, res) => {
 // Check enrollment status (for infoSec.html)
 app.get('/api/tracks/:slug/enrollment', authenticateUser, async (req, res) => {
     try {
-        const slug = normalizeTrackSlug(req.params.slug);
+        const requestedSlug = req.params.slug;
 
         // Get track
-        const { data: track } = await supabase
-            .from('tracks')
-            .select('id')
-            .eq('slug', slug)
-            .single();
+        const { data: track } = await findTrackByIdentifier(requestedSlug, 'id', false);
 
         if (!track) {
             // Track not in DB yet — return unenrolled (don't 404, let the page load)
@@ -541,14 +715,10 @@ app.get('/api/user/courses', authenticateUser, async (req, res) => {
 // Get user's progress for a specific track
 app.get('/api/user/tracks/:slug/progress', authenticateUser, async (req, res) => {
     try {
-        const slug = normalizeTrackSlug(req.params.slug);
+        const requestedSlug = req.params.slug;
 
         // Get track
-        const { data: track } = await supabase
-            .from('tracks')
-            .select('id, modules')
-            .eq('slug', slug)
-            .single();
+        const { data: track } = await findTrackByIdentifier(requestedSlug, 'id, modules', false);
 
         if (!track) {
             return res.status(404).json({ error: 'Track not found' });
@@ -599,7 +769,7 @@ app.get('/api/user/tracks/:slug/progress', authenticateUser, async (req, res) =>
 app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) => {
     try {
         const { lessonId } = req.params;
-        const { score } = req.body; // Optional: for simulations/checkpoints
+        const { score } = req.body || {}; // Optional: for simulations/checkpoints
 
         // Get lesson details
         const { data: lesson, error: lessonError } = await supabase
@@ -615,7 +785,7 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
         // Check if already completed
         const { data: existing } = await supabase
             .from('user_lesson_progress')
-            .select('status')
+            .select('status, attempts_count')
             .eq('user_id', req.user.id)
             .eq('lesson_id', lessonId)
             .single();
@@ -646,33 +816,38 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
 
         if (progressError) throw progressError;
 
+        await ensureUserTokensRow(req.user.id);
+
         // Add tokens
-        await supabase.rpc('add_user_tokens', {
+        await callRpc('add_user_tokens', {
             p_user_id: req.user.id,
             p_tokens: lesson.token_reward
         });
 
         // Calculate and update module progress
-        const { data: allModuleLessons } = await supabase
+        const { data: allModuleLessons, error: allModuleLessonsError } = await supabase
             .from('lessons')
             .select('id, is_required')
             .eq('module_id', lesson.modules.id);
+        if (allModuleLessonsError) throw allModuleLessonsError;
 
-        const requiredLessons = allModuleLessons.filter(l => l.is_required);
-        const lessonIds = requiredLessons.map(l => l.id);
+        const requiredLessons = (allModuleLessons || []).filter((l) => l.is_required);
+        const progressLessons = requiredLessons.length > 0 ? requiredLessons : (allModuleLessons || []);
+        const lessonIds = progressLessons.map((l) => l.id);
 
-        const { data: completedLessons } = await supabase
+        const { data: completedLessons, error: completedLessonsError } = await supabase
             .from('user_lesson_progress')
             .select('id')
             .eq('user_id', req.user.id)
             .eq('status', 'completed')
             .in('lesson_id', lessonIds);
+        if (completedLessonsError) throw completedLessonsError;
 
-        const completedCount = completedLessons.length;
-        const totalLessons = requiredLessons.length;
-        const percentage = Math.round((completedCount / totalLessons) * 100);
+        const completedCount = (completedLessons || []).length;
+        const totalLessons = progressLessons.length;
+        const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 100;
 
-        await supabase
+        const { error: moduleProgressError } = await supabase
             .from('user_module_progress')
             .upsert({
                 user_id: req.user.id,
@@ -684,11 +859,12 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
             }, {
                 onConflict: 'user_id,module_id'
             });
+        if (moduleProgressError) throw moduleProgressError;
 
         // If module complete, unlock next module
         let unlockedModule = null;
         if (percentage === 100) {
-            const { data: nextModuleId } = await supabase.rpc('unlock_next_module', {
+            const nextModuleId = await callRpc('unlock_next_module', {
                 p_user_id: req.user.id,
                 p_current_module_id: lesson.modules.id
             });
@@ -696,13 +872,11 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
         }
 
         // Update overall track progress
-        await supabase.rpc('calculate_track_progress', {
+        await callRpc('calculate_track_progress', {
             p_user_id: req.user.id,
             p_track_id: lesson.modules.track_id
         });
-
-        const { data: updatedTokens } = await supabase
-            .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+        const updatedTokens = await ensureUserTokensRow(req.user.id);
 
         res.json({
             message: 'Lesson completed successfully',
@@ -715,7 +889,7 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
 
     } catch (error) {
         console.error('Error completing lesson:', error);
-        res.status(500).json({ error: 'Failed to complete lesson' });
+        res.status(error.statusCode || 500).json({ error: error.message || 'Failed to complete lesson' });
     }
 });
 
@@ -724,25 +898,20 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
 // Get user's token balance
 app.get('/api/user/tokens', authenticateUser, async (req, res) => {
     try {
-        const { data, error } = await supabase
-            .from('user_tokens')
-            .select('*')
-            .eq('user_id', req.user.id)
-            .single();
-
-        if (error && error.code !== 'PGRST116') throw error;
+        const tokenRow = await ensureUserTokensRow(req.user.id);
 
         res.json({
-            tokens: data || {
+            tokens: {
                 total_tokens: 0,
                 tokens_spent: 0,
-                tokens_available: 0
+                tokens_available: 0,
+                ...tokenRow
             }
         });
 
     } catch (error) {
         console.error('Error fetching tokens:', error);
-        res.status(500).json({ error: 'Failed to fetch tokens' });
+        res.status(500).json({ error: error.message || 'Failed to fetch tokens' });
     }
 });
 
@@ -802,7 +971,7 @@ app.get('/api/simulations/:simId', authenticateUser, (req, res) => {
 // POST /api/simulations/:simId/submit — record completion and award tokens
 app.post('/api/simulations/:simId/submit', authenticateUser, async (req, res) => {
     const { simId } = req.params;
-    const { choiceId } = req.body;
+    const { choiceId } = req.body || {};
 
     const filePath = SIMULATION_CONTENT_MAP[simId];
     if (!filePath) {
@@ -813,6 +982,7 @@ app.post('/api/simulations/:simId/submit', authenticateUser, async (req, res) =>
         const raw = fs.readFileSync(filePath, 'utf-8');
         const sim = JSON.parse(raw);
         const tokensEarned = sim.tokens || 5;
+        await ensureUserTokensRow(req.user.id);
 
         // Check if already completed
         const { data: existing } = await supabase
@@ -823,13 +993,12 @@ app.post('/api/simulations/:simId/submit', authenticateUser, async (req, res) =>
             .single();
 
         if (existing?.status === 'completed') {
-            const { data: tokenData } = await supabase
-                .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+            const tokenData = await ensureUserTokensRow(req.user.id);
             return res.json({ message: 'Already completed', alreadyCompleted: true, tokensEarned: 0, newBalance: tokenData?.tokens_available || 0 });
         }
 
         // Record completion
-        await supabase.from('user_lesson_progress').upsert({
+        const { error: progressError } = await supabase.from('user_lesson_progress').upsert({
             user_id: req.user.id,
             lesson_id: simId,
             status: 'completed',
@@ -838,18 +1007,17 @@ app.post('/api/simulations/:simId/submit', authenticateUser, async (req, res) =>
             exam_score: null,
             attempts_count: 1
         }, { onConflict: 'user_id,lesson_id' });
+        if (progressError) throw progressError;
 
         // Award tokens
-        await supabase.rpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
-
-        const { data: tokenData } = await supabase
-            .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+        await callRpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
+        const tokenData = await ensureUserTokensRow(req.user.id);
 
         res.json({ message: 'Simulation completed', tokensEarned, newBalance: tokenData?.tokens_available || 0 });
 
     } catch (err) {
         console.error(`Error submitting simulation ${simId}:`, err.message);
-        res.status(500).json({ error: 'Failed to record simulation completion' });
+        res.status(err.statusCode || 500).json({ error: err.message || 'Failed to record simulation completion' });
     }
 });
 
@@ -875,7 +1043,7 @@ app.get('/api/checkpoints/:checkpointId', authenticateUser, (req, res) => {
 // POST /api/checkpoints/:checkpointId/submit — grade answers, award tokens if passed
 app.post('/api/checkpoints/:checkpointId/submit', authenticateUser, async (req, res) => {
     const { checkpointId } = req.params;
-    const { answers } = req.body; // [{questionIdx, selectedIdx}]
+    const { answers } = req.body || {}; // [{questionIdx, selectedIdx}]
 
     const filePath = CHECKPOINT_MAP[checkpointId];
     if (!filePath) {
@@ -896,6 +1064,7 @@ app.post('/api/checkpoints/:checkpointId/submit', authenticateUser, async (req, 
         const score = Math.round((correct / checkpoint.questions.length) * 100);
         const passed = score >= (checkpoint.passing_score || 70);
         const tokensEarned = passed ? (checkpoint.tokens || 100) : 0;
+        await ensureUserTokensRow(req.user.id);
 
         // Record attempt in user_lesson_progress
         const { data: existing } = await supabase
@@ -907,7 +1076,7 @@ app.post('/api/checkpoints/:checkpointId/submit', authenticateUser, async (req, 
 
         const attempts = (existing?.attempts_count || 0) + 1;
 
-        await supabase.from('user_lesson_progress').upsert({
+        const { error: progressError } = await supabase.from('user_lesson_progress').upsert({
             user_id: req.user.id,
             lesson_id: checkpointId,
             status: passed ? 'completed' : 'attempted',
@@ -916,33 +1085,89 @@ app.post('/api/checkpoints/:checkpointId/submit', authenticateUser, async (req, 
             exam_score: score,
             attempts_count: attempts
         }, { onConflict: 'user_id,lesson_id' });
+        if (progressError) throw progressError;
 
         // Award tokens if passed
         if (passed && tokensEarned > 0) {
-            await supabase.rpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
+            await callRpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
         }
 
-        const { data: tokenData } = await supabase
-            .from('user_tokens').select('tokens_available').eq('user_id', req.user.id).single();
+        const tokenData = await ensureUserTokensRow(req.user.id);
 
         res.json({ score, passed, correct, total: checkpoint.questions.length, tokensEarned, newBalance: tokenData?.tokens_available || 0 });
 
     } catch (err) {
         console.error(`Error submitting checkpoint ${checkpointId}:`, err.message);
-        res.status(500).json({ error: 'Failed to submit checkpoint' });
+        res.status(err.statusCode || 500).json({ error: err.message || 'Failed to submit checkpoint' });
     }
 });
 
 // ===== AI ENDPOINTS (Groq — free tier) =====
 // Free API key: https://console.groq.com  (no credit card required)
 
-function getGroqClient() {
-    if (!process.env.GROQ_API_KEY) return null;
-    const Groq = require('groq-sdk');
-    return new Groq({ apiKey: process.env.GROQ_API_KEY });
+function normalizeApiKey(value) {
+    if (!value) return '';
+    return String(value).trim().replace(/^['"“”‘’]|['"“”‘’]$/g, '');
 }
 
-// POST /api/ai/hint — contextual learning hint (Llama 3 8B)
+function getGroqKeySource() {
+    if (normalizeApiKey(process.env.GROQ_API_KEY)) return 'GROQ_API_KEY';
+    if (normalizeApiKey(process.env.GROK_API_KEY)) return 'GROK_API_KEY';
+    return null;
+}
+
+function getGroqApiKey() {
+    let key = normalizeApiKey(process.env.GROQ_API_KEY || process.env.GROK_API_KEY);
+    if (key) return key;
+
+    // Fallback: reload backend/.env in case key was added after process start.
+    require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+    key = normalizeApiKey(process.env.GROQ_API_KEY || process.env.GROK_API_KEY);
+    return key || '';
+}
+
+function getGroqClient() {
+    const apiKey = getGroqApiKey();
+    if (!apiKey) return null;
+    const Groq = require('groq-sdk');
+    return new Groq({ apiKey });
+}
+
+const GROQ_MODELS = {
+    hint: process.env.GROQ_HINT_MODEL || 'llama-3.1-8b-instant',
+    quiz: process.env.GROQ_QUIZ_MODEL || 'llama-3.3-70b-versatile',
+    feedback: process.env.GROQ_FEEDBACK_MODEL || 'llama-3.3-70b-versatile'
+};
+
+function mapGroqProviderError(error, fallbackMessage) {
+    const raw = String(error?.error?.message || error?.message || '').trim();
+    if (!raw) return fallbackMessage;
+
+    const lower = raw.toLowerCase();
+    if (lower.includes('decommissioned') || (lower.includes('model') && lower.includes('not found'))) {
+        return 'AI model configuration is invalid. Update GROQ_HINT_MODEL / GROQ_QUIZ_MODEL / GROQ_FEEDBACK_MODEL.';
+    }
+    if (lower.includes('invalid api key') || lower.includes('incorrect api key') || lower.includes('unauthorized') || lower.includes('authentication')) {
+        return 'AI key rejected by Groq. Verify GROQ_API_KEY in backend/.env and restart the backend.';
+    }
+    if (lower.includes('rate limit') || lower.includes('429') || lower.includes('quota')) {
+        return 'AI provider is rate-limited right now. Please try again in a minute.';
+    }
+
+    return raw.length > 220 ? `${raw.slice(0, 217)}...` : raw;
+}
+
+app.get('/api/ai/status', (req, res) => {
+    const hasKey = Boolean(getGroqApiKey());
+    res.json({
+        provider: 'groq',
+        configured: hasKey,
+        configuredFrom: getGroqKeySource(),
+        models: GROQ_MODELS
+    });
+});
+
+// POST /api/ai/hint — contextual learning hint
 app.post('/api/ai/hint', authenticateUser, async (req, res) => {
     const { lessonId, question } = req.body;
     if (!lessonId || !question) {
@@ -961,7 +1186,7 @@ app.post('/api/ai/hint', authenticateUser, async (req, res) => {
         }
 
         const completion = await groq.chat.completions.create({
-            model: 'llama3-8b-8192',
+            model: GROQ_MODELS.hint,
             max_tokens: 180,
             messages: [
                 { role: 'system', content: 'You are a patient cybersecurity instructor. Give concise hints (1-2 sentences) that guide thinking without giving away answers. Be encouraging.' },
@@ -971,12 +1196,13 @@ app.post('/api/ai/hint', authenticateUser, async (req, res) => {
 
         res.json({ hint: completion.choices[0].message.content });
     } catch (err) {
-        console.error('AI hint error:', err.message);
-        res.status(500).json({ error: 'Failed to generate hint' });
+        const message = mapGroqProviderError(err, 'Failed to generate hint');
+        console.error('AI hint error:', message);
+        res.status(502).json({ error: message });
     }
 });
 
-// POST /api/ai/generate-quiz — generate MCQ questions (Llama 3.3 70B)
+// POST /api/ai/generate-quiz — generate MCQ questions
 app.post('/api/ai/generate-quiz', authenticateUser, async (req, res) => {
     const { lessonId } = req.body;
     if (!lessonId) return res.status(400).json({ error: 'lessonId is required' });
@@ -995,7 +1221,7 @@ app.post('/api/ai/generate-quiz', authenticateUser, async (req, res) => {
 
     try {
         const completion = await groq.chat.completions.create({
-            model: 'llama-3.3-70b-versatile',
+            model: GROQ_MODELS.quiz,
             max_tokens: 1200,
             response_format: { type: 'json_object' },
             messages: [
@@ -1007,12 +1233,13 @@ app.post('/api/ai/generate-quiz', authenticateUser, async (req, res) => {
         const parsed = JSON.parse(completion.choices[0].message.content);
         res.json(parsed);
     } catch (err) {
-        console.error('AI quiz gen error:', err.message);
-        res.status(500).json({ error: 'Failed to generate quiz questions' });
+        const message = mapGroqProviderError(err, 'Failed to generate quiz questions');
+        console.error('AI quiz gen error:', message);
+        res.status(502).json({ error: message });
     }
 });
 
-// POST /api/ai/feedback — personalized progress feedback (Llama 3.3 70B)
+// POST /api/ai/feedback — personalized progress feedback
 app.post('/api/ai/feedback', authenticateUser, async (req, res) => {
     const { checkpointId, score, incorrectTopics } = req.body;
 
@@ -1023,7 +1250,7 @@ app.post('/api/ai/feedback', authenticateUser, async (req, res) => {
         const topicsText = incorrectTopics?.length ? incorrectTopics.join(', ') : 'general concepts';
 
         const completion = await groq.chat.completions.create({
-            model: 'llama-3.3-70b-versatile',
+            model: GROQ_MODELS.feedback,
             max_tokens: 250,
             messages: [
                 { role: 'system', content: 'You are a cybersecurity educator. Give direct, professional feedback in 2-3 sentences. Acknowledge the score, mention what to review, and motivate without being cheerful.' },
@@ -1033,8 +1260,9 @@ app.post('/api/ai/feedback', authenticateUser, async (req, res) => {
 
         res.json({ feedback: completion.choices[0].message.content });
     } catch (err) {
-        console.error('AI feedback error:', err.message);
-        res.status(500).json({ error: 'Failed to generate feedback' });
+        const message = mapGroqProviderError(err, 'Failed to generate feedback');
+        console.error('AI feedback error:', message);
+        res.status(502).json({ error: message });
     }
 });
 

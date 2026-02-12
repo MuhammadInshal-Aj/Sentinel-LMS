@@ -38,6 +38,7 @@
 
     <style>
         body { display: flex; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
         /* ── MAIN LAYOUT ────────────────────────────────── */
         .lesson-page {
@@ -66,6 +67,29 @@
         .lesson-breadcrumbs a { color: var(--text-muted); text-decoration: none; cursor: pointer; transition: color 0.2s; }
         .lesson-breadcrumbs a:hover { color: var(--accent); }
         .lesson-topbar-actions { display: flex; align-items: center; gap: 1rem; }
+        .reading-readout {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            min-width: 66px;
+            text-align: right;
+        }
+        .reading-progress {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.04);
+            pointer-events: none;
+        }
+        .reading-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            transition: width 0.2s ease;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
 
         /* ── LESSON CONTENT AREA ─────────────────────────── */
         .lesson-content-area {
@@ -92,7 +116,7 @@
         .objectives-box li::before { content: '›'; color: var(--accent); font-weight: 700; margin-top: 1px; flex-shrink: 0; }
 
         /* ── MARKDOWN RENDERED CONTENT ───────────────────── */
-        .lesson-body { line-height: 1.85; color: #d4d4d4; font-size: 1rem; }
+        .lesson-body { line-height: 1.85; color: #d4d4d4; font-size: 1.05rem; }
         .lesson-body h1 { font-size: 1.8rem; font-weight: 700; color: #fff; margin: 2.5rem 0 1rem; }
         .lesson-body h2 { font-size: 1.35rem; font-weight: 600; color: #fff; margin: 2.2rem 0 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
         .lesson-body h3 { font-size: 1.1rem; font-weight: 600; color: var(--accent); margin: 1.8rem 0 0.6rem; }
@@ -145,10 +169,26 @@
 
         /* Outline in panel */
         .outline-list { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
-        .outline-item { font-size: 0.85rem; color: var(--text-muted); cursor: pointer; padding: 0.3rem 0.5rem; border-radius: 4px; transition: all 0.2s; display: flex; gap: 0.5rem; align-items: center; }
+        .outline-item { font-size: 0.85rem; color: var(--text-muted); border-radius: 4px; transition: all 0.2s; display: flex; align-items: center; }
+        .outline-item-btn {
+            width: 100%;
+            padding: 0.3rem 0.5rem;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: inherit;
+            text-align: left;
+            cursor: pointer;
+            border-radius: inherit;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
         .outline-item:hover { color: var(--accent); background: rgba(0,242,255,0.05); }
         .outline-item.h3 { padding-left: 1.2rem; font-size: 0.8rem; }
-        .outline-item::before { content: '·'; color: var(--accent); flex-shrink: 0; }
+        .outline-item-btn::before { content: '·'; color: var(--accent); flex-shrink: 0; }
+        .outline-item.active { color: var(--accent); background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.2); }
 
         /* Complete button */
         .complete-btn {
@@ -174,6 +214,11 @@
         .complete-btn:hover { background: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.3); }
         .complete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .complete-btn.done { background: rgba(0,255,157,0.15); color: var(--success); border: 1px solid rgba(0,255,157,0.3); box-shadow: none; cursor: default; }
+        .next-lesson-pulse { animation: pulseNext 1.2s ease-in-out 3; }
+        @keyframes pulseNext {
+            0%, 100% { box-shadow: 0 0 0 rgba(0, 242, 255, 0); }
+            50% { box-shadow: 0 0 20px var(--accent-glow); }
+        }
 
         /* Hint box */
         .hint-form { display: flex; flex-direction: column; gap: 0.6rem; }
@@ -185,17 +230,129 @@
 
         /* ── BOTTOM NAV ──────────────────────────────────── */
         .lesson-footnav {
-            grid-column: 1 / -1;
+            grid-column: 1 / 2;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 1rem 2.5rem;
             border-top: 1px solid var(--border);
-            background: var(--bg);
+            border-right: 1px solid var(--border);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)),
+                rgba(5,5,5,0.92);
+            backdrop-filter: blur(6px);
             gap: 1rem;
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
         }
         .footnav-lesson-info { text-align: center; font-size: 0.85rem; color: var(--text-muted); }
         .footnav-lesson-info strong { display: block; color: #fff; font-size: 0.9rem; }
+        .lesson-footnav .btn-outline,
+        .lesson-footnav .btn-primary {
+            min-width: 170px !important;
+            min-height: 42px;
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: all 0.22s ease;
+        }
+        .lesson-footnav .btn-outline {
+            border: 1px solid rgba(0, 242, 255, 0.32);
+            background: rgba(0, 242, 255, 0.06);
+            color: #d8fcff;
+        }
+        .lesson-footnav .btn-outline:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: rgba(0, 242, 255, 0.12);
+            transform: translateY(-1px);
+            box-shadow: 0 0 14px rgba(0, 242, 255, 0.25);
+        }
+        .lesson-footnav .btn-primary {
+            border: 1px solid rgba(0, 242, 255, 0.75);
+            background: linear-gradient(135deg, var(--accent), #00b8ff);
+            color: #03161a;
+            box-shadow: 0 0 18px rgba(0, 242, 255, 0.35);
+        }
+        .lesson-footnav .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 0 24px rgba(0, 242, 255, 0.5);
+            filter: saturate(1.1);
+        }
+        .lesson-footnav .btn-outline:disabled,
+        .lesson-footnav .btn-primary:disabled {
+            opacity: 0.6;
+            box-shadow: none;
+            transform: none;
+        }
+        .lesson-footnav .btn-outline i,
+        .lesson-footnav .btn-primary i {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 1360px) {
+            .lesson-page { grid-template-columns: minmax(0, 1fr) 250px; }
+            .lesson-content-area { padding: 2.5rem; max-width: none; }
+            .lesson-panel { padding: 2rem 1.4rem; }
+        }
+
+        @media (max-width: 1140px) {
+            .lesson-page {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+            .lesson-content-area { padding: 2rem; }
+            .lesson-panel {
+                position: static;
+                top: auto;
+                height: auto;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                padding: 1.5rem 2rem;
+                overflow-y: visible;
+            }
+            .lesson-footnav {
+                grid-column: 1 / -1;
+                padding: 1rem 2rem;
+                border-right: none;
+            }
+            .lesson-title-main { font-size: 1.9rem; }
+        }
+
+        @media (max-width: 900px) {
+            .lesson-topbar { padding: 0.9rem 1.2rem; }
+            .lesson-content-area { padding: 1.5rem 1.2rem; }
+            .lesson-panel { padding: 1.2rem; }
+            .lesson-footnav { flex-wrap: wrap; justify-content: center; }
+            .footnav-lesson-info { width: 100%; order: 3; }
+            .lesson-footnav .btn-outline,
+            .lesson-footnav .btn-primary { min-width: 145px !important; }
+        }
+
+        @media (max-width: 768px) {
+            .lesson-page {
+                margin-left: 0;
+                width: 100%;
+            }
+            .lesson-title-main { font-size: 1.6rem; }
+            .lesson-body { font-size: 1rem; }
+            .complete-btn,
+            #prevBtn,
+            #nextBtn { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .lesson-skeleton { animation: none; }
+        }
 
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -212,19 +369,19 @@
         </div>
         <ul class="nav-menu">
             <li class="nav-item">
-                <a class="nav-link" onclick="goBackToCourse()">
+                <a class="nav-link" data-course-link href="infoSec.html" onclick="goBackToCourse(); return false;">
                     <i data-lucide="arrow-left" size="20"></i>
                     <span>Back to Course</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" onclick="goBackToDashboard()">
+                <a class="nav-link" href="index.html" onclick="goBackToDashboard(); return false;">
                     <i data-lucide="layout-dashboard" size="20"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link">
+                <a class="nav-link" href="labs.html">
                     <i data-lucide="terminal-square" size="20"></i>
                     <span>Labs & CTFs</span>
                 </a>
@@ -257,12 +414,16 @@
         <!-- TOP BAR -->
         <div class="lesson-topbar">
             <div class="lesson-breadcrumbs">
-                <a onclick="goBackToDashboard()"><i data-lucide="home" size="14"></i></a> /
-                <a onclick="goBackToCourse()" id="breadcrumb-course">Information Security</a> /
+                <a href="index.html" aria-label="Back to Dashboard" onclick="goBackToDashboard(); return false;"><i data-lucide="home" size="14"></i></a> /
+                <a data-course-link href="infoSec.html" onclick="goBackToCourse(); return false;" id="breadcrumb-course">Information Security</a> /
                 <span id="breadcrumb-lesson">Lesson</span>
             </div>
             <div class="lesson-topbar-actions">
-                <span id="topbar-status" style="font-size:0.8rem; color:var(--text-muted);"></span>
+                <span class="reading-readout" id="readingReadout">0% read</span>
+                <span id="topbar-status" style="font-size:0.8rem; color:var(--text-muted);" aria-live="polite"></span>
+            </div>
+            <div class="reading-progress" aria-hidden="true">
+                <div class="reading-progress-fill" id="readingProgressFill"></div>
             </div>
         </div>
 
@@ -310,7 +471,7 @@
             </div>
 
             <div class="panel-section">
-                <button class="complete-btn" id="completeBtn" onclick="markComplete()">
+                <button class="complete-btn" id="completeBtn" type="button" onclick="markComplete()">
                     <i data-lucide="check-circle" size="18"></i>
                     Mark as Complete
                 </button>
@@ -325,22 +486,22 @@
                 <div class="panel-label">Need a Hint?</div>
                 <div class="hint-form">
                     <textarea class="hint-input" id="hintInput" placeholder="What are you stuck on? e.g. 'explain the CIA Triad in simple terms'"></textarea>
-                    <button class="hint-btn" onclick="getHint()">ASK AI MENTOR</button>
-                    <div class="hint-result" id="hintResult"></div>
+                    <button class="hint-btn" type="button" onclick="getHint()">ASK AI MENTOR</button>
+                    <div class="hint-result" id="hintResult" aria-live="polite"></div>
                 </div>
             </div>
         </aside>
 
         <!-- BOTTOM NAVIGATION -->
         <div class="lesson-footnav">
-            <button class="btn-outline" id="prevBtn" onclick="navigateLesson('prev')" style="min-width:140px">
+            <button class="btn-outline" id="prevBtn" type="button" onclick="navigateLesson('prev')">
                 <i data-lucide="arrow-left" size="16"></i> Previous
             </button>
             <div class="footnav-lesson-info" id="footnav-info">
                 <strong id="footnav-title">–</strong>
                 <span id="footnav-course">Information Security · Module 01</span>
             </div>
-            <button class="btn-primary" id="nextBtn" onclick="navigateLesson('next')" style="min-width:140px">
+            <button class="btn-primary" id="nextBtn" type="button" onclick="navigateLesson('next')">
                 Next <i data-lucide="arrow-right" size="16"></i>
             </button>
         </div>
@@ -400,6 +561,11 @@
             currentIndex: -1
         };
 
+        const VIEW_STATE = {
+            reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            outlineEntries: []
+        };
+
         // ── INIT ─────────────────────────────────────
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
@@ -420,8 +586,17 @@
 
             // Set up breadcrumb and footnav
             const course = COURSE_SEQUENCE[LESSON.courseSlug];
-            if (course) document.getElementById('breadcrumb-course').textContent = course.title;
+            if (course) {
+                document.getElementById('breadcrumb-course').textContent = course.title;
+                const courseHref = `${course.courseUrl}?course=${encodeURIComponent(LESSON.courseSlug)}`;
+                document.querySelectorAll('[data-course-link]').forEach((link) => {
+                    link.setAttribute('href', courseHref);
+                });
+            }
             updateNavButtons();
+            window.addEventListener('scroll', handleViewportUpdates, { passive: true });
+            window.addEventListener('resize', handleViewportUpdates);
+            handleViewportUpdates();
 
             // Load token balance
             try {
@@ -435,6 +610,7 @@
             }
 
             await loadLesson(LESSON.id);
+            handleViewportUpdates();
         });
 
         // ── LOAD & RENDER LESSON ─────────────────────
@@ -470,6 +646,7 @@
 
                 // Build outline from headings
                 buildOutline();
+                handleViewportUpdates();
 
                 // Restore completion state
                 try {
@@ -489,7 +666,11 @@
                 }
 
                 // Update topbar status
-                document.getElementById('topbar-status').textContent = `${data.estimatedTime || 0} min read`;
+                if (!LESSON.isCompleted) {
+                    const statusEl = document.getElementById('topbar-status');
+                    statusEl.textContent = `${data.estimatedTime || 0} min read`;
+                    statusEl.style.color = 'var(--text-muted)';
+                }
 
             } catch (err) {
                 document.getElementById('lessonBody').innerHTML = `<p style="color:var(--danger)">Failed to load lesson: ${err.message}</p>`;
@@ -499,21 +680,84 @@
 
         // ── OUTLINE ───────────────────────────────────
         function buildOutline() {
-            const headings = document.querySelectorAll('.lesson-body h2, .lesson-body h3');
-            if (headings.length < 2) return;
-
+            const headings = [...document.querySelectorAll('.lesson-body h2, .lesson-body h3')];
             const list = document.getElementById('outlineList');
+            const section = document.getElementById('outlineSection');
             list.innerHTML = '';
-            headings.forEach((h, i) => {
+            VIEW_STATE.outlineEntries = [];
+
+            if (headings.length < 2) {
+                section.style.display = 'none';
+                return;
+            }
+
+            headings.forEach((heading, i) => {
                 const id = `heading-${i}`;
-                h.id = id;
+                heading.id = id;
+
                 const li = document.createElement('li');
-                li.className = `outline-item ${h.tagName === 'H3' ? 'h3' : ''}`;
-                li.textContent = h.textContent;
-                li.onclick = () => h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                li.className = `outline-item ${heading.tagName === 'H3' ? 'h3' : ''}`;
+                li.dataset.headingId = id;
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'outline-item-btn';
+                button.textContent = heading.textContent;
+                button.setAttribute('aria-label', `Jump to ${heading.textContent}`);
+                button.onclick = () => {
+                    heading.scrollIntoView({
+                        behavior: VIEW_STATE.reducedMotion ? 'auto' : 'smooth',
+                        block: 'start'
+                    });
+                    updateActiveOutline();
+                };
+
+                li.appendChild(button);
                 list.appendChild(li);
+                VIEW_STATE.outlineEntries.push({ id, item: li });
             });
-            document.getElementById('outlineSection').style.display = 'block';
+            section.style.display = 'block';
+            updateActiveOutline();
+        }
+
+        function handleViewportUpdates() {
+            updateReadingProgress();
+            updateActiveOutline();
+        }
+
+        function updateReadingProgress() {
+            const fill = document.getElementById('readingProgressFill');
+            const readout = document.getElementById('readingReadout');
+            const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
+            const ratio = maxScroll === 0 ? 0 : Math.min(window.scrollY / maxScroll, 1);
+            const percentage = Math.round(ratio * 100);
+
+            if (fill) fill.style.width = `${percentage}%`;
+            if (readout) readout.textContent = `${percentage}% read`;
+        }
+
+        function updateActiveOutline() {
+            if (!VIEW_STATE.outlineEntries.length) return;
+
+            let activeId = VIEW_STATE.outlineEntries[0].id;
+            const headingOffset = 150;
+
+            VIEW_STATE.outlineEntries.forEach(({ id }) => {
+                const heading = document.getElementById(id);
+                if (heading && heading.getBoundingClientRect().top <= headingOffset) {
+                    activeId = id;
+                }
+            });
+
+            VIEW_STATE.outlineEntries.forEach(({ id, item }) => {
+                const isActive = id === activeId;
+                item.classList.toggle('active', isActive);
+                const button = item.querySelector('.outline-item-btn');
+                if (button) {
+                    if (isActive) button.setAttribute('aria-current', 'location');
+                    else button.removeAttribute('aria-current');
+                }
+            });
         }
 
         // ── MARK COMPLETE ────────────────────────────
@@ -529,15 +773,17 @@
                 const result = await Api.completeLesson(LESSON.id);
                 markAsAlreadyDone();
                 const tokens = result.tokensEarned || 20;
-                const newBalance = result.newBalance || result.tokens_available;
+                const newBalance = result.newBalance ?? result.tokens_available;
 
-                Toast.success(`+${tokens} Tokens · Lesson Complete!`);
+                Toast.success(`+${tokens} Tokens - Lesson complete.`);
 
                 // Update token display
-                if (newBalance) document.getElementById('sidebar-tokens').textContent = newBalance;
+                if (newBalance !== undefined && newBalance !== null) {
+                    document.getElementById('sidebar-tokens').textContent = newBalance;
+                }
 
-                // Auto-navigate to next after short delay
-                setTimeout(() => navigateLesson('next'), 1800);
+                incrementPanelProgress();
+                highlightNextLessonAction();
 
             } catch (err) {
                 btn.disabled = false;
@@ -557,9 +803,30 @@
             btn.disabled = true;
             btn.innerHTML = '<i data-lucide="check-circle" size="18"></i> Completed';
             lucide.createIcons();
-            document.getElementById('topbar-status').textContent = '✓ Completed';
+            document.getElementById('topbar-status').textContent = 'Completed';
             document.getElementById('topbar-status').style.color = 'var(--success)';
             LESSON.isCompleted = true;
+        }
+
+        function incrementPanelProgress() {
+            const progressEl = document.getElementById('panel-progress');
+            if (!progressEl) return;
+
+            const parts = progressEl.textContent.split('/');
+            if (parts.length !== 2) return;
+
+            const completed = Number(parts[0]);
+            const total = Number(parts[1]);
+            if (!Number.isFinite(completed) || !Number.isFinite(total)) return;
+
+            progressEl.textContent = `${Math.min(completed + 1, total)}/${total}`;
+        }
+
+        function highlightNextLessonAction() {
+            const nextBtn = document.getElementById('nextBtn');
+            if (!nextBtn) return;
+            nextBtn.classList.add('next-lesson-pulse');
+            setTimeout(() => nextBtn.classList.remove('next-lesson-pulse'), 3600);
         }
 
         // ── NAVIGATION ────────────────────────────────
@@ -591,6 +858,27 @@
         }
 
         // ── AI HINT ───────────────────────────────────
+        async function diagnoseAiMentorAvailability(initialMessage = '') {
+            const apiUrl = window.CONFIG?.API_URL || window.API_URL || 'http://localhost:3000';
+
+            try {
+                const status = await Api.getAiStatus();
+                if (!status.configured) {
+                    return `AI mentor is unavailable on ${apiUrl}. Add GROQ_API_KEY in backend/.env and restart backend.`;
+                }
+                return 'AI mentor is configured but hint requests are still failing. Restart backend, then refresh and log in again.';
+            } catch (statusErr) {
+                const statusMessage = String(statusErr?.message || '').toLowerCase();
+                if (statusMessage.includes('404')) {
+                    return `Backend at ${apiUrl} is running an older build. Restart backend from this project and try again.`;
+                }
+                if (statusMessage.includes('failed to fetch') || statusMessage.includes('network')) {
+                    return `Cannot reach backend at ${apiUrl}. Start backend server and try again.`;
+                }
+                return initialMessage || `AI mentor is temporarily unavailable on ${apiUrl}.`;
+            }
+        }
+
         async function getHint() {
             const input = document.getElementById('hintInput');
             const result = document.getElementById('hintResult');
@@ -608,7 +896,17 @@
                 result.textContent = data.hint;
                 result.style.display = 'block';
             } catch (err) {
-                Toast.error(err.message || 'Could not get hint right now.');
+                const message = String(err?.message || '').trim();
+                const lower = message.toLowerCase();
+                if (
+                    lower.includes('ai mentor is unavailable') ||
+                    lower.includes('ai not configured') ||
+                    lower.includes('failed to generate hint')
+                ) {
+                    Toast.error(await diagnoseAiMentorAvailability(message));
+                } else {
+                    Toast.error(message || 'Could not get hint right now.');
+                }
             } finally {
                 btn.textContent = 'ASK AI MENTOR';
                 btn.disabled = false;

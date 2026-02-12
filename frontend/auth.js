@@ -181,10 +181,39 @@ const Auth = {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({ error: 'Request failed' }));
-            throw new Error(error.error || `HTTP ${response.status}`);
+            throw new Error(this.getUserFriendlyApiError(error.error || `HTTP ${response.status}`));
         }
 
         return await response.json();
+    },
+
+    /**
+     * Normalize low-level API errors into clear user-facing messages.
+     * @param {string} message
+     * @returns {string}
+     */
+    getUserFriendlyApiError(message) {
+        const text = String(message || '').trim();
+        const rpcMatch = text.match(/Database function '([^']+)' is missing/i);
+
+        if (rpcMatch) {
+            return `Platform setup required: missing database function ${rpcMatch[1]}. Please ask the admin to run the Supabase SQL setup.`;
+        }
+
+        if (text.includes('AI not configured')) {
+            const apiUrl = window.API_URL || window.CONFIG?.API_URL || 'http://localhost:3000';
+            return `AI mentor is unavailable on ${apiUrl}. Verify GROQ_API_KEY in backend/.env for the running backend instance, then restart backend.`;
+        }
+
+        if (text.toLowerCase().includes('rate-limited')) {
+            return 'AI mentor is temporarily rate-limited. Please try again in about a minute.';
+        }
+
+        if (text.toLowerCase().includes('ai key rejected')) {
+            return 'AI mentor key was rejected by Groq. Recheck GROQ_API_KEY in backend/.env and restart backend.';
+        }
+
+        return text || 'Request failed';
     },
 
     /**

@@ -25,7 +25,7 @@ const CURRICULUM_ROOT = path.join(__dirname, '../../curriculum');
 
 const LESSON_CONTENT_MAP = {
     'infosec-m01-l01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_1.md'),
-    'infosec-m01-l02': null,
+    'infosec-m01-l02': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_2.md'),
     'infosec-m01-l03': null,
     'infosec-m01-l04': null,
     'infosec-m01-l05': null

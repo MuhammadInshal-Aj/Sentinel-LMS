@@ -21,56 +21,6 @@
 
     <!-- Landing-specific styles -->
     <style>
-        /* --- CARD IMAGE HOVER ZOOM --- */
-        .card img    { transition: transform 0.3s ease; }
-        .card:hover img { transform: scale(1.05); }
-
-        /* --- COURSE DROPDOWN (hover reveal) --- */
-        .course-dropdown {
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            background: rgba(10, 10, 10, 0.98);
-            border: 1px solid var(--accent);
-            border-top: none;
-            border-radius: 0 0 12px 12px;
-            padding: 1.5rem;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 100;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-        }
-
-        .card:hover .course-dropdown {
-            opacity: 1; visibility: visible; transform: translateY(0);
-        }
-
-        .course-dropdown h4 {
-            color: var(--accent); font-size: 0.9rem; margin-bottom: 0.75rem;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-
-        .course-dropdown ul { list-style: none; margin-bottom: 1rem; }
-
-        .course-dropdown li {
-            padding: 0.5rem 0; color: #aaa; font-size: 0.85rem;
-            display: flex; align-items: center; gap: 0.5rem;
-        }
-
-        .course-dropdown li:before {
-            content: 'â–¸'; color: var(--accent); font-weight: bold;
-        }
-
-        .course-info-row {
-            display: flex; justify-content: space-between;
-            padding: 0.5rem 0; border-top: 1px solid var(--border);
-            margin-top: 1rem; font-size: 0.85rem;
-        }
-
-        .course-info-label { color: #666; }
-        .course-info-value { color: #fff; font-weight: 600; }
-
         /* --- ABOUT SECTION --- */
         .about-section { padding: 6rem; max-width: 1200px; margin: 0 auto; }
 
@@ -290,8 +240,8 @@
                 
                 <p>Master the art of cybersecurity. Access offensive and defensive labs directly in your browser with our state-of-the-art Pwnbox integration.</p>
                 <div class="hero-actions">
-                    <button class="btn btn-primary" style="width: auto; padding: 1rem 2.5rem;">START PATH</button>
-                    <button class="btn btn-outline" style="width: auto; padding: 1rem 2.5rem;">EXPLORE LABS</button>
+                    <button class="btn btn-primary" style="width: auto; padding: 1rem 2.5rem;" onclick="location.href='register.html'">START PATH</button>
+                    <button class="btn btn-outline" style="width: auto; padding: 1rem 2.5rem;" onclick="Toast.info('Labs are not available right now. Check back soon.')">EXPLORE LABS</button>
                 </div>
             </section>
 
@@ -305,98 +255,137 @@
                 </div>
 
                 <div class="grid-cards">
-                    <div class="card">
-                        <span class="difficulty" style="color: #ff4444;">Hard</span>
-                        <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400" alt="Hacking">
-                        <h3>OSCP Prep Track</h3>
-                        <p>Advanced penetration testing techniques, buffer overflows, and privilege escalation methodologies.</p>
-                        <div class="card-footer">
-                            <span style="font-size: 0.9rem; color: #777;">Modules: 12</span>
-                        </div>
-                        <div class="course-dropdown">
-                            <h4>Course Overview</h4>
-                            <ul>
-                                <li>Advanced Network Exploitation</li>
-                                <li>Windows & Linux Privilege Escalation</li>
-                                <li>Buffer Overflow Techniques</li>
-                                <li>Active Directory Attacks</li>
-                                <li>Post-Exploitation Frameworks</li>
-                            </ul>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Duration:</span>
-                                <span class="course-info-value">120 Hours</span>
+                    <!-- Information Security (Fundamentals) -->
+                    <div class="card-container">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card">
+                                    <span class="difficulty" style="color: #00f2ff;">FUNDAMENTALS</span>
+                                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400" alt="Information Security">
+                                    <h3>INFORMATION SECURITY</h3>
+                                    <p>Learn the foundational concepts of cybersecurity, including threat modeling, vulnerability assessment, and defense strategies.</p>
+                                    <div class="card-footer">
+                                        <span style="font-size: 0.9rem; color: #777;">Modules: 8</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Difficulty:</span>
-                                <span class="course-info-value">Advanced</span>
-                            </div>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Prerequisites:</span>
-                                <span class="course-info-value">Network+ & Security+</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <span class="difficulty" style="color: #44ff44;">Medium</span>
-                        <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400" alt="Server">
-                        <h3>SOC Analyst Level 1</h3>
-                        <p>Master the core concepts of security operations, threat hunting, and incident response.</p>
-                        <div class="card-footer">
-                            <span style="font-size: 0.9rem; color: #777;">Modules: 8</span>
-                        </div>
-                        <div class="course-dropdown">
-                            <h4>Course Overview</h4>
-                            <ul>
-                                <li>Security Information & Event Management (SIEM)</li>
-                                <li>Network Traffic Analysis</li>
-                                <li>Threat Intelligence & IOCs</li>
-                                <li>Incident Response Procedures</li>
-                                <li>Malware Analysis Basics</li>
-                            </ul>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Duration:</span>
-                                <span class="course-info-value">80 Hours</span>
-                            </div>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Difficulty:</span>
-                                <span class="course-info-value">Intermediate</span>
-                            </div>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Prerequisites:</span>
-                                <span class="course-info-value">Basic Networking Knowledge</span>
+                            <div class="card-back">
+                                <div class="course-overview">
+                                    <div>
+                                        <h4>Course Overview</h4>
+                                        <ul>
+                                            <li>Introduction to Cybersecurity</li>
+                                            <li>CIA Triad & Security Principles</li>
+                                            <li>Threat & Vulnerability Assessment</li>
+                                            <li>Secure System Design</li>
+                                            <li>Defense in Depth Strategies</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Duration:</span>
+                                            <span class="course-info-value">40 Hours</span>
+                                        </div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Difficulty:</span>
+                                            <span class="course-info-value">Fundamentals</span>
+                                        </div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Prerequisites:</span>
+                                            <span class="course-info-value">None</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <span class="difficulty" style="color: #ffaa00;">Expert</span>
-                        <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=400" alt="Code">
-                        <h3>Malware Reverse Engineering</h3>
-                        <p>Deconstruct sophisticated threats and learn to reverse engineer malicious binaries safely.</p>
-                        <div class="card-footer">
-                            <span style="font-size: 0.9rem; color: #777;">Modules: 15</span>
+                    <!-- Computer Networking (Fundamentals) -->
+                    <div class="card-container">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card">
+                                    <span class="difficulty" style="color: #00f2ff;">FUNDAMENTALS</span>
+                                    <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400" alt="Computer Networking">
+                                    <h3>COMPUTER NETWORKING</h3>
+                                    <p>Master network fundamentals, OSI model, TCP/IP protocols, and network architecture essential for security professionals.</p>
+                                    <div class="card-footer">
+                                        <span style="font-size: 0.9rem; color: #777;">Modules: 6</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="course-overview">
+                                    <div>
+                                        <h4>Course Overview</h4>
+                                        <ul>
+                                            <li>OSI & TCP/IP Model</li>
+                                            <li>IP Addressing & Subnetting</li>
+                                            <li>Network Protocols (DNS, HTTP, SMTP)</li>
+                                            <li>Routing & Switching Basics</li>
+                                            <li>Network Troubleshooting Tools</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Duration:</span>
+                                            <span class="course-info-value">35 Hours</span>
+                                        </div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Difficulty:</span>
+                                            <span class="course-info-value">Fundamentals</span>
+                                        </div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Prerequisites:</span>
+                                            <span class="course-info-value">None</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="course-dropdown">
-                            <h4>Course Overview</h4>
-                            <ul>
-                                <li>x86/x64 Assembly Language</li>
-                                <li>IDA Pro & Ghidra Debugging</li>
-                                <li>Obfuscation & Anti-Analysis Techniques</li>
-                                <li>Unpacking & Decryption Methods</li>
-                                <li>Advanced Malware Families Analysis</li>
-                            </ul>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Duration:</span>
-                                <span class="course-info-value">150 Hours</span>
+                    </div>
+
+                    <!-- Ethical Hacking (Intermediate) -->
+                    <div class="card-container">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card">
+                                    <span class="difficulty" style="color: #ffa502;">INTERMEDIATE</span>
+                                    <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=400" alt="Ethical Hacking">
+                                    <h3>ETHICAL HACKING</h3>
+                                    <p>Hands-on penetration testing, vulnerability exploitation, and ethical hacking methodologies for security professionals.</p>
+                                    <div class="card-footer">
+                                        <span style="font-size: 0.9rem; color: #777;">Modules: 10</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Difficulty:</span>
-                                <span class="course-info-value">Expert</span>
-                            </div>
-                            <div class="course-info-row">
-                                <span class="course-info-label">Prerequisites:</span>
-                                <span class="course-info-value">Programming & Assembly</span>
+                            <div class="card-back">
+                                <div class="course-overview">
+                                    <div>
+                                        <h4>Course Overview</h4>
+                                        <ul>
+                                            <li>Reconnaissance & Enumeration</li>
+                                            <li>Vulnerability Scanning</li>
+                                            <li>Exploitation Techniques</li>
+                                            <li>Post-Exploitation & Privilege Escalation</li>
+                                            <li>Reporting & Documentation</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Duration:</span>
+                                            <span class="course-info-value">60 Hours</span>
+                                        </div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Difficulty:</span>
+                                            <span class="course-info-value">Intermediate</span>
+                                        </div>
+                                        <div class="course-info-row">
+                                            <span class="course-info-label">Prerequisites:</span>
+                                            <span class="course-info-value">Information Security, Networking</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -587,6 +576,16 @@
 
     <script>
         lucide.createIcons();
+        
+        // Card flip functionality
+        document.querySelectorAll('.card-container').forEach(container => {
+            container.addEventListener('click', function(e) {
+                // Only flip if clicking on the card itself, not on interactive elements
+                if (!e.target.closest('button') && !e.target.closest('a')) {
+                    this.classList.toggle('flipped');
+                }
+            });
+        });
         
         // Mouse tracking for grid glow effect
         window.addEventListener('mousemove', (e) => {

@@ -35,7 +35,10 @@ async function fetchMyCourses() {
                 const enrolledCourses = data.myCourses.map(c => ({
                     id: c.slug || c.id,
                     title: c.title,
-                    category: c.level === 'foundation' ? 'fundamentals' : (c.level || c.category || 'fundamentals'),
+                    category: (c.level === 'foundation' || c.level === 'fundamentals')
+                        ? 'fundamentals'
+                        : 'intermediate',
+
                     description: c.description || '',
                     progress: {
                         percentage: c.overall_progress_percentage || 0,
@@ -58,7 +61,15 @@ async function fetchMyCourses() {
                     const mappedSlug = window.COURSE_SLUG_MAP?.[c.id] || c.id;
                     return !enrolledIds.has(c.id) && !enrolledIds.has(mappedSlug);
                 });
-                window.coursesData.myCourses = [...enrolledCourses, ...unenrolledCatalog];
+                // Only update progress, NEVER replace catalog order
+window.coursesData.myCourses = catalogCourses.map(cat => {
+    const match = enrolledCourses.find(e =>
+        e.id === cat.id ||
+        e.id === (window.COURSE_SLUG_MAP?.[cat.id] || cat.id)
+    );
+    return match ? { ...cat, progress: match.progress, meta: match.meta } : cat;
+});
+
                 console.log(`Merged: ${enrolledCourses.length} enrolled + ${unenrolledCatalog.length} catalog = ${window.coursesData.myCourses.length} total`);
             } else {
                 // API succeeded but user has no enrollments — keep catalog as-is
@@ -143,6 +154,9 @@ async function initializeMyCoursesPage() {
             
             console.log('✅ Rendering intermediate courses...');
             renderCoursesByCategory(window.coursesData.myCourses, 'intermediate');
+
+            // Update tab counts after rendering
+            updateCoursesTabCounts(window.coursesData.myCourses);
         } else {
             console.error('❌ renderCoursesByCategory function not found!');
         }
@@ -158,7 +172,28 @@ async function initializeMyCoursesPage() {
         console.log('✅ My Courses initialized successfully');
     } else {
         console.error('❌ Failed to initialize My Courses. Data:', { data, coursesData: window.coursesData });
+        // Show zeroes if no data
+        updateCoursesTabCounts([]);
     }
+}
+
+// Count and update the tab values for Active, Available, Upcoming
+function updateCoursesTabCounts(courses) {
+    let active = 0, available = 0, upcoming = 0;
+    if (Array.isArray(courses)) {
+        courses.forEach(c => {
+            if (window.UPCOMING_COURSE_IDS && window.UPCOMING_COURSE_IDS.has(c.id)) {
+                upcoming++;
+            } else if (c.progress && (c.progress.status === 'in-progress' || c.progress.status === 'completed')) {
+                active++;
+            } else {
+                available++;
+            }
+        });
+    }
+    document.getElementById('activeCoursesCount').textContent = active;
+    document.getElementById('availableCoursesCount').textContent = available;
+    document.getElementById('upcomingCoursesCount').textContent = upcoming;
 }
 
 // Token display update

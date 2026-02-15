@@ -356,6 +356,9 @@
         .course-card:nth-child(2) { animation-delay: 0.2s; }
         .course-card:nth-child(3) { animation-delay: 0.3s; }
 
+        /* Modal Large */
+        .modal.modal-large { max-width: 700px; }
+
         /* === RESPONSIVE === */
         @media (max-width: 1200px) {
             .progress-section { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
@@ -865,6 +868,25 @@
         </div>
     </div>
 
+    <!-- COURSE OVERVIEW MODAL -->
+    <div class="modal-overlay" id="courseOverviewModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i data-lucide="book-open" size="24" style="color: var(--accent);"></i>
+                </div>
+                <h2 id="overviewCourseTitle">Course Overview</h2>
+            </div>
+            <div id="overviewContent" style="max-height: 60vh; overflow-y: auto; padding: var(--space-lg) var(--space-xl);">
+                <!-- Content will be populated dynamically -->
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeCourseOverviewModal(); return false;">Close</button>
+                <button type="button" class="modal-btn modal-btn-confirm" onclick="proceedFromOverview(); return false;">Enroll Now</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     // 1. INITIALIZE SUPABASE
     const supabaseUrl = 'https://dtvdoyigadkdjkvjahna.supabase.co';
@@ -1365,8 +1387,123 @@
         'ethical-hacking': 'ethical-hacking'
     };
 
+    /**
+     * Show course overview modal on card click
+     */
+    function showCourseOverview(courseId) {
+        if (!window.coursesData || !window.coursesData.myCourses) {
+            console.error('coursesData not initialized');
+            return;
+        }
+
+        const course = window.coursesData.myCourses.find(c => c.id === courseId);
+        if (!course) {
+            console.error('Course not found:', courseId);
+            return;
+        }
+
+        const modal = document.getElementById('courseOverviewModal');
+        const title = document.getElementById('overviewCourseTitle');
+        const content = document.getElementById('overviewContent');
+
+        title.textContent = course.title;
+
+        // Build overview content with better formatting
+        const isUpcoming = UPCOMING_COURSE_IDS && UPCOMING_COURSE_IDS.has(courseId);
+        
+        content.innerHTML = `
+            <div style="line-height: 1.8;">
+                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--space-md); color: var(--accent);">About This Course</h3>
+                <p style="margin-bottom: var(--space-lg); color: var(--text-muted); font-size: 0.95rem;">${course.description}</p>
+
+                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--space-md); margin-top: var(--space-xl); color: var(--accent);">Course Details</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-lg);">
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Duration</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">${course.meta.estimatedDuration}</div>
+                    </div>
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Level</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); text-transform: capitalize;">${course.category}</div>
+                    </div>
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Modules</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">${course.meta.modulesCount}</div>
+                    </div>
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Lessons</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">${course.meta.lessonsCount}</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--space-md); margin-top: var(--space-xl); color: var(--accent);">What You'll Learn</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Master core concepts and foundational knowledge
+                    </li>
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Gain hands-on experience through practical exercises
+                    </li>
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Develop problem-solving skills in real-world scenarios
+                    </li>
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Complete assessments and earn course certification
+                    </li>
+                </ul>
+
+                ${isUpcoming ? `
+                    <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.35); border-radius: var(--radius-lg); color: #ffd666;">
+                        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                            <span style="font-weight: 600;">Coming Soon</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9rem;">This course will be available soon. Check back later or sign up for notifications.</p>
+                    </div>
+                ` : `
+                    <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.25); border-radius: var(--radius-lg); color: var(--accent);">
+                        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+                            <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
+                            <span style="font-weight: 600;">Ready to Start</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9rem;">This course is available for enrollment. Click 'Enroll Now' to get started.</p>
+                    </div>
+                `}
+            </div>
+        `;
+
+        lucide.createIcons();
+        modal.classList.add('active');
+    }
+
+    function closeCourseOverviewModal() {
+        document.getElementById('courseOverviewModal').classList.remove('active');
+    }
+
+    function proceedFromOverview() {
+        // This function will be called when user clicks "Enroll Now" from the overview modal
+        // We'll find which course is open and trigger the action
+        const modal = document.getElementById('courseOverviewModal');
+        const courseTitle = document.getElementById('overviewCourseTitle').textContent;
+        
+        // Find the course ID from the title
+        if (!window.coursesData || !window.coursesData.myCourses) {
+            console.error('coursesData not initialized');
+            return;
+        }
+
+        const course = window.coursesData.myCourses.find(c => c.title === courseTitle);
+        if (!course) {
+            console.error('Could not find course from title:', courseTitle);
+            return;
+        }
+
+        closeCourseOverviewModal();
+        handleCourseAction(course.id, course.progress.status);
+    }
+
     // Course rollout controls for My Courses cards
-    const UPCOMING_COURSE_IDS = new Set(['computer-networking', 'ethical-hacking']);
+    const UPCOMING_COURSE_IDS = new Set([]);
     const COURSE_CARD_PRIORITY = {
         'information-security': 0,
         'infosec': 0,
@@ -1381,7 +1518,7 @@
                 "id": "computer-networking",
                 "title": "Computer Networking",
                 "category": "fundamentals",
-                "description": "Learn core networking concepts essential for cybersecurity.",
+                "description": "Learn core networking concepts essential for cybersecurity. Master TCP/IP protocols, routing, switching, DNS, and network security architecture. Build a solid foundation in networking to understand how systems communicate and how to protect them.",
                 "progress": {
                     "percentage": 0,
                     "status": "not-started",
@@ -1397,7 +1534,7 @@
                 "id": "information-security",
                 "title": "Information Security",
                 "category": "fundamentals",
-                "description": "Understand security principles, risk models, and defensive thinking.",
+                "description": "Understand security principles, risk models, and defensive thinking. Explore the CIA triad, threat modeling, vulnerability assessment, and security frameworks. Develop a cybersecurity mindset and learn how to design systems with security at their core.",
                 "progress": {
                     "percentage": 0,
                     "status": "not-started",
@@ -1413,11 +1550,11 @@
                 "id": "ethical-hacking",
                 "title": "Ethical Hacking",
                 "category": "intermediate",
-                "description": "Practice offensive security techniques with hands-on labs.",
+                "description": "Practice offensive security techniques with hands-on labs. Learn penetration testing, vulnerability exploitation, and ethical hacking methodologies. Develop practical skills in identifying and exploiting security weaknesses in a controlled environment.",
                 "progress": {
-                    "percentage": 35,
-                    "status": "in-progress",
-                    "currentLesson": "SQL Injection Basics"
+                    "percentage": 0,
+                    "status": "not-started",
+                    "currentLesson": null
                 },
                 "meta": {
                     "estimatedDuration": "8 weeks",
@@ -1433,78 +1570,75 @@
      */
     function renderCourseCard(course) {
         const isUpcoming = UPCOMING_COURSE_IDS.has(course.id);
-        const isActive = course.progress.status === 'in-progress';
+        const isActive = course.progress.status === 'in-progress' || course.progress.status === 'completed';
         const progressText = course.progress.percentage === 0 
             ? 'Not started' 
             : `${course.progress.percentage}% completed`;
         const buttonText = isUpcoming
-            ? 'Upcomming'
+            ? 'Coming Soon'
             : course.progress.status === 'not-started' 
             ? 'Start Course' 
             : 'Resume Course';
         const buttonIcon = isUpcoming
-            ? 'clock-3'
+            ? 'lock'
             : course.progress.status === 'not-started' 
             ? 'play-circle' 
             : 'arrow-right';
 
+        // All cards now show full details
         return `
-            <article class="course-card ${isActive ? 'active-course' : ''}" data-course-id="${course.id}">
-                <div class="card-header-courses">
-                    <div class="course-title-wrapper">
-                        <h3 class="course-title">${course.title}</h3>
-                        <span class="course-category-badge">${course.category}</span>
+        <article class="course-card${isActive ? ' active-course' : ''}${isUpcoming ? ' upcoming-course' : ''}" data-course-id="${course.id}" onclick="showCourseOverview('${course.id}')">
+            <div class="card-header-courses">
+                <div class="course-title-wrapper">
+                    <h3 class="course-title">${course.title}</h3>
+                    <span class="course-category-badge">${course.category}</span>
+                </div>
+            </div>
+            <div class="card-content-courses">
+                <p class="course-description">${course.description}</p>
+                ${course.progress.currentLesson ? `
+                    <div class="current-lesson">
+                        <i data-lucide="play-circle"></i>
+                        <span class="current-lesson-text">
+                            Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
+                        </span>
+                    </div>
+                ` : ''}
+                <div class="course-meta">
+                    <div class="meta-item">
+                        <i data-lucide="clock"></i>
+                        <span>${course.meta.estimatedDuration}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i data-lucide="folder"></i>
+                        <span>${course.meta.modulesCount} modules</span>
+                    </div>
+                    <div class="meta-item">
+                        <i data-lucide="book-open"></i>
+                        <span>${course.meta.lessonsCount} lessons</span>
                     </div>
                 </div>
-
-                <div class="card-content-courses">
-                    <p class="course-description">${course.description}</p>
-
-                    ${course.progress.currentLesson ? `
-                        <div class="current-lesson">
-                            <i data-lucide="play-circle"></i>
-                            <span class="current-lesson-text">
-                                Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
-                            </span>
-                        </div>
-                    ` : ''}
-
-                    <div class="course-meta">
-                        <div class="meta-item">
-                            <i data-lucide="clock"></i>
-                            <span>${course.meta.estimatedDuration}</span>
-                        </div>
-                        <div class="meta-item">
-                            <i data-lucide="folder"></i>
-                            <span>${course.meta.modulesCount} modules</span>
-                        </div>
-                        <div class="meta-item">
-                            <i data-lucide="book-open"></i>
-                            <span>${course.meta.lessonsCount} lessons</span>
-                        </div>
+                <div class="progress-section-courses">
+                    <div class="progress-header-courses">
+                        <span class="progress-label-courses">Progress</span>
+                        <span class="progress-percentage-courses">${course.progress.percentage}%</span>
                     </div>
-
-                    <div class="progress-section-courses">
-                        <div class="progress-header-courses">
-                            <span class="progress-label-courses">Progress</span>
-                            <span class="progress-percentage-courses">${course.progress.percentage}%</span>
-                        </div>
-                        <div class="progress-bar-container-courses">
-                            <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
-                        </div>
-                        <p class="progress-status-courses">${progressText}</p>
+                    <div class="progress-bar-container-courses">
+                        <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
                     </div>
+                    <p class="progress-status-courses">${progressText}</p>
                 </div>
-
-                <div class="card-actions-courses">
-                    <button class="btn-course-primary ${isUpcoming ? 'is-upcoming' : ''}" ${isUpcoming ? 'disabled aria-disabled="true" title="Coming soon"' : `onclick="handleCourseAction('${course.id}', '${course.progress.status}')"`}>
-                        <i data-lucide="${buttonIcon}"></i>
-                        ${buttonText}
-                    </button>
-                </div>
-            </article>
+            </div>
+            <div class="card-actions-courses">
+                <button class="btn-course-primary${isUpcoming ? ' is-upcoming' : ''}" onclick="event.stopPropagation(); handleCourseAction('${course.id}', '${course.progress.status}')" ${isUpcoming ? 'disabled aria-disabled="true"' : ''}>
+                    <i data-lucide="${buttonIcon}"></i>
+                    ${buttonText}
+                </button>
+            </div>
+        </article>
         `;
     }
+    // ...existing code...
 
     /**
      * Render courses by category

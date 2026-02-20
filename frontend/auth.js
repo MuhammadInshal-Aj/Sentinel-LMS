@@ -125,6 +125,45 @@ const Auth = {
     },
 
     /**
+     * Attempt to refresh the access token using the stored refresh token.
+     * Uses Supabase Auth REST API directly.
+     * @returns {Promise<boolean>} True if refresh succeeded
+     */
+    async refreshSession() {
+        const refreshToken = this.getRefreshToken();
+        if (!refreshToken) return false;
+
+        const supabaseUrl = window.CONFIG?.SUPABASE_URL;
+        const supabaseKey = window.CONFIG?.SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseKey) return false;
+
+        try {
+            const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': supabaseKey
+                },
+                body: JSON.stringify({ refresh_token: refreshToken })
+            });
+
+            if (!response.ok) return false;
+
+            const data = await response.json();
+            if (data.access_token && data.refresh_token) {
+                this.storage.setItem(this.TOKEN_KEY, data.access_token);
+                this.storage.setItem(this.REFRESH_KEY, data.refresh_token);
+                console.log('[Auth] Session refreshed successfully');
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.warn('[Auth] Token refresh failed:', err.message);
+            return false;
+        }
+    },
+
+    /**
      * Make authenticated API request
      * @param {string} endpoint - API endpoint (e.g., '/api/user/courses')
      * @param {object} options - Fetch options (method, body, etc.)
@@ -154,13 +193,23 @@ const Auth = {
         };
 
         try {
-            const response = await fetch(`${window.API_URL}${endpoint}`, mergedOptions);
+            let response = await fetch(`${window.API_URL}${endpoint}`, mergedOptions);
 
-            // Handle unauthorized (token expired or invalid)
+            // On 401, try to refresh the token once before giving up
             if (response.status === 401) {
-                this.clearAuth();
-                window.location.href = 'login.html';
-                throw new Error('Session expired. Please login again.');
+                const refreshed = await this.refreshSession();
+                if (refreshed) {
+                    // Retry the request with the new token
+                    mergedOptions.headers['Authorization'] = `Bearer ${this.getToken()}`;
+                    response = await fetch(`${window.API_URL}${endpoint}`, mergedOptions);
+                }
+
+                // If still 401 after refresh attempt, redirect to login
+                if (response.status === 401) {
+                    this.clearAuth();
+                    window.location.href = 'login.html';
+                    throw new Error('Session expired. Please login again.');
+                }
             }
 
             return response;

@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m03-l04",
+  "title": "Security Monitoring & Logging",
+  "order": 4,
+  "type": "theory",
+  "difficulty": "intermediate",
+  "estimated_time": 10,
+  "objectives": [
+    "Explain the purpose of SIEM systems",
+    "Understand what to log and why",
+    "Describe common detection use cases (brute force, lateral movement)"
+  ],
+  "tags": ["SIEM", "logging", "monitoring", "detection"]
+}

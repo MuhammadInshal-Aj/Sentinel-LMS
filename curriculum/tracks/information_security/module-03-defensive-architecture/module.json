@@ -1,0 +1,19 @@
+{
+  "id": "infosec-m03",
+  "track_id": "infosec",
+  "title": "Defensive Architecture",
+  "order": 3,
+  "description": "Designing and operating layered defenses: network security, identity management, incident response, and monitoring",
+  "estimated_time": 70,
+  "lessons": [
+    "infosec-m03-l01",
+    "infosec-m03-l02",
+    "infosec-m03-l03",
+    "infosec-m03-l04",
+    "infosec-m03-l05"
+  ],
+  "checkpoint": {
+    "type": "reflection",
+    "unlock_condition": "all_lessons_completed"
+  }
+}

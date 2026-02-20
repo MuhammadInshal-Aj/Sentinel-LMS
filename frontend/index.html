@@ -235,7 +235,7 @@
             background: linear-gradient(90deg, rgba(255, 193, 7, 0.95), rgba(255, 193, 7, 0.1));
         }
         .course-card.upcoming-course::after {
-            content: 'UPCOMING';
+            content: 'PENDING';
             position: absolute;
             top: 1.5rem;
             right: 1.5rem;
@@ -248,6 +248,16 @@
             letter-spacing: 1px;
             border-radius: var(--radius-sm);
         }
+
+        /* Disabled state for overview modal confirm button on pending courses */
+        .modal-btn-confirm.is-upcoming {
+            background: rgba(255, 193, 7, 0.25) !important;
+            color: #a07a00 !important;
+            cursor: not-allowed !important;
+            opacity: 0.75;
+            box-shadow: none !important;
+        }
+        .modal-btn-confirm.is-upcoming:hover { transform: none !important; }
 
         .card-header-courses { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-lg); }
         .course-title-wrapper { flex: 1; }
@@ -457,7 +467,7 @@
                         </svg>
                         <div class="progress-text">
                             <div class="progress-percentage" id="offensivePercent" style="color: #ff4444;">0.0%</div>
-                            <div class="progress-total">0/100</div>
+                            <div class="progress-total" id="offensiveTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">Offensive</div>
@@ -472,7 +482,7 @@
                         </svg>
                         <div class="progress-text">
                             <div class="progress-percentage" id="defensivePercent" style="color: #4444ff;">0.0%</div>
-                            <div class="progress-total">0/100</div>
+                            <div class="progress-total" id="defensiveTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">Defensive</div>
@@ -487,7 +497,7 @@
                         </svg>
                         <div class="progress-text">
                             <div class="progress-percentage" id="generalPercent" style="color: #44ff44;">0.0%</div>
-                            <div class="progress-total">0/100</div>
+                            <div class="progress-total" id="generalTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">General</div>
@@ -1028,31 +1038,90 @@
         }
     }
 
-    function updateDashboard() {
-        const noCoursesContent = document.getElementById('noCoursesContent');
-        const courseContent = document.getElementById('courseContent');
-        
-        if (userData.enrolledCourse) {
-            noCoursesContent.style.display = 'none';
-            courseContent.style.display = 'flex';
-            document.getElementById('courseName').textContent = userData.enrolledCourse;
-            document.getElementById('courseProgress').textContent = userData.progress[userData.courseType] + '%';
-        } else {
-            noCoursesContent.style.display = 'block';
-            courseContent.style.display = 'none';
-        }
-        setTimeout(animateProgressCircles, 300);
+    async function updateDashboard() {
         updateStreakDisplay();
+
+        const noCoursesContent = document.getElementById('noCoursesContent');
+        const courseContent    = document.getElementById('courseContent');
+
+        try {
+            const data     = await Api.getUserCourses();
+            const enrolled = data.myCourses || [];
+
+            if (enrolled.length > 0) {
+                const primary = enrolled[0];
+                const pct     = primary.overall_progress_percentage || 0;
+
+                // Show the enrolled course card
+                noCoursesContent.style.display = 'none';
+                courseContent.style.display    = 'flex';
+                document.getElementById('courseName').textContent     = primary.title;
+                document.getElementById('courseProgress').textContent = pct.toFixed(1) + '%';
+
+                // Wire "Continue Learning" to the actual enrolled course page
+                const continueBtn = courseContent.querySelector('.btn-continue');
+                if (continueBtn) {
+                    const page = window.COURSE_PAGES?.[primary.slug] || 'infoSec.html';
+                    const slug = window.COURSE_SLUG_MAP?.[primary.slug] || primary.slug;
+                    continueBtn.onclick = () => {
+                        window.location.href = `${page}?course=${encodeURIComponent(slug)}`;
+                    };
+                }
+
+                // Map each enrolled course to its progress circle
+                enrolled.forEach(course => {
+                    const type = COURSE_CIRCLE_MAP[course.slug]
+                              || COURSE_CIRCLE_MAP[course.id]
+                              || 'general';
+                    userData.progress[type] = course.overall_progress_percentage || 0;
+                    if (!userData.courseTotals) userData.courseTotals = {};
+                    userData.courseTotals[type] =
+                        `${course.lessons_completed || 0}/${course.total_lessons || 0}`;
+                });
+
+            } else {
+                // API returned no enrollments — fall back to localStorage if present
+                if (userData.enrolledCourse) {
+                    noCoursesContent.style.display = 'none';
+                    courseContent.style.display    = 'flex';
+                    document.getElementById('courseName').textContent     = userData.enrolledCourse;
+                    document.getElementById('courseProgress').textContent =
+                        (userData.progress[userData.courseType] || 0) + '%';
+                } else {
+                    noCoursesContent.style.display = 'block';
+                    courseContent.style.display    = 'none';
+                }
+            }
+        } catch (err) {
+            console.warn('Dashboard: API unavailable, using local data:', err.message);
+            // Fallback to localStorage only
+            if (userData.enrolledCourse) {
+                noCoursesContent.style.display = 'none';
+                courseContent.style.display    = 'flex';
+                document.getElementById('courseName').textContent     = userData.enrolledCourse;
+                document.getElementById('courseProgress').textContent =
+                    (userData.progress[userData.courseType] || 0) + '%';
+            } else {
+                noCoursesContent.style.display = 'block';
+                courseContent.style.display    = 'none';
+            }
+        }
+
+        setTimeout(animateProgressCircles, 300);
     }
 
     function animateProgressCircles() {
         const circumference = 2 * Math.PI * 65;
         ['offensive', 'defensive', 'general'].forEach(type => {
-            const circle = document.getElementById(`${type}Circle`);
-            const percent = document.getElementById(`${type}Percent`);
-            const progress = userData.progress[type];
+            const circle   = document.getElementById(`${type}Circle`);
+            const percent  = document.getElementById(`${type}Percent`);
+            const totalEl  = document.getElementById(`${type}Total`);
+            const progress = userData.progress[type] || 0;
             circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
             percent.textContent = progress.toFixed(1) + '%';
+            if (totalEl && userData.courseTotals?.[type]) {
+                totalEl.textContent = userData.courseTotals[type];
+            }
         });
     }
 
@@ -1372,6 +1441,17 @@
 
     // === MY COURSES FUNCTIONALITY ===
 
+    // Maps course slug → which progress circle it contributes to.
+    // 'general'   = foundational/broad courses (InfoSec, Networking basics)
+    // 'defensive' = specialized defensive security modules only
+    // 'offensive' = ethical hacking / red team focused courses
+    const COURSE_CIRCLE_MAP = {
+        'information-security': 'general',   // foundational — covers principles, risk, and architecture
+        'infosec':              'general',
+        'computer-networking':  'general',
+        'ethical-hacking':      'offensive',
+    };
+
     // Course slug → dedicated page mapping
     // Add entries here when a course gets its own page
     window.COURSE_PAGES = {
@@ -1455,22 +1535,44 @@
                 ${isUpcoming ? `
                     <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.35); border-radius: var(--radius-lg); color: #ffd666;">
                         <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
-                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
-                            <span style="font-weight: 600;">Coming Soon</span>
+                            <i data-lucide="clock" style="width: 18px; height: 18px;"></i>
+                            <span style="font-weight: 600;">Pending</span>
                         </div>
-                        <p style="margin: 0; font-size: 0.9rem;">This course will be available soon. Check back later or sign up for notifications.</p>
+                        <p style="margin: 0; font-size: 0.9rem;">This course is currently pending development and is not yet available for enrollment. It will be released soon — check back later!</p>
                     </div>
                 ` : `
                     <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.25); border-radius: var(--radius-lg); color: var(--accent);">
                         <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
-                            <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
-                            <span style="font-weight: 600;">Ready to Start</span>
+                            <i data-lucide="${course.progress.status === 'not-started' ? 'check-circle' : 'book-open'}" style="width: 18px; height: 18px;"></i>
+                            <span style="font-weight: 600;">${course.progress.status === 'not-started' ? 'Ready to Start' : 'In Progress'}</span>
                         </div>
-                        <p style="margin: 0; font-size: 0.9rem;">This course is available for enrollment. Click 'Enroll Now' to get started.</p>
+                        <p style="margin: 0; font-size: 0.9rem;">${course.progress.status === 'not-started'
+                            ? "This course is available for enrollment. Click 'Enroll Now' to get started."
+                            : "You're already enrolled in this course. Click 'Continue' to pick up where you left off."
+                        }</p>
                     </div>
                 `}
             </div>
         `;
+
+        // Update the action button based on course availability and enrollment status
+        const isEnrolled = course.progress.status !== 'not-started';
+        const proceedBtn = document.querySelector('#courseOverviewModal .modal-btn-confirm');
+        if (proceedBtn) {
+            if (isUpcoming) {
+                proceedBtn.textContent = 'Available Soon';
+                proceedBtn.disabled = true;
+                proceedBtn.classList.add('is-upcoming');
+            } else if (isEnrolled) {
+                proceedBtn.textContent = 'Continue';
+                proceedBtn.disabled = false;
+                proceedBtn.classList.remove('is-upcoming');
+            } else {
+                proceedBtn.textContent = 'Enroll Now';
+                proceedBtn.disabled = false;
+                proceedBtn.classList.remove('is-upcoming');
+            }
+        }
 
         lucide.createIcons();
         modal.classList.add('active');
@@ -1482,11 +1584,8 @@
 
     function proceedFromOverview() {
         // This function will be called when user clicks "Enroll Now" from the overview modal
-        // We'll find which course is open and trigger the action
-        const modal = document.getElementById('courseOverviewModal');
         const courseTitle = document.getElementById('overviewCourseTitle').textContent;
-        
-        // Find the course ID from the title
+
         if (!window.coursesData || !window.coursesData.myCourses) {
             console.error('coursesData not initialized');
             return;
@@ -1498,12 +1597,18 @@
             return;
         }
 
+        // Do nothing for pending/upcoming courses — button should be disabled anyway
+        if (UPCOMING_COURSE_IDS.has(course.id)) {
+            return;
+        }
+
         closeCourseOverviewModal();
         handleCourseAction(course.id, course.progress.status);
     }
 
     // Course rollout controls for My Courses cards
-    const UPCOMING_COURSE_IDS = new Set([]);
+    // Add a course ID here when it is not yet developed/available
+    const UPCOMING_COURSE_IDS = new Set(['computer-networking', 'ethical-hacking']);
     const COURSE_CARD_PRIORITY = {
         'information-security': 0,
         'infosec': 0,
@@ -1571,23 +1676,47 @@
     function renderCourseCard(course) {
         const isUpcoming = UPCOMING_COURSE_IDS.has(course.id);
         const isActive = course.progress.status === 'in-progress' || course.progress.status === 'completed';
-        const progressText = course.progress.percentage === 0 
-            ? 'Not started' 
+
+        // ── PENDING COURSE CARD ──────────────────────────────────────────────
+        if (isUpcoming) {
+            return `
+            <article class="course-card upcoming-course" data-course-id="${course.id}" onclick="showCourseOverview('${course.id}')">
+                <div class="card-header-courses">
+                    <div class="course-title-wrapper">
+                        <h3 class="course-title">${course.title}</h3>
+                        <span class="course-category-badge">${course.category}</span>
+                    </div>
+                </div>
+                <div class="card-content-courses">
+                    <p class="course-description">${course.description}</p>
+                    <div class="upcoming-note">
+                        <i data-lucide="clock"></i>
+                        This course is currently pending and not yet available for enrollment.
+                    </div>
+                </div>
+                <div class="card-actions-courses">
+                    <button class="btn-course-primary is-upcoming" disabled aria-disabled="true">
+                        <i data-lucide="lock"></i>
+                        Available Soon
+                    </button>
+                </div>
+            </article>
+            `;
+        }
+
+        // ── ACTIVE / AVAILABLE COURSE CARD ───────────────────────────────────
+        const progressText = course.progress.percentage === 0
+            ? 'Not started'
             : `${course.progress.percentage}% completed`;
-        const buttonText = isUpcoming
-            ? 'Coming Soon'
-            : course.progress.status === 'not-started' 
-            ? 'Start Course' 
-            : 'Resume Course';
-        const buttonIcon = isUpcoming
-            ? 'lock'
-            : course.progress.status === 'not-started' 
-            ? 'play-circle' 
+        const buttonText = course.progress.status === 'not-started'
+            ? 'Start Course'
+            : 'Continue Course';
+        const buttonIcon = course.progress.status === 'not-started'
+            ? 'play-circle'
             : 'arrow-right';
 
-        // All cards now show full details
         return `
-        <article class="course-card${isActive ? ' active-course' : ''}${isUpcoming ? ' upcoming-course' : ''}" data-course-id="${course.id}" onclick="showCourseOverview('${course.id}')">
+        <article class="course-card${isActive ? ' active-course' : ''}" data-course-id="${course.id}" onclick="showCourseOverview('${course.id}')">
             <div class="card-header-courses">
                 <div class="course-title-wrapper">
                     <h3 class="course-title">${course.title}</h3>
@@ -1630,7 +1759,7 @@
                 </div>
             </div>
             <div class="card-actions-courses">
-                <button class="btn-course-primary${isUpcoming ? ' is-upcoming' : ''}" onclick="event.stopPropagation(); handleCourseAction('${course.id}', '${course.progress.status}')" ${isUpcoming ? 'disabled aria-disabled="true"' : ''}>
+                <button class="btn-course-primary" onclick="event.stopPropagation(); handleCourseAction('${course.id}', '${course.progress.status}')">
                     <i data-lucide="${buttonIcon}"></i>
                     ${buttonText}
                 </button>
@@ -1638,7 +1767,6 @@
         </article>
         `;
     }
-    // ...existing code...
 
     /**
      * Render courses by category

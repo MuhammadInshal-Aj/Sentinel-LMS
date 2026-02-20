@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m02-l01",
+  "title": "Introduction to Risk",
+  "order": 1,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 10,
+  "objectives": [
+    "Define risk in an information security context",
+    "Distinguish between threats, vulnerabilities, and risk",
+    "Understand the risk equation: Risk = Likelihood × Impact"
+  ],
+  "tags": ["risk", "fundamentals"]
+}

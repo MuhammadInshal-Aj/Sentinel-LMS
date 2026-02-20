@@ -7,8 +7,10 @@
     <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
     <link rel="shortcut icon" href="../assets/sentinel-mark.svg">
     
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Shared Stylesheets -->
@@ -138,13 +140,20 @@
         }
 
         .outcome-card {
-            background: var(--bg-surface); 
-            border: 1px solid var(--border); 
-            padding: 1.2rem; 
-            border-radius: 8px;
-            display: flex; 
-            gap: 1rem; 
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            padding: 1.2rem;
+            border-radius: var(--radius-lg);
+            display: flex;
+            gap: 1rem;
             align-items: flex-start;
+            transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+        }
+
+        .outcome-card:hover {
+            border-color: var(--accent-border);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.08);
+            transform: translateY(-1px);
         }
 
         .outcome-card i { 
@@ -180,8 +189,8 @@
             transition: border-color 0.3s ease;
         }
 
-        .module:hover { 
-            border-color: #333; 
+        .module:hover {
+            border-color: var(--border-hover);
         }
 
         .module-header {
@@ -243,8 +252,12 @@
             transition: max-height 0.8s ease-in-out; 
         }
 
-        .module.active .chevron { 
-            transform: rotate(180deg); 
+        .chevron {
+            transition: transform var(--transition-base);
+        }
+
+        .module.active .chevron {
+            transform: rotate(180deg);
         }
 
         .lesson-row {
@@ -263,8 +276,9 @@
             border-bottom: none; 
         }
 
-        .lesson-row:hover { 
-            background: rgba(0, 242, 255, 0.03); 
+        .lesson-row:hover {
+            background: rgba(0, 242, 255, 0.03);
+            padding-left: 1.7rem;
         }
 
         .lesson-row.completed .lesson-icon { 
@@ -659,7 +673,7 @@
             <section>
                 <div class="section-box">
                     <h3 class="section-title"><i data-lucide="target"></i> Acquired Capabilities</h3>
-                    <div class="outcomes-grid">
+                    <div class="outcomes-grid stagger-children">
                         <div class="outcome-card">
                             <i data-lucide="check-circle"></i>
                             <span class="outcome-text">Develop a security-first mindset before touching tools.</span>
@@ -677,7 +691,18 @@
 
                 <div class="section-box">
                     <h3 class="section-title"><i data-lucide="layers"></i> Operational Modules</h3>
-                    
+
+                    <!-- Overall course progress (shown only when enrolled) -->
+                    <div id="course-overall-bar" style="display:none; margin-bottom: 1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span style="font-size:0.8rem; color:var(--text-muted); font-family:var(--font-mono);">COURSE PROGRESS</span>
+                            <span id="course-overall-pct" style="font-size:0.85rem; font-weight:700; color:var(--accent); font-family:var(--font-mono);">0%</span>
+                        </div>
+                        <div class="progress-track" style="display:block; height:6px;">
+                            <div class="progress-fill" id="course-overall-fill" style="background: linear-gradient(90deg, var(--accent), #00ff88);"></div>
+                        </div>
+                    </div>
+
                     <div class="curriculum-container" id="curriculumArea">
                         <div class="curriculum-locked" id="lockedOverlay"> 
                         
@@ -778,22 +803,120 @@
                         </div>
 
                         <div class="module locked" id="module2">
-                            <div class="module-header">
+                            <div class="module-header" data-module-id="module2" role="button" tabindex="0" aria-expanded="false">
                                 <div class="module-info">
-                                    <h3 style="color: #666" id="m2-title">Module 02: Risk Management</h3>
+                                    <h3 id="m2-title">Module 02: Risk Management</h3>
                                     <p id="m2-desc">LOCKED: Complete Module 01 (100%) to unlock.</p>
+                                    <div class="progress-track" id="m2-track" style="display:none">
+                                        <div class="progress-fill" id="m2-fill"></div>
+                                    </div>
                                 </div>
-                                <i data-lucide="lock" size="18" style="color: #444" id="m2-icon"></i>
+                                <i data-lucide="lock" size="18" id="m2-icon"></i>
+                            </div>
+                            <div class="module-body">
+                                <div class="lesson-row" data-lesson-id="infosec-m02-l01">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">2.1 Introduction to Risk</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">10 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m02-l02">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">2.2 Risk Assessment Methods</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">15 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m02-l03">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">2.3 Risk Mitigation & Treatment</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">15 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m02-l04">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">2.4 Compliance & Security Frameworks</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">10 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m02-l05">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">2.5 Risk Communication & Reporting</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">10 min</span></div>
+                                </div>
+                                <div class="lesson-row checkpoint" data-checkpoint-id="infosec-m02-checkpoint">
+                                    <div class="lesson-left">
+                                        <i data-lucide="shield" class="lesson-icon" style="color: var(--warning)"></i>
+                                        <span class="lesson-title" style="color: var(--warning)">2.6 CHECKPOINT: Risk Management</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag" style="border-color: var(--warning); color: var(--warning)">EXAM</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="module locked">
-                            <div class="module-header">
+                        <div class="module locked" id="module3">
+                            <div class="module-header" data-module-id="module3" role="button" tabindex="0" aria-expanded="false">
                                 <div class="module-info">
-                                    <h3 style="color: #666">Module 03: Defensive Architecture</h3>
-                                    <p>Prerequisite: Complete Module 02</p>
+                                    <h3 id="m3-title">Module 03: Defensive Architecture</h3>
+                                    <p id="m3-desc">LOCKED: Complete Module 02 (100%) to unlock.</p>
+                                    <div class="progress-track" id="m3-track" style="display:none">
+                                        <div class="progress-fill" id="m3-fill"></div>
+                                    </div>
                                 </div>
-                                <i data-lucide="lock" size="18" style="color: #444"></i>
+                                <i data-lucide="lock" size="18" id="m3-icon"></i>
+                            </div>
+                            <div class="module-body">
+                                <div class="lesson-row" data-lesson-id="infosec-m03-l01">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">3.1 Network Security Architecture</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">15 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m03-l02">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">3.2 Identity & Access Management</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">15 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m03-l03">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">3.3 Incident Response Planning</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">15 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m03-l04">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">3.4 Security Monitoring & Logging</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">10 min</span></div>
+                                </div>
+                                <div class="lesson-row" data-lesson-id="infosec-m03-l05">
+                                    <div class="lesson-left">
+                                        <i data-lucide="circle" class="lesson-icon"></i>
+                                        <span class="lesson-title">3.5 Defensive Security Operations</span>
+                                    </div>
+                                    <div class="lesson-right"><span class="lesson-tag">15 min</span></div>
+                                </div>
+                                <div class="lesson-row checkpoint" data-checkpoint-id="infosec-m03-checkpoint">
+                                    <div class="lesson-left">
+                                        <i data-lucide="shield" class="lesson-icon" style="color: var(--warning)"></i>
+                                        <span class="lesson-title" style="color: var(--warning)">3.6 CHECKPOINT: Defensive Architecture</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag" style="border-color: var(--warning); color: var(--warning)">EXAM</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1062,7 +1185,9 @@
         }
 
         function restoreProgressUI(data) {
-            const { lessonProgress = [] } = data;
+            const { lessonProgress = [], moduleProgress = [] } = data;
+
+            // Mark completed lesson/sim/checkpoint rows
             lessonProgress.forEach(lp => {
                 if (lp.status === 'completed') {
                     PAGE_STATE.completedIds.add(lp.lesson_id);
@@ -1072,14 +1197,86 @@
                     if (row) row.classList.add('completed');
                 }
             });
-            // Update module 1 progress bar based on completed required lessons
-            const requiredIds = ['infosec-m01-l01','infosec-m01-l02','infosec-m01-l03','infosec-m01-l04','infosec-m01-l05'];
-            const completedRequired = requiredIds.filter(id => PAGE_STATE.completedIds.has(id)).length;
-            const pct = Math.round((completedRequired / requiredIds.length) * 100);
-            const fill = document.getElementById('m1-fill');
-            const track = document.getElementById('m1-track');
-            if (fill) fill.style.width = pct + '%';
-            if (track) track.style.display = 'block';
+
+            // Map module DB ids to HTML progress bar prefixes
+            const moduleMap = {
+                'infosec-m01': 'm1',
+                'infosec-m02': 'm2',
+                'infosec-m03': 'm3',
+            };
+
+            // All content IDs per module (lessons + sims + checkpoints)
+            const moduleContentIds = {
+                'infosec-m01': [
+                    'infosec-m01-l01','infosec-m01-sim01','infosec-m01-l02','infosec-m01-l03',
+                    'infosec-m01-sim02','infosec-m01-l04','infosec-m01-l05','infosec-m01-checkpoint'
+                ],
+                'infosec-m02': [
+                    'infosec-m02-l01','infosec-m02-l02','infosec-m02-l03','infosec-m02-l04','infosec-m02-l05'
+                ],
+                'infosec-m03': [
+                    'infosec-m03-l01','infosec-m03-l02','infosec-m03-l03','infosec-m03-l04','infosec-m03-l05'
+                ]
+            };
+
+            // Compute effective progress per module — prefer local completedIds count
+            // (covers cases where DB module progress is stale or missing)
+            const effectiveProgress = {};
+            Object.entries(moduleContentIds).forEach(([modId, ids]) => {
+                const localDone = ids.filter(id => PAGE_STATE.completedIds.has(id)).length;
+                const localPct = Math.round((localDone / ids.length) * 100);
+                const mp = moduleProgress.find(m => m.module_id === modId);
+                const dbPct = mp ? (mp.progress_percentage || 0) : 0;
+                // Use whichever is higher — local may be more up-to-date than DB
+                effectiveProgress[modId] = Math.max(localPct, dbPct);
+            });
+
+            // Update all module progress bars
+            Object.entries(effectiveProgress).forEach(([modId, pct]) => {
+                const prefix = moduleMap[modId];
+                if (!prefix) return;
+                const fill  = document.getElementById(`${prefix}-fill`);
+                const track = document.getElementById(`${prefix}-track`);
+                if (fill)  fill.style.width = pct + '%';
+                if (track) track.style.display = 'block';
+            });
+
+            // Unlock modules whose predecessor is 100% complete
+            const moduleUnlockChain = [
+                { id: 'infosec-m01', nextEl: 'module2', desc: 'm2-desc', icon: 'm2-icon', track: 'm2-track' },
+                { id: 'infosec-m02', nextEl: 'module3', desc: 'm3-desc', icon: 'm3-icon', track: 'm3-track' }
+            ];
+            moduleUnlockChain.forEach(({ id, nextEl, desc, icon, track }) => {
+                if (effectiveProgress[id] >= 100) {
+                    const el = document.getElementById(nextEl);
+                    if (el && el.classList.contains('locked')) {
+                        el.classList.remove('locked');
+                        el.classList.add('unlocked');
+                        const descEl = document.getElementById(desc);
+                        if (descEl) descEl.textContent = 'Unlocked! Click to begin.';
+                        const iconEl = document.getElementById(icon);
+                        if (iconEl) {
+                            iconEl.setAttribute('data-lucide', 'chevron-down');
+                            iconEl.classList.add('chevron');
+                        }
+                        const trackEl = document.getElementById(track);
+                        if (trackEl) trackEl.style.display = 'block';
+                    }
+                }
+            });
+            lucide.createIcons();
+
+            // Overall course progress — weighted by total lessons across all modules
+            const totalLessons     = moduleProgress.reduce((s, m) => s + (m.total_lessons     || 0), 0);
+            const completedLessons = moduleProgress.reduce((s, m) => s + (m.lessons_completed || 0), 0);
+            const overallPct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+            const overallBar = document.getElementById('course-overall-bar');
+            const overallFill = document.getElementById('course-overall-fill');
+            const overallTxt  = document.getElementById('course-overall-pct');
+            if (overallBar)  overallBar.style.display  = 'block';
+            if (overallFill) overallFill.style.width   = overallPct + '%';
+            if (overallTxt)  overallTxt.textContent    = overallPct + '%';
         }
 
         // ── ENROLLMENT ───────────────────────────────
@@ -1346,10 +1543,14 @@
             const step = SIM_STATE.sim.steps[SIM_STATE.stepIndex];
             const choice = step.choices[idx];
 
-            document.querySelectorAll('.quiz-option').forEach((b, i) => {
+            // Scope to sim modal only to avoid collisions with checkpoint modal's .quiz-option buttons
+            const simBody = document.getElementById('simModalBody');
+            simBody.querySelectorAll('.quiz-option').forEach((b, i) => {
                 b.disabled = true;
-                if (step.choices[i].isCorrect) b.classList.add('correct');
-                if (i === idx && !choice.isCorrect) b.classList.add('incorrect');
+                if (step.choices[i]) {
+                    if (step.choices[i].isCorrect) b.classList.add('correct');
+                    if (i === idx && !choice.isCorrect) b.classList.add('incorrect');
+                }
             });
 
             const fb = document.getElementById('stepFeedback');
@@ -1358,7 +1559,7 @@
             lucide.createIcons();
 
             const isLast = SIM_STATE.stepIndex === SIM_STATE.sim.steps.length - 1;
-            document.querySelector('.sim-footer').innerHTML = `
+            simBody.querySelector('.sim-footer').innerHTML = `
                 <span></span>
                 <button class="btn-primary" onclick="${isLast ? 'finishMultiStepSim()' : 'nextSimStep()'}">
                     ${isLast ? 'Finish →' : 'Next →'}
@@ -1428,6 +1629,7 @@
 
         function closeSimModal() {
             document.getElementById('simModal').classList.remove('active');
+            document.getElementById('simModalBody').innerHTML = '';
             SIM_STATE = {};
         }
 
@@ -1485,10 +1687,14 @@
             const isCorrect = q.choices[idx].isCorrect;
             QUIZ_STATE.answers.push({ questionIdx: currentQ, selectedIdx: idx, isCorrect, topic: q.topic });
 
-            document.querySelectorAll('.quiz-option').forEach((b, i) => {
+            // Scope to quiz modal only to avoid collisions with sim modal's .quiz-option buttons
+            const quizBody = document.getElementById('quizModalBody');
+            quizBody.querySelectorAll('.quiz-option').forEach((b, i) => {
                 b.disabled = true;
-                if (q.choices[i].isCorrect) b.classList.add('correct');
-                if (i === idx && !isCorrect) b.classList.add('incorrect');
+                if (q.choices[i]) {
+                    if (q.choices[i].isCorrect) b.classList.add('correct');
+                    if (i === idx && !isCorrect) b.classList.add('incorrect');
+                }
             });
 
             const fb = document.getElementById('quizFeedback');
@@ -1497,7 +1703,7 @@
             lucide.createIcons();
 
             const isLast = currentQ === questions.length - 1;
-            document.querySelector('.quiz-footer').innerHTML = `
+            quizBody.querySelector('.quiz-footer').innerHTML = `
                 <span></span>
                 <button class="btn-primary" onclick="${isLast ? 'submitQuiz()' : 'nextQuestion()'}">
                     ${isLast ? 'Submit →' : 'Next →'}
@@ -1556,6 +1762,12 @@
                     aiFeedback = fbRes.feedback || '';
                 } catch (_) { /* AI feedback optional */ }
 
+                // If module completed, unlock the next module visually
+                let unlockMsg = '';
+                if (result.passed && result.moduleCompleted) {
+                    unlockMsg = unlockNextModuleUI(checkpointId);
+                }
+
                 body.innerHTML = `
                     <div class="quiz-results">
                         <div class="result-score ${result.passed ? 'passed' : 'failed'}">
@@ -1563,6 +1775,7 @@
                             <span class="score-label">${result.passed ? 'PASSED' : 'FAILED'}</span>
                         </div>
                         <p>${result.correct}/${result.total} correct${result.passed ? ` &middot; +${result.tokensEarned} Tokens Earned` : ' &middot; Score &ge;70% required to pass'}</p>
+                        ${unlockMsg ? `<p style="color:var(--success); margin-top:0.5rem;">${unlockMsg}</p>` : ''}
                         ${aiFeedback ? `<div class="ai-feedback"><i data-lucide="bot"></i><p>${aiFeedback}</p></div>` : ''}
                         <div class="result-actions">
                             ${!result.passed ? `<button class="btn-outline" onclick="retryCheckpoint()">Retry</button>` : ''}
@@ -1582,7 +1795,47 @@
 
         function closeQuizModal() {
             document.getElementById('quizModal').classList.remove('active');
+            document.getElementById('quizModalBody').innerHTML = '';
             QUIZ_STATE = {};
+        }
+
+        // ============================================
+        // MODULE UNLOCK UI
+        // ============================================
+        function unlockNextModuleUI(checkpointId) {
+            // Map checkpoint IDs to the next module element
+            const nextModuleMap = {
+                'infosec-m01-checkpoint': { el: 'module2', title: 'm2-title', desc: 'm2-desc', icon: 'm2-icon', track: 'm2-track', name: 'Module 02: Risk Management' },
+                'infosec-m02-checkpoint': { el: 'module3', title: 'm3-title', desc: 'm3-desc', icon: 'm3-icon', track: 'm3-track', name: 'Module 03: Defensive Architecture' }
+            };
+
+            const next = nextModuleMap[checkpointId];
+            if (!next) return '';
+
+            const moduleEl = document.getElementById(next.el);
+            if (!moduleEl) return '';
+
+            // Remove locked state and add unlocked styling
+            moduleEl.classList.remove('locked');
+            moduleEl.classList.add('unlocked');
+
+            // Update description text
+            const descEl = document.getElementById(next.desc);
+            if (descEl) descEl.textContent = 'Unlocked! Click to begin.';
+
+            // Swap lock icon for chevron
+            const iconEl = document.getElementById(next.icon);
+            if (iconEl) {
+                iconEl.setAttribute('data-lucide', 'chevron-down');
+                iconEl.classList.add('chevron');
+                lucide.createIcons();
+            }
+
+            // Show progress track
+            const trackEl = document.getElementById(next.track);
+            if (trackEl) trackEl.style.display = 'block';
+
+            return `${next.name} unlocked!`;
         }
 
         // ============================================

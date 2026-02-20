@@ -24,11 +24,24 @@ function decodeJwtRole(token) {
 const CURRICULUM_ROOT = path.join(__dirname, '../../curriculum');
 
 const LESSON_CONTENT_MAP = {
+    // Module 01 — Security Mindset & Core Principles
     'infosec-m01-l01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_1.md'),
     'infosec-m01-l02': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_2.md'),
     'infosec-m01-l03': null,
     'infosec-m01-l04': null,
-    'infosec-m01-l05': null
+    'infosec-m01-l05': null,
+    // Module 02 — Risk Management
+    'infosec-m02-l01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_2/lesson_1.md'),
+    'infosec-m02-l02': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_2/lesson_2.md'),
+    'infosec-m02-l03': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_2/lesson_3.md'),
+    'infosec-m02-l04': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_2/lesson_4.md'),
+    'infosec-m02-l05': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_2/lesson_5.md'),
+    // Module 03 — Defensive Architecture
+    'infosec-m03-l01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_3/lesson_1.md'),
+    'infosec-m03-l02': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_3/lesson_2.md'),
+    'infosec-m03-l03': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_3/lesson_3.md'),
+    'infosec-m03-l04': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_3/lesson_4.md'),
+    'infosec-m03-l05': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_3/lesson_5.md'),
 };
 
 const SIMULATION_CONTENT_MAP = {
@@ -41,12 +54,103 @@ const CHECKPOINT_MAP = {
 };
 
 const LESSON_META_MAP = {
+    // Module 01 — Security Mindset & Core Principles
     'infosec-m01-l01': { title: 'What Is Information Security?', estimatedTime: 10, objectives: ['Define information security', 'Explain security controls', 'Understand attacker vs defender mindset'] },
     'infosec-m01-l02': { title: 'The CIA Triad', estimatedTime: 10, objectives: ['Explain Confidentiality, Integrity, Availability', 'Apply CIA Triad to real scenarios'] },
     'infosec-m01-l03': { title: 'Threats, Vulnerabilities, and Risk', estimatedTime: 15, objectives: ['Distinguish threats from vulnerabilities', 'Define risk in security context', 'Apply threat modelling basics'] },
     'infosec-m01-l04': { title: 'Secure by Design', estimatedTime: 10, objectives: ['Apply security-first design principles', 'Understand least privilege and fail-safe defaults'] },
-    'infosec-m01-l05': { title: 'Defense in Depth', estimatedTime: 15, objectives: ['Explain layered security strategy', 'Design overlapping controls for resilience'] }
+    'infosec-m01-l05': { title: 'Defense in Depth', estimatedTime: 15, objectives: ['Explain layered security strategy', 'Design overlapping controls for resilience'] },
+    // Module 02 — Risk Management
+    'infosec-m02-l01': { title: 'Introduction to Risk', estimatedTime: 10, objectives: ['Define risk in an information security context', 'Distinguish between threats, vulnerabilities, and risk', 'Understand the risk equation: Risk = Likelihood × Impact'] },
+    'infosec-m02-l02': { title: 'Risk Assessment Methods', estimatedTime: 15, objectives: ['Explain qualitative vs quantitative risk assessment', 'Apply a basic risk matrix to real scenarios', 'Understand asset-based and threat-based assessment approaches'] },
+    'infosec-m02-l03': { title: 'Risk Mitigation & Treatment', estimatedTime: 15, objectives: ['Identify the four risk treatment options: Accept, Avoid, Transfer, Reduce', 'Select appropriate controls for a given risk', 'Understand residual risk and risk appetite'] },
+    'infosec-m02-l04': { title: 'Compliance & Security Frameworks', estimatedTime: 10, objectives: ['Understand the purpose of security frameworks (NIST, ISO 27001)', 'Explain what compliance means and why it matters', 'Map controls to framework requirements'] },
+    'infosec-m02-l05': { title: 'Risk Communication & Reporting', estimatedTime: 10, objectives: ['Communicate risk findings clearly to technical and non-technical audiences', 'Produce a basic risk register', 'Understand the role of risk reporting in security governance'] },
+    // Module 03 — Defensive Architecture
+    'infosec-m03-l01': { title: 'Network Security Architecture', estimatedTime: 15, objectives: ['Understand network segmentation and its role in defense', 'Explain firewalls, DMZs, and perimeter defenses', 'Apply the principle of least privilege to network design'] },
+    'infosec-m03-l02': { title: 'Identity & Access Management', estimatedTime: 15, objectives: ['Explain authentication, authorization, and accounting (AAA)', 'Describe multi-factor authentication and why it matters', 'Apply role-based access control (RBAC) concepts'] },
+    'infosec-m03-l03': { title: 'Incident Response Planning', estimatedTime: 15, objectives: ['Describe the six phases of incident response', 'Understand the role of a CSIRT', 'Draft a basic incident response playbook for a common scenario'] },
+    'infosec-m03-l04': { title: 'Security Monitoring & Logging', estimatedTime: 10, objectives: ['Explain the purpose of SIEM systems', 'Understand what to log and why', 'Describe common detection use cases'] },
+    'infosec-m03-l05': { title: 'Defensive Security Operations', estimatedTime: 15, objectives: ['Understand the role of a Security Operations Center (SOC)', 'Explain threat hunting and proactive defense', 'Describe vulnerability management lifecycle'] },
 };
+
+// Helper: get ALL content IDs for a module (lessons from DB + sims + checkpoints from maps)
+async function getAllModuleContentIds(moduleId) {
+    // Get lessons from the DB
+    const { data: dbLessons } = await supabase
+        .from('lessons')
+        .select('id, is_required')
+        .eq('module_id', moduleId);
+    const lessonIds = (dbLessons || []).map(l => l.id);
+
+    // Get simulation IDs that belong to this module (by naming convention)
+    const simIds = Object.keys(SIMULATION_CONTENT_MAP).filter(id => id.startsWith(moduleId + '-'));
+
+    // Get checkpoint IDs that belong to this module (by naming convention)
+    const checkpointIds = Object.keys(CHECKPOINT_MAP).filter(id => id.startsWith(moduleId + '-'));
+
+    const allIds = [...lessonIds, ...simIds, ...checkpointIds];
+    return allIds;
+}
+
+// Helper: calculate and update module progress, unlock next module if 100%
+async function updateModuleProgress(userId, moduleId) {
+    const allContentIds = await getAllModuleContentIds(moduleId);
+    if (allContentIds.length === 0) return { percentage: 0, moduleCompleted: false, unlockedModule: null };
+
+    const { data: completedItems } = await supabase
+        .from('user_lesson_progress')
+        .select('lesson_id')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .in('lesson_id', allContentIds);
+
+    const completedCount = (completedItems || []).length;
+    const totalCount = allContentIds.length;
+    const percentage = Math.round((completedCount / totalCount) * 100);
+
+    await supabase.from('user_module_progress').upsert({
+        user_id: userId,
+        module_id: moduleId,
+        lessons_completed: completedCount,
+        total_lessons: totalCount,
+        progress_percentage: percentage,
+        completed_at: percentage === 100 ? new Date().toISOString() : null
+    }, { onConflict: 'user_id,module_id' });
+
+    let moduleCompleted = percentage === 100;
+    let unlockedModule = null;
+
+    if (moduleCompleted) {
+        try {
+            unlockedModule = await callRpc('unlock_next_module', {
+                p_user_id: userId,
+                p_current_module_id: moduleId
+            });
+        } catch (unlockErr) {
+            console.warn('unlock_next_module RPC failed (non-critical):', unlockErr.message);
+        }
+
+        // Update overall track progress
+        try {
+            const { data: modRow } = await supabase
+                .from('modules')
+                .select('track_id')
+                .eq('id', moduleId)
+                .single();
+            if (modRow?.track_id) {
+                await callRpc('calculate_track_progress', {
+                    p_user_id: userId,
+                    p_track_id: modRow.track_id
+                });
+            }
+        } catch (trackErr) {
+            console.warn('calculate_track_progress failed (non-critical):', trackErr.message);
+        }
+    }
+
+    return { percentage, moduleCompleted, unlockedModule };
+}
 
 const TRACK_SLUG_ALIASES = {
     'information-security': 'information-security',
@@ -739,19 +843,18 @@ app.get('/api/user/tracks/:slug/progress', authenticateUser, async (req, res) =>
             .eq('user_id', req.user.id)
             .in('module_id', track.modules);
 
-        // Get lesson progress for all modules
-        const { data: allLessons } = await supabase
-            .from('lessons')
-            .select('id')
-            .in('module_id', track.modules);
-
-        const lessonIds = allLessons.map(l => l.id);
+        // Get ALL content IDs for all modules (lessons + sims + checkpoints)
+        let allContentIds = [];
+        for (const modId of track.modules) {
+            const ids = await getAllModuleContentIds(modId);
+            allContentIds = allContentIds.concat(ids);
+        }
 
         const { data: lessonProgress } = await supabase
             .from('user_lesson_progress')
             .select('*')
             .eq('user_id', req.user.id)
-            .in('lesson_id', lessonIds);
+            .in('lesson_id', allContentIds);
 
         res.json({
             enrollment,
@@ -824,52 +927,8 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
             p_tokens: lesson.token_reward
         });
 
-        // Calculate and update module progress
-        const { data: allModuleLessons, error: allModuleLessonsError } = await supabase
-            .from('lessons')
-            .select('id, is_required')
-            .eq('module_id', lesson.modules.id);
-        if (allModuleLessonsError) throw allModuleLessonsError;
-
-        const requiredLessons = (allModuleLessons || []).filter((l) => l.is_required);
-        const progressLessons = requiredLessons.length > 0 ? requiredLessons : (allModuleLessons || []);
-        const lessonIds = progressLessons.map((l) => l.id);
-
-        const { data: completedLessons, error: completedLessonsError } = await supabase
-            .from('user_lesson_progress')
-            .select('id')
-            .eq('user_id', req.user.id)
-            .eq('status', 'completed')
-            .in('lesson_id', lessonIds);
-        if (completedLessonsError) throw completedLessonsError;
-
-        const completedCount = (completedLessons || []).length;
-        const totalLessons = progressLessons.length;
-        const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 100;
-
-        const { error: moduleProgressError } = await supabase
-            .from('user_module_progress')
-            .upsert({
-                user_id: req.user.id,
-                module_id: lesson.modules.id,
-                lessons_completed: completedCount,
-                total_lessons: totalLessons,
-                progress_percentage: percentage,
-                completed_at: percentage === 100 ? new Date().toISOString() : null
-            }, {
-                onConflict: 'user_id,module_id'
-            });
-        if (moduleProgressError) throw moduleProgressError;
-
-        // If module complete, unlock next module
-        let unlockedModule = null;
-        if (percentage === 100) {
-            const nextModuleId = await callRpc('unlock_next_module', {
-                p_user_id: req.user.id,
-                p_current_module_id: lesson.modules.id
-            });
-            unlockedModule = nextModuleId;
-        }
+        // Calculate and update module progress (includes lessons + sims + checkpoints)
+        const { percentage, moduleCompleted, unlockedModule } = await updateModuleProgress(req.user.id, lesson.modules.id);
 
         // Update overall track progress
         await callRpc('calculate_track_progress', {
@@ -883,8 +942,8 @@ app.post('/api/lessons/:lessonId/complete', authenticateUser, async (req, res) =
             tokensEarned: lesson.token_reward,
             newBalance: updatedTokens?.tokens_available || 0,
             moduleProgress: percentage,
-            moduleCompleted: percentage === 100,
-            unlockedModule: unlockedModule
+            moduleCompleted,
+            unlockedModule
         });
 
     } catch (error) {
@@ -1013,7 +1072,19 @@ app.post('/api/simulations/:simId/submit', authenticateUser, async (req, res) =>
         await callRpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
         const tokenData = await ensureUserTokensRow(req.user.id);
 
-        res.json({ message: 'Simulation completed', tokensEarned, newBalance: tokenData?.tokens_available || 0 });
+        // Update module progress (derive module ID from sim ID, e.g. "infosec-m01-sim01" -> "infosec-m01")
+        let moduleCompleted = false;
+        let unlockedModule = null;
+        try {
+            const moduleId = simId.replace(/-sim\d+$/, '');
+            const result = await updateModuleProgress(req.user.id, moduleId);
+            moduleCompleted = result.moduleCompleted;
+            unlockedModule = result.unlockedModule;
+        } catch (moduleErr) {
+            console.warn('Module progress update after simulation failed (non-critical):', moduleErr.message);
+        }
+
+        res.json({ message: 'Simulation completed', tokensEarned, newBalance: tokenData?.tokens_available || 0, moduleCompleted, unlockedModule });
 
     } catch (err) {
         console.error(`Error submitting simulation ${simId}:`, err.message);
@@ -1094,7 +1165,22 @@ app.post('/api/checkpoints/:checkpointId/submit', authenticateUser, async (req, 
 
         const tokenData = await ensureUserTokensRow(req.user.id);
 
-        res.json({ score, passed, correct, total: checkpoint.questions.length, tokensEarned, newBalance: tokenData?.tokens_available || 0 });
+        // Update module progress and unlock next module if checkpoint passed
+        // Update module progress and unlock next module if checkpoint passed
+        let moduleCompleted = false;
+        let unlockedModule = null;
+        if (passed) {
+            try {
+                const moduleId = checkpointId.replace(/-checkpoint$/, '');
+                const result = await updateModuleProgress(req.user.id, moduleId);
+                moduleCompleted = result.moduleCompleted;
+                unlockedModule = result.unlockedModule;
+            } catch (moduleErr) {
+                console.warn('Module progress update after checkpoint failed (non-critical):', moduleErr.message);
+            }
+        }
+
+        res.json({ score, passed, correct, total: checkpoint.questions.length, tokensEarned, newBalance: tokenData?.tokens_available || 0, moduleCompleted, unlockedModule });
 
     } catch (err) {
         console.error(`Error submitting checkpoint ${checkpointId}:`, err.message);

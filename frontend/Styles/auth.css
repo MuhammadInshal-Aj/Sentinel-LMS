@@ -20,56 +20,10 @@
    ========================================================== */
 
 
-/* --- BACKGROUND SYSTEM --- */
-
-.cyber-bg {
-    position: fixed;
-    inset: 0;
-    background: #020202;
-    z-index: -1;
-    overflow: hidden;
-}
-
-.grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px;
-    opacity: 0.2;
-}
-
-.blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.1;
-    animation: drift 15s infinite alternate;
-}
-
-.blob-1 {
-    width: 400px;
-    height: 400px;
-    background: var(--accent);
-    top: 10%;
-    left: 10%;
-}
-
-/* Register-only: purple second blob */
-.blob-2 {
-    width: 400px;
-    height: 400px;
-    background: #9d50bb;
-    bottom: -10%;
-    right: -5%;
-    animation-delay: -5s;
-}
-
-@keyframes drift {
-    from { transform: translate(0, 0); }
-    to   { transform: translate(50px, 50px); }
-}
+/* --- BACKGROUND SYSTEM ---
+   .cyber-bg, .blob, .grid, @keyframes drift are in layout.css (shared).
+   Auth pages import layout.css for the background system.
+   ------------------------------------------------ */
 
 
 /* --- AUTH NAVIGATION BAR --- */
@@ -89,7 +43,7 @@
     font-weight: 700;
     font-size: 1.2rem;
     letter-spacing: 2px;
-    color: #fff;
+    color: var(--text-primary);
     text-decoration: none;
     cursor: pointer;
     display: inline-flex;
@@ -113,7 +67,7 @@
 
 .auth-nav .nav-links a {
     text-decoration: none;
-    color: #777;
+    color: var(--text-muted);
     font-size: 0.85rem;
     transition: 0.3s;
 }
@@ -139,12 +93,24 @@
     width: 420px;
     background: rgba(10, 10, 10, 0.8);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     padding: 3rem 2.5rem 2.5rem;
     position: relative;
     backdrop-filter: blur(20px);
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
     transition: all 0.4s ease;
+    animation: authCardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authCardEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* Wide variant for register (more fields need more space) */
@@ -158,7 +124,7 @@
     border-color: rgba(0, 242, 255, 0.3);
     box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.6),
-        0 0 30px var(--accent-glow);
+        0 0 20px rgba(0, 242, 255, 0.15);
 }
 
 
@@ -172,13 +138,13 @@
 .auth-header h2 {
     font-size: 1.2rem;
     letter-spacing: 1px;
-    color: #fff;
+    color: var(--text-primary);
     text-transform: uppercase;
 }
 
 .auth-header p {
     font-size: 0.8rem;
-    color: #555;
+    color: var(--text-disabled);
     margin-top: 0.4rem;
 }
 
@@ -202,7 +168,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.03);
-    color: #555;
+    color: var(--text-disabled);
     cursor: pointer;
     transition: 0.3s;
 }
@@ -223,7 +189,7 @@
 
 .auth-input-group label {
     font-size: 0.65rem;
-    color: #666;
+    color: var(--text-disabled);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     display: block;
@@ -233,9 +199,9 @@
 .auth-field {
     display: flex;
     align-items: center;
-    background: #000;
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     padding: 0 1rem;
     transition: 0.3s;
 }
@@ -246,7 +212,7 @@
     box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);
 }
 
-.auth-field i { color: #333; transition: 0.3s; }
+.auth-field i { color: var(--text-disabled); transition: 0.3s; }
 .auth-field:focus-within i { color: var(--accent); }
 
 .auth-field input {
@@ -254,8 +220,8 @@
     background: transparent;
     border: none;
     padding: 0.9rem;
-    color: #fff;
-    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
     font-size: 0.85rem;
 }
 
@@ -296,14 +262,14 @@
 .btn-auth {
     width: 100%;
     padding: 1rem;
-    background: #fff;
-    color: #000;
+    background: var(--text-primary);
+    color: var(--bg);
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-weight: 700;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-primary);
     cursor: pointer;
-    transition: 0.3s;
+    transition: all var(--transition-base);
     margin-top: 1rem;
     display: flex;
     align-items: center;
@@ -336,7 +302,7 @@
 .auth-footer {
     margin-top: 1.5rem;
     font-size: 0.8rem;
-    color: #444;
+    color: var(--text-disabled);
     text-align: center;
 }
 
@@ -349,56 +315,7 @@
 .auth-footer a:hover { text-decoration: underline; }
 
 
-/* --- STATUS BOX --- */
-
-.status-box {
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border: 1px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.status-box.success {
-    background: rgba(0, 255, 170, 0.1);
-    border-color: #00ffaa;
-    color: #00ffaa;
-    box-shadow: 0 0 10px rgba(0, 255, 170, 0.2);
-}
-
-.status-box.error {
-    background: rgba(255, 0, 60, 0.1);
-    border-color: #ff003c;
-    color: #ff003c;
-    box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
-}
-
-
-/* --- LOADING SPINNER --- */
-
-.spinner {
-    width: 18px;
-    height: 18px;
-    border: 3px solid rgba(0, 0, 0, 0.3);
-    border-top: 3px solid #000;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    0%   { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-    0%, 100% { box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
-    50%      { box-shadow: 0 0 25px rgba(0, 242, 255, 0.5); }
-}
-
-
-/* --- UTILITY --- */
-
-.hidden { display: none; }
+/* --- STATUS BOX, SPINNER, HIDDEN, KEYFRAMES ---
+   These are defined in components.css and utilities.css (shared).
+   Auth pages should import those shared files.
+   ------------------------------------------------ */

@@ -168,7 +168,7 @@
 
 .nav-link:hover,
 .nav-link.active {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 242, 255, 0.05);
     color: var(--text-primary);
 }
 
@@ -364,7 +364,7 @@
 }
 
 .breadcrumb {
-    color: #666;
+    color: var(--text-disabled);
     font-size: 0.9rem;
 }
 
@@ -436,10 +436,42 @@
    ========================= */
 
 @media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
     .sidebar {
         width: 100%;
         height: auto;
         position: relative;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: var(--space-md) var(--space-lg);
+        gap: var(--space-sm);
+        align-items: center;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar .nav-menu {
+        flex-direction: row;
+        gap: var(--space-xs);
+        flex-wrap: wrap;
+    }
+
+    .sidebar .sidebar-footer {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .sidebar .logo {
+        margin-bottom: 0;
+    }
+
+    .nav-link.active::before {
+        display: none;
     }
 
     .main-content {

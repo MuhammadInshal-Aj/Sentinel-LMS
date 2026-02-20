@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m03-l01",
+  "title": "Network Security Architecture",
+  "order": 1,
+  "type": "theory",
+  "difficulty": "intermediate",
+  "estimated_time": 15,
+  "objectives": [
+    "Understand network segmentation and its role in defense",
+    "Explain firewalls, DMZs, and perimeter defenses",
+    "Apply the principle of least privilege to network design"
+  ],
+  "tags": ["network", "architecture", "firewall", "segmentation"]
+}

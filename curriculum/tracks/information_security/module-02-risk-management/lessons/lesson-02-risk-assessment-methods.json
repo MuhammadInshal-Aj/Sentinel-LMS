@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m02-l02",
+  "title": "Risk Assessment Methods",
+  "order": 2,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 15,
+  "objectives": [
+    "Explain qualitative vs quantitative risk assessment",
+    "Apply a basic risk matrix to real scenarios",
+    "Understand asset-based and threat-based assessment approaches"
+  ],
+  "tags": ["risk", "assessment", "methodology"]
+}

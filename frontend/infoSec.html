@@ -9,7 +9,7 @@
     
 <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -54,123 +54,143 @@
             align-content: start;
         }
 
-        /* COURSE HEADER */
+        /* ── COURSE HEADER ────────────────────────────── */
         .course-header {
             grid-column: 1 / -1;
             margin-bottom: 1rem;
+            position: relative;
+            padding-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease-out backwards;
         }
 
-        .breadcrumbs { 
-            color: var(--text-secondary);
-            font-size: 0.9rem; 
-            margin-bottom: 1rem; 
-            display: flex; 
-            gap: 0.5rem; 
+        .course-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 80px; height: 1px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .breadcrumbs {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            gap: 0.5rem;
             align-items: center;
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
         }
 
-        .breadcrumbs a { 
-            color: var(--text-secondary);
+        .breadcrumbs a {
+            color: var(--text-muted);
             text-decoration: none;
             cursor: pointer;
             transition: color 0.2s;
         }
 
-        .breadcrumbs a:hover { 
-            color: var(--accent);
-        }
+        .breadcrumbs a:hover { color: var(--accent); }
 
         .course-title {
-            font-size: 2rem;
+            font-family: var(--font-display);
+            font-size: 1.7rem;
             font-weight: 700;
+            letter-spacing: 2px;
             line-height: 1.2;
             margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #fff 50%, rgba(0,242,255,0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .course-meta {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.6rem;
             flex-wrap: wrap;
             margin-bottom: 1rem;
         }
 
         .badge {
-            padding: 0.4rem 0.8rem; 
-            border-radius: 4px; 
-            font-size: 0.8rem; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px;
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid var(--border);
+            padding: 0.35rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-family: var(--font-mono);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .badge.difficulty { 
-            border-color: var(--success); 
-            color: var(--success); 
-        }
+        .badge.difficulty { border-color: rgba(0,255,157,0.4); color: var(--success); }
+        .badge.type       { border-color: rgba(0,242,255,0.4); color: var(--accent); }
 
-        .badge.type { 
-            border-color: var(--accent); 
-            color: var(--accent); 
-        }
-
-        /* SECTION BOXES */
+        /* ── SECTION BOXES ─────────────────────────── */
         .section-box {
             margin-bottom: 2rem;
+            animation: fadeInUp 0.5s ease-out backwards;
         }
+        .section-box:nth-child(2) { animation-delay: 0.1s; }
+        .section-box:nth-child(3) { animation-delay: 0.2s; }
 
         .section-title {
-            font-size: 1.1rem;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            letter-spacing: 3px;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.8rem;
-            color: #fff;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        .section-title i { 
-            color: var(--accent); 
-        }
+        .section-title i { color: var(--accent); }
 
         .outcomes-grid {
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
-            gap: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem;
         }
 
         .outcome-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            padding: 1.2rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 1rem;
             border-radius: var(--radius-lg);
             display: flex;
-            gap: 1rem;
+            gap: 0.875rem;
             align-items: flex-start;
-            transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .outcome-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,242,255,0.03), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .outcome-card:hover {
-            border-color: var(--accent-border);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.08);
-            transform: translateY(-1px);
+            border-color: rgba(0,242,255,0.25);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 15px rgba(0,242,255,0.06);
+            transform: translateY(-2px);
         }
+        .outcome-card:hover::before { opacity: 1; }
 
-        .outcome-card i { 
-            color: var(--accent); 
-            margin-top: 3px; 
-        }
+        .outcome-card i { color: var(--accent); margin-top: 2px; flex-shrink: 0; }
+        .outcome-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
 
-        .outcome-text { 
-            font-size: 0.95rem; 
-            color: #ccc; 
-            line-height: 1.5; 
-        }
-
-        /* CURRICULUM */
-        .curriculum-container { 
-            position: relative; 
-        }
+        /* ── CURRICULUM ────────────────────────────── */
+        .curriculum-container { position: relative; }
 
         .curriculum-locked {
             filter: blur(5px);
@@ -181,27 +201,48 @@
         }
 
         .module {
-            border: 1px solid var(--border); 
-            background: var(--bg-surface); 
-            border-radius: 8px; 
-            margin-bottom: 1rem; 
+            border: 1px solid rgba(255,255,255,0.06);
+            background: var(--bg-surface);
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
             overflow: hidden;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease-out backwards;
         }
 
-        .module:hover {
-            border-color: var(--border-hover);
+        .module:nth-child(1) { animation-delay: 0.05s; }
+        .module:nth-child(2) { animation-delay: 0.10s; }
+        .module:nth-child(3) { animation-delay: 0.15s; }
+        .module:nth-child(4) { animation-delay: 0.20s; }
+
+        .module:hover { border-color: rgba(0,242,255,0.15); }
+        .module.active {
+            border-color: rgba(0,242,255,0.25);
+            box-shadow: 0 0 20px rgba(0,242,255,0.05);
         }
 
         .module-header {
-            padding: 1.5rem; 
-            cursor: pointer; 
-            display: flex; 
-            justify-content: space-between; 
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
-            transition: background 0.2s;
+            background: linear-gradient(90deg, rgba(0,242,255,0.02), transparent);
+            transition: background 0.25s ease;
+            position: relative;
         }
+
+        .module-header::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .module.active .module-header::before { opacity: 1; }
 
         .module-header:hover { 
             background: linear-gradient(90deg, rgba(255,255,255,0.04), transparent); 
@@ -277,8 +318,9 @@
         }
 
         .lesson-row:hover {
-            background: rgba(0, 242, 255, 0.03);
-            padding-left: 1.7rem;
+            background: rgba(0, 242, 255, 0.04);
+            padding-left: 1.8rem;
+            box-shadow: inset 3px 0 0 rgba(0,242,255,0.3);
         }
 
         .lesson-row.completed .lesson-icon { 
@@ -328,11 +370,13 @@
             transition: 0.3s; 
         }
 
-        .lesson-title { 
-            font-size: 0.95rem; 
-            color: #e0e0e0; 
-            font-family: 'JetBrains Mono', monospace; 
+        .lesson-title {
+            font-size: 0.88rem;
+            color: var(--text);
+            font-family: var(--font-mono);
+            transition: color 0.2s;
         }
+        .lesson-row:hover .lesson-title { color: #fff; }
 
         .lesson-right { 
             display: flex; 
@@ -355,37 +399,37 @@
             border-color: rgba(0,242,255,0.3); 
         }
 
-        /* STICKY CARD */
+        /* ── STICKY CARD ──────────────────────────── */
         .sticky-card {
-            background: var(--bg-surface); 
-            border: 1px solid var(--border); 
-            border-radius: 12px; 
+            background: linear-gradient(135deg, rgba(17,17,24,0.95), rgba(11,11,18,0.98));
+            border: 1px solid rgba(0,242,255,0.12);
+            border-radius: 12px;
             padding: 1.5rem;
-            position: sticky; 
-            top: 2rem; 
+            position: sticky;
+            top: 2rem;
             height: fit-content;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,242,255,0.04);
+            animation: fadeInUp 0.6s 0.3s ease-out backwards;
         }
 
         .video-preview {
-            width: 100%; 
-            aspect-ratio: 16/9; 
-            background: #000; 
-            border-radius: 8px; 
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 8px;
             margin-bottom: 1.5rem;
-            position: relative; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(0,242,255,0.1);
         }
 
         .video-overlay {
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-            background: radial-gradient(circle, rgba(0,242,255,0.1), transparent 70%);
+            position: absolute;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 50% 50%, rgba(0,242,255,0.08), transparent 70%);
         }
 
         .play-btn {
@@ -769,10 +813,40 @@
                                     </div>
                                 </div>
 
+                                <div class="lesson-row lab" data-lab-id="infosec-m01-lab01">
+                                    <div class="lesson-left">
+                                        <i data-lucide="terminal" class="lesson-icon" style="color: var(--accent)"></i>
+                                        <span class="lesson-title" style="color: var(--accent)">1.6 LAB: Risk Score Calculator</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag" style="border-color: var(--accent); color: var(--accent)">50 tokens</span>
+                                    </div>
+                                </div>
+
+                                <div class="lesson-row lab" data-lab-id="infosec-m01-lab01-cia">
+                                    <div class="lesson-left">
+                                        <i data-lucide="terminal" class="lesson-icon" style="color: var(--accent)"></i>
+                                        <span class="lesson-title" style="color: var(--accent)">1.7 LAB: Digital Crime Scene &#8212; CIA Breakdown</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag" style="border-color: var(--accent); color: var(--accent)">75 tokens</span>
+                                    </div>
+                                </div>
+
+                                <div class="lesson-row lab" data-lab-id="infosec-m01-lab02-tvr">
+                                    <div class="lesson-left">
+                                        <i data-lucide="terminal" class="lesson-icon" style="color: var(--accent)"></i>
+                                        <span class="lesson-title" style="color: var(--accent)">1.8 LAB: Threat / Vulnerability / Risk Analysis</span>
+                                    </div>
+                                    <div class="lesson-right">
+                                        <span class="lesson-tag" style="border-color: var(--accent); color: var(--accent)">75 tokens</span>
+                                    </div>
+                                </div>
+
                                 <div class="lesson-row" data-lesson-id="infosec-m01-l04">
                                     <div class="lesson-left">
                                         <i data-lucide="circle" class="lesson-icon"></i>
-                                        <span class="lesson-title">1.6 Secure by Design</span>
+                                        <span class="lesson-title">1.9 Secure by Design</span>
                                     </div>
                                     <div class="lesson-right">
                                         <span class="lesson-tag">10 min</span>
@@ -782,7 +856,7 @@
                                 <div class="lesson-row" data-lesson-id="infosec-m01-l05">
                                     <div class="lesson-left">
                                         <i data-lucide="circle" class="lesson-icon"></i>
-                                        <span class="lesson-title">1.7 Defense in Depth</span>
+                                        <span class="lesson-title">1.10 Defense in Depth</span>
                                     </div>
                                     <div class="lesson-right">
                                         <span class="lesson-tag">15 min</span>
@@ -792,7 +866,7 @@
                                 <div class="lesson-row checkpoint" data-checkpoint-id="infosec-m01-checkpoint">
                                     <div class="lesson-left">
                                         <i data-lucide="shield" class="lesson-icon" style="color: var(--warning)"></i>
-                                        <span class="lesson-title" style="color: var(--warning)">1.8 CHECKPOINT: Security Mindset</span>
+                                        <span class="lesson-title" style="color: var(--warning)">1.11 CHECKPOINT: Security Mindset</span>
                                     </div>
                                     <div class="lesson-right">
                                         <span class="lesson-tag" style="border-color: var(--warning); color: var(--warning)">EXAM</span>
@@ -942,7 +1016,7 @@
                 </button>
 
                 <ul class="course-features">
-                    <li><i data-lucide="monitor"></i> 2 Hands-on Labs (Pwnbox)</li>
+                    <li><i data-lucide="monitor"></i> 3 Hands-on Labs (Pwnbox)</li>
                     <li><i data-lucide="film"></i> 5 Theory Lessons</li>
                     <li><i data-lucide="shield-check"></i> Certificate of Completion</li>
                     <li><i data-lucide="globe"></i> 100% Online & Self-Paced</li>
@@ -1192,7 +1266,7 @@
                 if (lp.status === 'completed') {
                     PAGE_STATE.completedIds.add(lp.lesson_id);
                     const row = document.querySelector(
-                        `[data-lesson-id="${lp.lesson_id}"], [data-sim-id="${lp.lesson_id}"], [data-checkpoint-id="${lp.lesson_id}"]`
+                        `[data-lesson-id="${lp.lesson_id}"], [data-sim-id="${lp.lesson_id}"], [data-checkpoint-id="${lp.lesson_id}"], [data-lab-id="${lp.lesson_id}"]`
                     );
                     if (row) row.classList.add('completed');
                 }
@@ -1209,7 +1283,8 @@
             const moduleContentIds = {
                 'infosec-m01': [
                     'infosec-m01-l01','infosec-m01-sim01','infosec-m01-l02','infosec-m01-l03',
-                    'infosec-m01-sim02','infosec-m01-l04','infosec-m01-l05','infosec-m01-checkpoint'
+                    'infosec-m01-sim02','infosec-m01-lab01','infosec-m01-lab01-cia','infosec-m01-lab02-tvr',
+                    'infosec-m01-l04','infosec-m01-l05','infosec-m01-checkpoint'
                 ],
                 'infosec-m02': [
                     'infosec-m02-l01','infosec-m02-l02','infosec-m02-l03','infosec-m02-l04','infosec-m02-l05'
@@ -1363,14 +1438,17 @@
                 return;
             }
 
-            const lessonId = row.dataset.lessonId;
-            const simId = row.dataset.simId;
+            const lessonId    = row.dataset.lessonId;
+            const simId       = row.dataset.simId;
             const checkpointId = row.dataset.checkpointId;
+            const labId       = row.dataset.labId;
 
             if (simId) {
                 openSimulation(simId, row);
             } else if (checkpointId) {
                 openCheckpoint(checkpointId, row);
+            } else if (labId) {
+                window.location.href = `labs.html?id=${labId}`;
             } else if (lessonId) {
                 window.location.href = `lesson.html?id=${lessonId}&course=${PAGE_STATE.courseSlug}`;
             }

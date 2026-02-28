@@ -27,8 +27,8 @@ const LESSON_CONTENT_MAP = {
     // Module 01 — Security Mindset & Core Principles
     'infosec-m01-l01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_1.md'),
     'infosec-m01-l02': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_2.md'),
-    'infosec-m01-l03': null,
-    'infosec-m01-l04': null,
+    'infosec-m01-l03': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_3.md'),
+    'infosec-m01-l04': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/lesson_4.md'),
     'infosec-m01-l05': null,
     // Module 02 — Risk Management
     'infosec-m02-l01': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_2/lesson_1.md'),
@@ -53,13 +53,19 @@ const CHECKPOINT_MAP = {
     'infosec-m01-checkpoint': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/checkpoint-questions.json')
 };
 
+const LAB_CONTENT_MAP = {
+    'infosec-m01-lab01':     path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/labs/lab-01-risk-analyzer.json'),
+    'infosec-m01-lab01-cia': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/labs/lab-01-cia-crime-scene.json'),
+    'infosec-m01-lab02-tvr': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/labs/lab-02-tvr-analysis.json'),
+};
+
 const LESSON_META_MAP = {
     // Module 01 — Security Mindset & Core Principles
     'infosec-m01-l01': { title: 'What Is Information Security?', estimatedTime: 10, objectives: ['Define information security', 'Explain security controls', 'Understand attacker vs defender mindset'] },
     'infosec-m01-l02': { title: 'The CIA Triad', estimatedTime: 10, objectives: ['Explain Confidentiality, Integrity, Availability', 'Apply CIA Triad to real scenarios'] },
     'infosec-m01-l03': { title: 'Threats, Vulnerabilities, and Risk', estimatedTime: 15, objectives: ['Distinguish threats from vulnerabilities', 'Define risk in security context', 'Apply threat modelling basics'] },
-    'infosec-m01-l04': { title: 'Secure by Design', estimatedTime: 10, objectives: ['Apply security-first design principles', 'Understand least privilege and fail-safe defaults'] },
-    'infosec-m01-l05': { title: 'Defense in Depth', estimatedTime: 15, objectives: ['Explain layered security strategy', 'Design overlapping controls for resilience'] },
+    'infosec-m01-l04': { title: 'Security Controls & Defense-in-Depth', estimatedTime: 20, objectives: ['Classify security controls by purpose and implementation type', 'Explain the Defense-in-Depth layered strategy', 'Map controls to CIA Triad principles', 'Identify industry frameworks that guide control selection'] },
+    'infosec-m01-l05': { title: 'Access Control & Least Privilege', estimatedTime: 15, objectives: ['Define access control and its role in security', 'Explain the principle of least privilege', 'Distinguish between authentication and authorization'] },
     // Module 02 — Risk Management
     'infosec-m02-l01': { title: 'Introduction to Risk', estimatedTime: 10, objectives: ['Define risk in an information security context', 'Distinguish between threats, vulnerabilities, and risk', 'Understand the risk equation: Risk = Likelihood × Impact'] },
     'infosec-m02-l02': { title: 'Risk Assessment Methods', estimatedTime: 15, objectives: ['Explain qualitative vs quantitative risk assessment', 'Apply a basic risk matrix to real scenarios', 'Understand asset-based and threat-based assessment approaches'] },
@@ -89,7 +95,8 @@ async function getAllModuleContentIds(moduleId) {
     // Get checkpoint IDs that belong to this module (by naming convention)
     const checkpointIds = Object.keys(CHECKPOINT_MAP).filter(id => id.startsWith(moduleId + '-'));
 
-    const allIds = [...lessonIds, ...simIds, ...checkpointIds];
+    const labIds = Object.keys(LAB_CONTENT_MAP).filter(id => id.startsWith(moduleId + '-'));
+    const allIds = [...lessonIds, ...simIds, ...checkpointIds, ...labIds];
     return allIds;
 }
 
@@ -1251,6 +1258,92 @@ app.get('/api/ai/status', (req, res) => {
         configuredFrom: getGroqKeySource(),
         models: GROQ_MODELS
     });
+});
+
+// ============================================================
+// LAB ENDPOINTS
+// ============================================================
+
+// GET /api/labs/:labId — serve lab metadata (flag and solution fields stripped)
+app.get('/api/labs/:labId', authenticateUser, (req, res) => {
+    const { labId } = req.params;
+    const filePath = LAB_CONTENT_MAP[labId];
+    if (!filePath) return res.status(404).json({ error: `Lab '${labId}' not found` });
+
+    try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        // eslint-disable-next-line no-unused-vars
+        const { flag, solution, ...publicLab } = JSON.parse(raw);
+        res.json(publicLab);
+    } catch (err) {
+        console.error(`Error loading lab ${labId}:`, err.message);
+        res.status(500).json({ error: 'Failed to load lab' });
+    }
+});
+
+// POST /api/labs/:labId/submit — validate flag submission, award tokens
+app.post('/api/labs/:labId/submit', authenticateUser, async (req, res) => {
+    const { labId } = req.params;
+    const { flag } = req.body || {};
+    const filePath = LAB_CONTENT_MAP[labId];
+    if (!filePath) return res.status(404).json({ error: `Lab '${labId}' not found` });
+
+    try {
+        const lab = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+        if (!flag || flag.trim() !== lab.flag) {
+            return res.status(400).json({ correct: false, message: 'Incorrect flag. Check your terminal output and try again.' });
+        }
+
+        await ensureUserTokensRow(req.user.id);
+
+        // Duplicate completion guard
+        const { data: existing } = await supabase
+            .from('user_lesson_progress')
+            .select('status')
+            .eq('user_id', req.user.id)
+            .eq('lesson_id', labId)
+            .single();
+
+        if (existing?.status === 'completed') {
+            const tokenData = await ensureUserTokensRow(req.user.id);
+            return res.json({ correct: true, alreadyCompleted: true, tokensEarned: 0, newBalance: tokenData?.tokens_available || 0 });
+        }
+
+        const tokensEarned = lab.tokens || 50;
+
+        const { error: progressError } = await supabase.from('user_lesson_progress').upsert({
+            user_id: req.user.id,
+            lesson_id: labId,
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            tokens_earned: tokensEarned,
+            exam_score: null,
+            attempts_count: 1
+        }, { onConflict: 'user_id,lesson_id' });
+        if (progressError) throw progressError;
+
+        await callRpc('add_user_tokens', { p_user_id: req.user.id, p_tokens: tokensEarned });
+        const tokenData = await ensureUserTokensRow(req.user.id);
+
+        // Update module progress (derive module ID: "infosec-m01-lab01" → "infosec-m01")
+        let moduleCompleted = false;
+        let unlockedModule = null;
+        try {
+            const moduleId = labId.replace(/-lab\d+.*$/, '');
+            const result = await updateModuleProgress(req.user.id, moduleId);
+            moduleCompleted = result.moduleCompleted;
+            unlockedModule = result.unlockedModule;
+        } catch (moduleErr) {
+            console.warn('Module progress update after lab failed (non-critical):', moduleErr.message);
+        }
+
+        res.json({ correct: true, tokensEarned, newBalance: tokenData?.tokens_available || 0, moduleCompleted, unlockedModule });
+
+    } catch (err) {
+        console.error(`Error submitting lab ${labId}:`, err.message);
+        res.status(err.statusCode || 500).json({ error: err.message || 'Failed to submit lab' });
+    }
 });
 
 // POST /api/ai/hint — contextual learning hint

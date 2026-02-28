@@ -1,0 +1,71 @@
+{
+  "id": "infosec-m01-lab02-tvr",
+  "title": "Threat / Vulnerability / Risk Analysis",
+  "lessonId": "infosec-m01-l03",
+  "tokens": 75,
+  "flag": "FLAG{tvr-risk-identified-sentinel}",
+  "description": "Meridian Hospital's security team has handed you their asset inventory, threat intelligence, and vulnerability scan results. Apply the Risk = Likelihood \u00d7 Impact formula to identify the most critical risk, then decode the hidden flag.",
+  "language": "bash",
+  "hint": "Risk = Likelihood \u00d7 Impact. Use cat and grep to read files. Use Bash arithmetic: echo $((4 * 5)) to compute risk scores. Check risk_guide.txt for scoring details. The flag is base64-encoded.",
+  "starterCode": "#!/bin/bash\n# ============================================\n# SENTINEL SECURITY LAB: TVR Analysis\n# Meridian General Hospital \u2014 Risk Assessment\n# ============================================\n# Available files:\n#   asset_inventory.txt   - Hospital assets and values\n#   threat_intel.txt      - CISA threat intelligence\n#   vulnerability_scan.txt - CVE scan results\n#   risk_guide.txt        - Risk scoring formula\n#   hidden_flag.b64       - Encoded flag (find it!)\n#\n# Use grep, cat, and Bash math ($((a * b)))\n# to classify threats and compute risk scores.\n# ============================================\necho \"=== TVR ANALYSIS STARTED ===\"\nls",
+  "additionalFiles": [
+    {
+      "name": "asset_inventory.txt",
+      "content": "=== MERIDIAN HOSPITAL -- ASSET INVENTORY ===\nAssessment date: 2024-03-10\nClassified by: Security Architecture Team\n\nASSET: Patient Database\nVALUE: 5 (CRITICAL)\nDescription: 47,823 patient records -- PII, SSNs, medical histories, insurance\nNote: Primary target for attackers; breach triggers HIPAA notification\n\nASSET: Web Server\nVALUE: 4 (HIGH)\nDescription: Patient portal, appointment scheduling, public-facing\nNote: Exposed to internet; SQL injection vulnerability confirmed\n\nASSET: Email Server\nVALUE: 3 (MEDIUM)\nDescription: Internal staff communications and external notifications\nNote: High phishing risk due to staff credential reuse\n\nASSET: Backup System\nVALUE: 2 (LOW)\nDescription: Weekly offline backups stored on air-gapped tape system\nNote: Not network-accessible; ransomware risk minimal\n"
+    },
+    {
+      "name": "threat_intel.txt",
+      "content": "=== THREAT INTELLIGENCE REPORT ===\nSource: CISA Advisory 2024-Q1 | Healthcare Sector\n\nTHREAT: RANSOMWARE\nLikelihood: HIGH\nLikelihood_Score: 4\nDescription: Healthcare was targeted in 67% of Q1 ransomware campaigns.\nTTPs: Initial access via phishing or unpatched portals, then lateral movement.\n\nTHREAT: PHISHING\nLikelihood: HIGH\nLikelihood_Score: 3\nDescription: Credential harvesting via spoofed hospital login pages.\nTTPs: Spear-phishing emails mimicking IT helpdesk password resets.\n\nTHREAT: DDOS\nLikelihood: MEDIUM\nLikelihood_Score: 2\nDescription: Periodic volumetric attacks targeting patient portal availability.\nTTPs: Botnet-driven UDP/TCP flood against public IP ranges.\n\nTHREAT: INSIDER_THREAT\nLikelihood: LOW\nLikelihood_Score: 1\nDescription: Disgruntled employee intentional data leakage.\nTTPs: Exfiltration via USB or personal cloud storage.\n"
+    },
+    {
+      "name": "vulnerability_scan.txt",
+      "content": "=== VULNERABILITY SCAN RESULTS ===\nScanned: 2024-03-10 | Tool: OpenVAS 22.4\nScope: All patient-facing and internal systems\n\nCVE-2024-1234 | CRITICAL | SQL Injection in patient portal login form\nStatus: UNPATCHED\nAffected: Web Server, Patient Database\nCVSS: 9.8\nExploit available: YES (public PoC on GitHub)\n\nCVE-2023-9876 | HIGH | Unpatched OpenSSL version on email server\nStatus: UNPATCHED\nAffected: Email Server\nCVSS: 8.1\nExploit available: YES (Metasploit module)\n\nVULN-INT-001 | HIGH | Weak passwords on 43% of staff accounts\nStatus: UNMITIGATED\nAffected: All systems\nNote: Password audit found 'hospital123', 'meridian2024' in use\n\nVULN-INT-002 | MEDIUM | No MFA on administrative accounts\nStatus: UNMITIGATED\nAffected: Patient Database, Web Server admin panels\nNote: Single-factor auth increases credential theft risk\n"
+    },
+    {
+      "name": "risk_guide.txt",
+      "content": "=== RISK ASSESSMENT GUIDE ===\nFramework: NIST SP 800-30 (simplified)\n\nFormula:\n  RISK_SCORE = Likelihood_Score x Impact_Score\n\nScoring Scale (1-5):\n  5 = Critical\n  4 = High\n  3 = Medium\n  2 = Low\n  1 = Very Low\n\nExample calculation -- Ransomware targeting Patient Database:\n  Likelihood_Score = 4  (RANSOMWARE is HIGH likelihood)\n  Impact_Score     = 5  (Patient Database is CRITICAL value)\n  RISK_SCORE       = 4 x 5 = 20\n\nBash arithmetic:\n  echo \"RISK_SCORE: $((4 * 5))\"\n\nRisk thresholds:\n  20-25 : CRITICAL  -- immediate remediation required\n  15-19 : HIGH      -- remediate within 30 days\n  10-14 : MEDIUM    -- remediate within 90 days\n  1-9   : LOW       -- monitor and review annually\n"
+    },
+    {
+      "name": "hidden_flag.b64",
+      "content": "RkxBR3t0dnItcmlzay1pZGVudGlmaWVkLXNlbnRpbmVsfQ==\n"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Survey available intelligence files",
+      "desc": "Run <code>ls</code> to list all files in the analysis environment.",
+      "verifyKeyword": "threat_intel.txt"
+    },
+    {
+      "id": "t2",
+      "title": "Identify HIGH-likelihood threats",
+      "desc": "Run <code>cat threat_intel.txt | grep \"HIGH\"</code> to find the most likely threats.",
+      "verifyKeyword": "RANSOMWARE"
+    },
+    {
+      "id": "t3",
+      "title": "Find known CVE vulnerabilities",
+      "desc": "Run <code>cat vulnerability_scan.txt | grep \"CVE\"</code> to list all CVE findings.",
+      "verifyKeyword": "CVE-"
+    },
+    {
+      "id": "t4",
+      "title": "Calculate the top risk score",
+      "desc": "Apply Risk = Likelihood \u00d7 Impact for RANSOMWARE vs Patient Database. Run: <code>echo \"RISK_SCORE: $((4 * 5))\"</code>",
+      "verifyKeyword": "RISK_SCORE"
+    },
+    {
+      "id": "t5",
+      "title": "Flag the critical asset",
+      "desc": "Identify the highest-risk asset and run: <code>echo \"CRITICAL: Patient Database\"</code>",
+      "verifyKeyword": "CRITICAL"
+    },
+    {
+      "id": "t6",
+      "title": "Decode the hidden flag",
+      "desc": "Run <code>base64 -d hidden_flag.b64</code> to decode and reveal the lab flag.",
+      "verifyKeyword": "FLAG{"
+    }
+  ]
+}

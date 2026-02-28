@@ -1,13 +1,15 @@
 {
   "id": "infosec-m01-l05",
-  "title": "Defense in Depth",
+  "title": "Access Control & Least Privilege",
   "order": 5,
   "type": "theory",
   "difficulty": "beginner",
   "estimated_time": 15,
   "objectives": [
-    "Explain layered security",
-    "Apply defense in depth to real systems"
+    "Define access control and explain its role in information security",
+    "Explain the principle of least privilege and why it matters",
+    "Distinguish between authentication and authorization",
+    "Identify common access control models (DAC, MAC, RBAC)"
   ],
-  "tags": ["defense", "architecture"]
+  "tags": ["access-control", "least-privilege", "authentication", "authorization"]
 }

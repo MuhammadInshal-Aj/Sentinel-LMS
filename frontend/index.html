@@ -10,7 +10,7 @@
     <!-- Favicon (prevent 404 error) -->
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <!-- Shared Stylesheets (order matters: tokens → structure → components → helpers) -->
     <link rel="stylesheet" href="styles/theme.css">
@@ -21,6 +21,9 @@
     <!-- External Libraries -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Animation Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
     <!-- Shared Modules -->
     <script src="config.js"></script>
@@ -46,7 +49,102 @@
         /* This page uses sidebar layout = body needs flex */
         body { display: flex; }
 
-        /* === DASHBOARD: Progress Circles (SVG-based, unique to this page) === */
+        /* ── SCROLL PROGRESS BAR ─────────────────────────── */
+        #scrollProgress {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2, #a855f7));
+            z-index: 9999;
+            box-shadow: 0 0 8px rgba(0,242,255,0.5);
+            transition: width 0.08s linear;
+            pointer-events: none;
+        }
+
+        /* ── DASHBOARD HEADER ─────────────────────────────── */
+        .dashboard-header {
+            background: linear-gradient(135deg,
+                rgba(0,242,255,0.04) 0%,
+                rgba(168,85,247,0.02) 40%,
+                transparent 70%);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Purple ambient accent top-right */
+        .dashboard-header::after {
+            content: '';
+            position: absolute;
+            top: -30px; right: 80px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        /* Header welcome sub-text */
+        .dashboard-header .welcome-line {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: rgba(0,242,255,0.45);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+            display: none; /* shown by JS once name is loaded */
+        }
+
+        /* ── STATS STRIP ──────────────────────────────────── */
+        .stats-strip {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid rgba(0,242,255,0.06);
+            background: rgba(0,0,0,0.3);
+        }
+        .stat-chip {
+            flex: 1;
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-right: 1px solid rgba(255,255,255,0.04);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+        .stat-chip:last-child { border-right: none; }
+        .stat-chip:hover { background: rgba(0,242,255,0.03); }
+        .stat-chip::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--chip-color, var(--accent)), transparent);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        .stat-chip:hover::after { transform: scaleX(1); }
+        .stat-chip-icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.07);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            color: var(--chip-color, var(--accent));
+        }
+        .stat-chip-data { display: flex; flex-direction: column; gap: 1px; }
+        .stat-chip-value {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            animation: countUp 0.6s ease-out backwards;
+        }
+        .stat-chip-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* ── DASHBOARD: Progress Circles ─────────────────── */
         .progress-section {
             padding: var(--space-2xl) var(--space-3xl);
             display: grid;
@@ -57,19 +155,67 @@
 
         .progress-circle-card {
             background: var(--bg-surface);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: var(--radius-xl);
             padding: var(--space-xl);
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: all var(--transition-base);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+        .progress-circle-card:nth-child(1) { animation-delay: 0.1s; }
+        .progress-circle-card:nth-child(2) { animation-delay: 0.2s; }
+        .progress-circle-card:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Colored top border per category */
+        .progress-circle-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+            opacity: 0.7;
+        }
+
+        /* Ambient corner glow */
+        .progress-circle-card::after {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--card-accent, var(--accent)) 0%, transparent 70%);
+            opacity: 0.05;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
         .progress-circle-card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transform: translateY(-5px);
+            border-color: var(--card-accent, var(--accent));
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6),
+                        0 0 30px var(--card-glow, var(--accent-glow));
+            transform: translateY(-6px);
+        }
+
+        .progress-circle-card:hover::after {
+            opacity: 0.12;
+            transform: scale(1.5);
+        }
+
+        /* Per-category color tokens */
+        .progress-circle-card.offensive {
+            --card-accent: #ff5555;
+            --card-glow: rgba(255,85,85,0.25);
+        }
+        .progress-circle-card.defensive {
+            --card-accent: #5588ff;
+            --card-glow: rgba(85,136,255,0.25);
+        }
+        .progress-circle-card.general {
+            --card-accent: #44ffaa;
+            --card-glow: rgba(68,255,170,0.25);
         }
 
         .progress-circle {
@@ -79,12 +225,34 @@
             margin-bottom: var(--space-md);
         }
 
+        /* Pulse ring behind circle */
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent, var(--accent));
+            opacity: 0.12;
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes ringPulse {
+            0%, 100% { transform: scale(1);   opacity: 0.12; }
+            50%       { transform: scale(1.05); opacity: 0.25; }
+        }
+
         .progress-circle svg { transform: rotate(-90deg); }
-        .progress-circle-bg { fill: none; stroke: #1a1a1a; stroke-width: 10; }
-        .progress-circle-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
-        .progress-circle-fill.offensive { stroke: #ff4444; }
-        .progress-circle-fill.defensive { stroke: #4444ff; }
-        .progress-circle-fill.general { stroke: #44ff44; }
+        .progress-circle-bg { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 8; }
+        .progress-circle-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 4px currentColor);
+        }
+        .progress-circle-fill.offensive { stroke: #ff5555; }
+        .progress-circle-fill.defensive { stroke: #5588ff; }
+        .progress-circle-fill.general   { stroke: #44ffaa; }
 
         .progress-text {
             position: absolute;
@@ -93,64 +261,106 @@
             text-align: center;
         }
 
-        .progress-percentage { font-size: 1.8rem; font-weight: 700; }
-        .progress-total { font-size: 0.8rem; color: #666; }
-        .progress-label { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+        .progress-percentage {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: 700;
+            animation: countUp 0.8s ease-out backwards;
+            animation-delay: 0.5s;
+        }
+        .progress-total { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); }
+        .progress-label {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
 
-        /* === DASHBOARD: Grid & Enrolled Course === */
+        /* ── DASHBOARD: Grid & Enrolled Course ─────────── */
         .dashboard-grid {
             padding: 0 var(--space-3xl) var(--space-3xl) var(--space-3xl);
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 300px;
             gap: var(--space-xl);
             max-width: 1400px;
         }
 
         .no-courses { text-align: center; padding: var(--space-3xl) var(--space-xl); }
         .no-courses-icon {
-            width: 120px; height: 120px;
+            width: 100px; height: 100px;
             margin: 0 auto var(--space-xl);
             background: var(--accent-soft);
             border-radius: var(--radius-full);
             display: flex; align-items: center; justify-content: center;
-            border: 2px dashed var(--border);
+            border: 1px dashed rgba(0,242,255,0.25);
+            animation: glowPulse 4s ease-in-out infinite;
         }
-        .no-courses h3 { font-size: 1.5rem; margin-bottom: var(--space-md); }
-        .no-courses p { color: var(--text-muted); margin-bottom: var(--space-xl); font-size: 1rem; }
+        .no-courses h3 { font-size: 1.4rem; margin-bottom: var(--space-md); font-family: var(--font-display); letter-spacing: 1px; }
+        .no-courses p { color: var(--text-muted); margin-bottom: var(--space-xl); font-size: 0.95rem; }
 
         .path-content { display: flex; gap: var(--space-xl); align-items: center; }
         .path-image {
-            width: 120px; height: 120px;
+            width: 100px; height: 100px;
             border-radius: var(--radius-lg);
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            background: linear-gradient(135deg, rgba(0,242,255,0.08), rgba(0,168,255,0.04));
+            border: 1px solid rgba(0,242,255,0.15);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
+            animation: glowPulse 4s ease-in-out infinite;
         }
         .path-info { flex: 1; }
-        .path-name { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-sm); }
-        .path-meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md); }
+        .path-name {
+            font-size: 1.4rem; font-weight: 700;
+            font-family: var(--font-display);
+            letter-spacing: 1px;
+            margin-bottom: var(--space-sm);
+        }
+        .path-meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: var(--space-md); font-family: var(--font-mono); }
         .path-actions { display: flex; gap: var(--space-md); }
 
-        /* === DASHBOARD: Streak Widget === */
+        /* ── DASHBOARD: Streak Widget ────────────────── */
         .streak-count {
-            font-size: 3rem; font-weight: 700; color: var(--accent);
+            font-size: 3.5rem; font-weight: 700; color: var(--accent);
             text-align: center; margin: var(--space-md) 0;
             display: flex; align-items: center; justify-content: center; gap: var(--space-sm);
+            font-family: var(--font-display);
         }
-        .streak-label { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md); }
-        .streak-days { display: flex; justify-content: center; gap: var(--space-sm); }
-        .day-dot { width: 10px; height: 10px; border-radius: var(--radius-full); background: #333; transition: all var(--transition-base); }
-        .day-dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+        .streak-count i { animation: flameFlicker 1.5s ease-in-out infinite; }
+        .streak-count span { animation: countUp 0.6s ease-out backwards; }
+        .streak-label {
+            text-align: center; color: var(--text-muted);
+            font-size: 0.75rem; margin-bottom: var(--space-md);
+            font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase;
+        }
+        .streak-days { display: flex; justify-content: center; gap: 6px; }
+        .day-dot {
+            width: 10px; height: 10px;
+            border-radius: var(--radius-full);
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .day-dot.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow), 0 0 16px rgba(0,242,255,0.15);
+        }
 
-        /* === MY COURSES SECTION === */
+        /* ── MY COURSES SECTION ───────────────────────── */
         .courses-container { padding: var(--space-2xl) var(--space-3xl); max-width: 1600px; }
         .courses-page-header { margin-bottom: var(--space-2xl); }
         .courses-page-title {
-            font-size: 2.5rem; font-weight: 700; color: var(--text-primary);
-            margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-md);
+            font-family: var(--font-display);
+            font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            display: flex; align-items: center; gap: var(--space-md);
+            letter-spacing: 2px;
         }
         .courses-page-title i { color: var(--accent); filter: drop-shadow(0 0 10px var(--accent-glow)); }
-        .courses-page-subtitle { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+        .courses-page-subtitle { font-size: 0.9rem; color: var(--text-muted); font-weight: 400; }
         .courses-overview {
             margin-top: var(--space-lg);
             display: flex;
@@ -192,24 +402,54 @@
             margin-bottom: var(--space-lg); padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--border);
         }
-        .category-title { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; }
+        .category-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem; font-weight: 700; color: var(--text-primary);
+            text-transform: uppercase; letter-spacing: 3px;
+        }
 
         .course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: var(--space-xl); }
 
         /* Course Cards */
         .course-card {
-            background: var(--bg-surface); border: 1px solid var(--border);
-            border-radius: var(--radius-xl); padding: var(--space-xl);
-            transition: all 0.4s ease; cursor: pointer;
-            position: relative; overflow: hidden;
+            background: var(--bg-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
+        /* Accent top bar */
         .course-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--accent), transparent);
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), #00a8ff, transparent);
             opacity: 0; transition: opacity 0.4s ease;
         }
-        .course-card:hover { background: #111111; border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 40px rgba(0, 242, 255, 0.15); }
+        /* Holographic shimmer on hover */
+        .course-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                transparent 0%,
+                rgba(0,242,255,0.03) 30%,
+                rgba(0,168,255,0.05) 50%,
+                transparent 100%
+            );
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .course-card:hover {
+            border-color: rgba(0,242,255,0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5),
+                        0 0 30px rgba(0,242,255,0.1);
+        }
         .course-card:hover::before { opacity: 1; }
+        .course-card:hover::after  { opacity: 1; }
         .course-card.active-course { border-color: var(--accent); background: linear-gradient(135deg, rgba(0, 242, 255, 0.05) 0%, var(--bg-surface) 100%); box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
         .course-card.active-course::before { opacity: 1; background: linear-gradient(90deg, var(--accent), #00ff88); }
         .course-card.active-course::after {
@@ -366,16 +606,51 @@
         .course-card:nth-child(2) { animation-delay: 0.2s; }
         .course-card:nth-child(3) { animation-delay: 0.3s; }
 
+        /* Course title in Orbitron */
+        .course-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            line-height: 1.3;
+            font-family: var(--font-display);
+            letter-spacing: 1px;
+        }
+
         /* Modal Large */
         .modal.modal-large { max-width: 700px; }
+
+        /* Dashboard card enhanced */
+        .dashboard-card {
+            border-color: rgba(255,255,255,0.05);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+        .dashboard-card:nth-child(1) { animation-delay: 0.4s; }
+        .dashboard-card:nth-child(2) { animation-delay: 0.5s; }
+        .dashboard-card:hover {
+            border-color: rgba(0,242,255,0.2);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,242,255,0.06);
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
 
         /* === RESPONSIVE === */
         @media (max-width: 1200px) {
             .progress-section { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .dashboard-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Scroll progress indicator -->
+    <div id="scrollProgress"></div>
 
     <div class="grid-background"></div>
     <div class="grid-cursor-follower" id="grid-glow"></div>
@@ -454,11 +729,44 @@
         <section id="dashboard" class="content-section active">
             <div class="dashboard-header">
                 <h1>DASHBOARD</h1>
+                <div class="welcome-line" id="dashboardWelcomeLine"></div>
                 <div class="breadcrumb">Pages / Dashboard</div>
             </div>
 
+            <!-- Quick stats strip -->
+            <div class="stats-strip">
+                <div class="stat-chip" style="--chip-color:#00f2ff">
+                    <div class="stat-chip-icon"><i data-lucide="zap" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="totalTokensStat">—</span>
+                        <span class="stat-chip-label">Tokens Earned</span>
+                    </div>
+                </div>
+                <div class="stat-chip" style="--chip-color:#ff5555">
+                    <div class="stat-chip-icon"><i data-lucide="flame" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="streakStatChip">0d</span>
+                        <span class="stat-chip-label">Streak</span>
+                    </div>
+                </div>
+                <div class="stat-chip" style="--chip-color:#44ffaa">
+                    <div class="stat-chip-icon"><i data-lucide="book-open" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="lessonsCompletedStat">0</span>
+                        <span class="stat-chip-label">Lessons Done</span>
+                    </div>
+                </div>
+                <div class="stat-chip" style="--chip-color:#5588ff">
+                    <div class="stat-chip-icon"><i data-lucide="shield" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="rankStatChip">NOVICE</span>
+                        <span class="stat-chip-label">Rank</span>
+                    </div>
+                </div>
+            </div>
+
             <section class="progress-section">
-                <div class="progress-circle-card">
+                <div class="progress-circle-card offensive">
                     <div class="progress-circle">
                         <svg width="150" height="150">
                             <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
@@ -466,37 +774,37 @@
                                     stroke-dasharray="408.407" stroke-dashoffset="408.407" id="offensiveCircle"></circle>
                         </svg>
                         <div class="progress-text">
-                            <div class="progress-percentage" id="offensivePercent" style="color: #ff4444;">0.0%</div>
+                            <div class="progress-percentage" id="offensivePercent" style="color: #ff5555;">0.0%</div>
                             <div class="progress-total" id="offensiveTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">Offensive</div>
                 </div>
 
-                <div class="progress-circle-card">
+                <div class="progress-circle-card defensive">
                     <div class="progress-circle">
                         <svg width="150" height="150">
                             <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
-                            <circle class="progress-circle-fill defensive" cx="75" cy="75" r="65" 
+                            <circle class="progress-circle-fill defensive" cx="75" cy="75" r="65"
                                     stroke-dasharray="408.407" stroke-dashoffset="408.407" id="defensiveCircle"></circle>
                         </svg>
                         <div class="progress-text">
-                            <div class="progress-percentage" id="defensivePercent" style="color: #4444ff;">0.0%</div>
+                            <div class="progress-percentage" id="defensivePercent" style="color: #5588ff;">0.0%</div>
                             <div class="progress-total" id="defensiveTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">Defensive</div>
                 </div>
 
-                <div class="progress-circle-card">
+                <div class="progress-circle-card general">
                     <div class="progress-circle">
                         <svg width="150" height="150">
                             <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
-                            <circle class="progress-circle-fill general" cx="75" cy="75" r="65" 
+                            <circle class="progress-circle-fill general" cx="75" cy="75" r="65"
                                     stroke-dasharray="408.407" stroke-dashoffset="408.407" id="generalCircle"></circle>
                         </svg>
                         <div class="progress-text">
-                            <div class="progress-percentage" id="generalPercent" style="color: #44ff44;">0.0%</div>
+                            <div class="progress-percentage" id="generalPercent" style="color: #44ffaa;">0.0%</div>
                             <div class="progress-total" id="generalTotal">0/0</div>
                         </div>
                     </div>
@@ -1944,6 +2252,79 @@
         console.log('handleCourseAction:', typeof handleCourseAction);
         console.log('=========================');
     };
+
+    /* ================================================================
+       SCROLL PROGRESS BAR
+       ================================================================ */
+    (function() {
+        const bar = document.getElementById('scrollProgress');
+        if (!bar) return;
+        const mc = document.querySelector('.main-content');
+        const target = mc || window;
+        function updateBar() {
+            const el = mc || document.documentElement;
+            const scrolled = mc ? mc.scrollTop : window.scrollY;
+            const maxScroll = el.scrollHeight - el.clientHeight;
+            bar.style.width = maxScroll > 0 ? (scrolled / maxScroll * 100) + '%' : '0%';
+        }
+        (mc || window).addEventListener('scroll', updateBar, { passive: true });
+    })();
+
+    /* ================================================================
+       CURSOR FOLLOWER (grid glow)
+       ================================================================ */
+    document.addEventListener('mousemove', e => {
+        document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+        document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+    });
+
+    /* ================================================================
+       GSAP DASHBOARD ENTRANCE ANIMATIONS
+       ================================================================ */
+    if (window.gsap) {
+        /* Dashboard header */
+        gsap.from('.dashboard-header', {
+            y: -20,
+            opacity: 0,
+            duration: 0.6,
+            ease: 'power2.out',
+            delay: 0.1,
+        });
+
+        /* Stats strip chips stagger */
+        gsap.from('.stat-chip', {
+            y: 20,
+            opacity: 0,
+            stagger: 0.08,
+            duration: 0.5,
+            ease: 'power2.out',
+            delay: 0.3,
+        });
+
+        /* Progress circle cards and dashboard cards use CSS fadeInUp animations
+           (set in page styles with nth-child delays) — no GSAP needed here. */
+    }
+
+    /* ================================================================
+       WELCOME LINE (shows name once loaded)
+       ================================================================ */
+    (function() {
+        const welcomeLine = document.getElementById('dashboardWelcomeLine');
+        if (!welcomeLine) return;
+        const nameEl = document.getElementById('display-name');
+        if (!nameEl) return;
+        // Poll until name is loaded from auth
+        const poll = setInterval(() => {
+            const name = nameEl.textContent.trim();
+            if (name && name !== 'Loading...') {
+                welcomeLine.textContent = `// Welcome back, ${name.split(' ')[0]}`;
+                welcomeLine.style.display = 'block';
+                gsap.from(welcomeLine, { opacity: 0, x: -10, duration: 0.5, ease: 'power2.out' });
+                clearInterval(poll);
+            }
+        }, 300);
+        setTimeout(() => clearInterval(poll), 5000); // stop after 5s
+    })();
 </script>
 
     <!-- My Courses Backend Integration -->

@@ -8,7 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Markdown renderer + syntax highlighting -->
@@ -39,6 +39,7 @@
     </script>
 
     <style>
+        :root { --lesson-font-scale: 1; }
         body { display: flex; }
         :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -58,23 +59,34 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem 2.5rem;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg);
+            padding: 0.9rem 2.5rem;
+            border-bottom: 1px solid rgba(0,242,255,0.06);
+            background: rgba(4,4,8,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             position: sticky;
             top: 0;
             z-index: 100;
         }
-        .lesson-breadcrumbs { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+
+        .lesson-breadcrumbs {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+        }
         .lesson-breadcrumbs a { color: var(--text-muted); text-decoration: none; cursor: pointer; transition: color 0.2s; }
         .lesson-breadcrumbs a:hover { color: var(--accent); }
         .lesson-topbar-actions { display: flex; align-items: center; gap: 1rem; }
         .reading-readout {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--accent);
+            font-family: var(--font-mono);
             min-width: 66px;
             text-align: right;
+            letter-spacing: 0.5px;
         }
         .reading-progress {
             position: absolute;
@@ -82,62 +94,148 @@
             right: 0;
             bottom: 0;
             height: 2px;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(0,242,255,0.05);
             pointer-events: none;
         }
         .reading-progress-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, var(--accent), var(--success));
-            transition: width 0.2s ease;
-            box-shadow: 0 0 10px var(--accent-glow);
+            background: linear-gradient(90deg, var(--accent), #00ffaa, var(--accent));
+            background-size: 200% 100%;
+            transition: width 0.15s ease;
+            box-shadow: 0 0 12px var(--accent-glow), 0 0 24px rgba(0,242,255,0.15);
+            animation: shimmer 3s linear infinite;
         }
 
         /* ── LESSON CONTENT AREA ─────────────────────────── */
         .lesson-content-area {
             padding: 3rem 3.5rem;
             max-width: 860px;
+            overflow-x: hidden; /* contain zoomed lesson body horizontally */
         }
 
-        .lesson-header { margin-bottom: 2.5rem; }
+        .lesson-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            animation: fadeInUp 0.5s ease-out backwards;
+        }
+        .lesson-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 60px; height: 1px;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
         .lesson-meta-row { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
-        .lesson-number { font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; color: var(--accent); text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
-        .lesson-title-main { font-size: 2.2rem; font-weight: 700; line-height: 1.15; color: #fff; margin-bottom: 1rem; }
-        .lesson-time-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-muted); }
+        .lesson-number {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 2px;
+            color: var(--accent); text-transform: uppercase;
+            font-family: var(--font-mono);
+            padding: 0.25rem 0.6rem;
+            border: 1px solid rgba(0,242,255,0.2);
+            border-radius: 3px;
+            background: rgba(0,242,255,0.05);
+        }
+        .lesson-title-main {
+            font-family: var(--font-display);
+            font-size: 1.7rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #fff;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+        .lesson-time-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); }
 
         .objectives-box {
-            background: rgba(0,242,255,0.04);
+            background: rgba(0,242,255,0.03);
             border: 1px solid rgba(0,242,255,0.12);
-            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
             padding: 1.2rem 1.5rem;
             margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s 0.15s ease-out backwards;
         }
-        .objectives-box h4 { font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; margin-bottom: 0.8rem; }
+        .objectives-box::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            background: radial-gradient(circle, rgba(0,242,255,0.06), transparent 70%);
+            pointer-events: none;
+        }
+        .objectives-box h4 {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+        }
         .objectives-box ul { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
         .objectives-box li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.9rem; color: #ccc; line-height: 1.5; }
         .objectives-box li::before { content: '›'; color: var(--accent); font-weight: 700; margin-top: 1px; flex-shrink: 0; }
 
         /* ── MARKDOWN RENDERED CONTENT ───────────────────── */
-        .lesson-body { line-height: 1.85; color: #d4d4d4; font-size: 1.05rem; }
-        .lesson-body h1 { font-size: 1.8rem; font-weight: 700; color: #fff; margin: 2.5rem 0 1rem; }
-        .lesson-body h2 { font-size: 1.35rem; font-weight: 600; color: #fff; margin: 2.2rem 0 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
-        .lesson-body h3 { font-size: 1.1rem; font-weight: 600; color: var(--accent); margin: 1.8rem 0 0.6rem; }
+        .lesson-body { line-height: 1.9; color: #d0d0d0; font-size: calc(1.05rem * var(--lesson-font-scale)); animation: fadeInUp 0.5s 0.3s ease-out backwards; }
+        .lesson-body h1 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: #fff; margin: 2.5rem 0 1rem; letter-spacing: 1.5px; }
+        .lesson-body h2 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: #fff; margin: 3rem 0 1rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(0,242,255,0.1); letter-spacing: 1px; position: relative; }
+        .lesson-body h2::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 40px; height: 1px; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+        .lesson-body h3 { font-size: 1.05rem; font-weight: 600; color: var(--accent); margin: 2.2rem 0 0.7rem; }
         .lesson-body h4 { font-size: 0.95rem; font-weight: 600; color: #e0e0e0; text-transform: uppercase; letter-spacing: 0.5px; margin: 1.5rem 0 0.5rem; }
-        .lesson-body p { margin: 0 0 1.2rem; }
-        .lesson-body ul, .lesson-body ol { padding-left: 1.5rem; margin-bottom: 1.2rem; }
-        .lesson-body li { margin-bottom: 0.4rem; }
-        .lesson-body strong { color: #fff; font-weight: 600; }
+        .lesson-body p { margin: 0 0 1.4rem; }
+        .lesson-body ul, .lesson-body ol { list-style: none; padding-left: 0; margin-bottom: 1.4rem; }
+        .lesson-body ul > li, .lesson-body ol > li {
+            position: relative; padding-left: 1.6rem;
+            margin-bottom: 0.55rem; line-height: 1.75; color: #d4d4d4;
+        }
+        .lesson-body ul > li::before {
+            content: '▸'; position: absolute; left: 0; top: 0.05em;
+            color: var(--accent); font-size: 0.8em; font-weight: 700; line-height: 1.75;
+        }
+        .lesson-body ol { counter-reset: lesson-ol; }
+        .lesson-body ol > li { counter-increment: lesson-ol; }
+        .lesson-body ol > li::before {
+            content: counter(lesson-ol) '.'; position: absolute; left: 0; top: 0;
+            color: var(--accent); font-size: 0.8em; font-family: var(--font-mono);
+            font-weight: 700; line-height: 1.75;
+        }
+        .lesson-body ul ul > li::before { content: '›'; color: rgba(0,242,255,0.55); font-size: 0.9em; }
+        .lesson-body ul ul, .lesson-body ol ol, .lesson-body ul ol, .lesson-body ol ul {
+            margin-top: 0.4rem; margin-bottom: 0.4rem; padding-left: 1.4rem;
+        }
+        .lesson-body strong { color: #fff; font-weight: 700; background: rgba(0,242,255,0.06); padding: 0.05em 0.3em; border-radius: 3px; }
         .lesson-body em { color: #b0b0b0; }
-        .lesson-body blockquote { border-left: 3px solid var(--accent); padding: 0.8rem 1.2rem; margin: 1.5rem 0; background: rgba(0,242,255,0.04); border-radius: 0 6px 6px 0; color: #b0b0b0; font-style: italic; }
-        .lesson-body blockquote p { margin: 0; }
+        .lesson-body blockquote {
+            position: relative; border: 1px solid rgba(0,242,255,0.18);
+            border-left: 3px solid var(--accent); padding: 1rem 1.2rem 1rem 3rem;
+            margin: 1.8rem 0; background: rgba(0,242,255,0.04);
+            border-radius: 0 8px 8px 0; color: #c0c8cc; font-style: normal;
+        }
+        .lesson-body blockquote::before {
+            content: 'ℹ'; position: absolute; left: 0.85rem; top: 1rem;
+            color: var(--accent); font-size: 1rem; opacity: 0.9; line-height: 1;
+        }
+        .lesson-body blockquote p { margin: 0; line-height: 1.7; }
+        .lesson-body blockquote strong { color: var(--accent); background: none; padding: 0; border-radius: 0; }
         .lesson-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: rgba(255,255,255,0.07); padding: 0.15em 0.4em; border-radius: 3px; color: var(--accent); }
-        .lesson-body pre { background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; overflow-x: auto; }
-        .lesson-body pre code { background: none; padding: 0; color: inherit; font-size: 0.875rem; }
-        .lesson-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
-        .lesson-body th { background: rgba(255,255,255,0.05); color: var(--accent); padding: 0.6rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .lesson-body td { padding: 0.6rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #ccc; }
+        .lesson-body pre { position: relative; background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px; padding: 0; margin: 1.5rem 0; overflow: hidden; }
+        .lesson-body pre code { display: block; padding: 1.2rem 1.4rem; overflow-x: auto; background: none; color: inherit; font-size: 0.875rem; line-height: 1.6; }
+        .lesson-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .lesson-body thead { background: rgba(0,242,255,0.06); }
+        .lesson-body th { color: var(--accent); padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid rgba(0,242,255,0.15); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; font-family: var(--font-mono); }
+        .lesson-body td { padding: 0.7rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #ccc; }
+        .lesson-body td:first-child { color: #e8e8e8; font-weight: 500; }
+        .lesson-body tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .lesson-body tbody tr:hover { background: rgba(0,242,255,0.04); }
         .lesson-body tr:last-child td { border-bottom: none; }
-        .lesson-body hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+        .lesson-body hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,242,255,0.15) 20%, rgba(0,242,255,0.15) 80%, transparent); margin: 3rem 0; }
         .lesson-body a { color: var(--accent); text-decoration: none; }
         .lesson-body a:hover { text-decoration: underline; }
 
@@ -151,8 +249,9 @@
 
         /* ── RIGHT PANEL ─────────────────────────────────── */
         .lesson-panel {
-            padding: 2.5rem 2rem;
-            border-left: 1px solid var(--border);
+            padding: 2rem 1.75rem;
+            border-left: 1px solid rgba(0,242,255,0.06);
+            background: rgba(6,6,12,0.6);
             position: sticky;
             top: 61px;
             height: calc(100vh - 61px);
@@ -163,10 +262,25 @@
         }
 
         .panel-section { }
-        .panel-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.8rem; }
+        .panel-label {
+            font-family: var(--font-display);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+        }
 
         /* Progress in panel */
-        .panel-progress-value { font-size: 1.8rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+        .panel-progress-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+            animation: countUp 0.6s ease-out backwards;
+        }
         .panel-progress-label { font-size: 0.8rem; color: var(--text-muted); }
 
         /* Outline in panel */
@@ -338,7 +452,7 @@
                 width: 100%;
             }
             .lesson-title-main { font-size: 1.6rem; }
-            .lesson-body { font-size: 1rem; }
+            .lesson-body { font-size: calc(1rem * var(--lesson-font-scale)); }
             .complete-btn,
             #prevBtn,
             #nextBtn { width: 100%; }
@@ -357,6 +471,33 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── CODE BLOCK ENHANCEMENTS ─────────────────────── */
+        .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 1rem; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); }
+        .code-lang-label { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; color: rgba(0,242,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; }
+        .code-copy-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-muted); font-size: 0.7rem; font-family: var(--font-mono); padding: 0.2rem 0.55rem; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s; }
+        .code-copy-btn:hover { color: var(--accent); border-color: rgba(0,242,255,0.35); background: rgba(0,242,255,0.06); }
+        .code-copy-btn.copied { color: var(--success); border-color: rgba(0,255,157,0.35); }
+
+        /* ── ZOOM INDICATOR ──────────────────────────────── */
+        .zoom-indicator {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: rgba(10,10,16,0.88);
+            border: 1px solid rgba(0,242,255,0.25);
+            border-radius: 6px;
+            padding: 0.3rem 0.65rem;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--accent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 9999;
+            backdrop-filter: blur(6px);
+        }
+        .zoom-indicator.visible { opacity: 1; }
     </style>
 </head>
 <body>
@@ -509,6 +650,9 @@
         </div>
     </div>
 
+    <!-- Pinch-to-zoom level indicator -->
+    <div class="zoom-indicator" id="zoomIndicator">100%</div>
+
     <script>
         // ============================================
         // LESSON VIEWER — CONFIGURATION
@@ -636,14 +780,45 @@
                     document.getElementById('objectivesBox').style.display = 'block';
                 }
 
-                // Render markdown
-                marked.setOptions({ gfm: true, breaks: false });
+                // Render markdown — html:true passes raw HTML blocks through unchanged.
+                // Use marked.use() (v9+ API) with setOptions fallback for older versions.
+                try { marked.use({ html: true, gfm: true, breaks: false }); } catch (e) {}
+                marked.setOptions({ gfm: true, breaks: false, html: true });
                 const html = marked.parse(data.content || '');
                 document.getElementById('lessonBody').innerHTML = html;
 
                 // Syntax highlight
                 document.querySelectorAll('.lesson-body pre code').forEach(block => {
                     hljs.highlightElement(block);
+                });
+
+                // Inject copy buttons + language labels into code blocks
+                document.querySelectorAll('.lesson-body pre').forEach(pre => {
+                    const codeEl = pre.querySelector('code');
+                    if (!codeEl || pre.querySelector('.code-block-header')) return;
+                    const langClass = [...codeEl.classList].find(c => c.startsWith('language-'));
+                    const lang = langClass ? langClass.replace('language-', '') : 'code';
+                    const header = document.createElement('div');
+                    header.className = 'code-block-header';
+                    const langLabel = document.createElement('span');
+                    langLabel.className = 'code-lang-label';
+                    langLabel.textContent = lang;
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'code-copy-btn';
+                    copyBtn.type = 'button';
+                    copyBtn.textContent = 'copy';
+                    copyBtn.setAttribute('aria-label', 'Copy code');
+                    copyBtn.addEventListener('click', async () => {
+                        try {
+                            await navigator.clipboard.writeText(codeEl.innerText);
+                            copyBtn.textContent = 'copied!';
+                            copyBtn.classList.add('copied');
+                            setTimeout(() => { copyBtn.textContent = 'copy'; copyBtn.classList.remove('copied'); }, 1800);
+                        } catch { copyBtn.textContent = 'failed'; setTimeout(() => { copyBtn.textContent = 'copy'; }, 1800); }
+                    });
+                    header.appendChild(langLabel);
+                    header.appendChild(copyBtn);
+                    pre.insertBefore(header, codeEl);
                 });
 
                 // Build outline from headings
@@ -933,6 +1108,51 @@
                 document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
             } catch (e) {}
         }
+
+        // ── ZOOM CONTROL (PINCH / CTRL+SCROLL) ───────────────────────
+        (function initZoom() {
+            const SCALE_MIN = 0.5, SCALE_MAX = 2.0, SCALE_STEP = 0.04;
+            let scale = parseFloat(localStorage.getItem('lessonPageZoom')) || 1.0;
+            let hideTimer = null;
+
+            const indicator = document.getElementById('zoomIndicator');
+
+            function applyScale(s) {
+                scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, parseFloat(s.toFixed(3))));
+                // Zoom only the lesson body — sidebar and right panel stay at native size
+                const body = document.getElementById('lessonBody');
+                if (body) body.style.zoom = scale;
+                localStorage.setItem('lessonPageZoom', scale);
+
+                // Show indicator briefly
+                if (indicator) {
+                    indicator.textContent = Math.round(scale * 100) + '%';
+                    indicator.classList.add('visible');
+                    clearTimeout(hideTimer);
+                    hideTimer = setTimeout(() => indicator.classList.remove('visible'), 1200);
+                }
+            }
+
+            applyScale(scale);
+
+            // Trackpad pinch = wheel event with ctrlKey: true
+            // Spreading fingers (zoom in) → deltaY < 0
+            // Compressing fingers (zoom out) → deltaY > 0
+            window.addEventListener('wheel', (e) => {
+                if (!e.ctrlKey) return;
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? SCALE_STEP : -SCALE_STEP;
+                applyScale(scale + delta);
+            }, { passive: false });
+
+            // Ctrl+0 resets to 100%
+            window.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === '0') {
+                    e.preventDefault();
+                    applyScale(1.0);
+                }
+            });
+        })();
 
         window.addEventListener('popstate', () => {
             if (!Auth.getToken()) window.location.replace('login.html');

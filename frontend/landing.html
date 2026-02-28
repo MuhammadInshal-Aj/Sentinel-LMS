@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,8 +12,11 @@
     <script src="navigation.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Animation Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
     <!-- Shared Stylesheets -->
     <link rel="stylesheet" href="styles/theme.css">
@@ -21,223 +24,1381 @@
     <link rel="stylesheet" href="styles/components.css">
     <link rel="stylesheet" href="styles/utilities.css">
 
-    <!-- Landing-specific styles -->
     <style>
-        /* --- ABOUT SECTION --- */
-        .about-section { padding: 6rem; max-width: 1200px; margin: 0 auto; }
+        /* ============================================================
+           LANDING PAGE — FULL OVERHAUL
+           Aesthetic: Dark Cyber Ops — NSA command center meets
+           underground hacker terminal. Orbitron for impact,
+           JetBrains Mono for authenticity.
+           ============================================================ */
 
+        * { cursor: none !important; }
+
+        /* ===== PARTICLE NETWORK CANVAS ===== */
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -2;
+            opacity: 1;
+        }
+
+        /* ===== SCANLINES OVERLAY ===== */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.025) 2px,
+                rgba(0, 0, 0, 0.025) 4px
+            );
+        }
+
+        /* ===== CUSTOM CURSOR ===== */
+        .cursor-dot {
+            position: fixed;
+            width: 6px; height: 6px;
+            background: #00f2ff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px #00f2ff, 0 0 16px rgba(0,242,255,0.4);
+            transition: width 0.2s, height 0.2s;
+        }
+        .cursor-ring {
+            position: fixed;
+            width: 28px; height: 28px;
+            border: 1px solid rgba(0, 242, 255, 0.45);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99998;
+            transform: translate(-50%, -50%);
+            transition: border-color 0.2s, transform 0.15s;
+        }
+        .cursor-dot.hovered {
+            width: 10px; height: 10px;
+            background: #fff;
+            box-shadow: 0 0 12px #fff;
+        }
+        .cursor-ring.hovered {
+            transform: translate(-50%, -50%) scale(2.2);
+            border-color: rgba(0, 242, 255, 0.7);
+        }
+
+        /* ===== SIDEBAR OVERRIDES ===== */
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 55fr 45fr;
+            align-items: center;
+            gap: 3rem;
+            padding: 5rem 4rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-left {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-right {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 450px;
+        }
+
+        /* ===== CYBER VISUAL (right hero column) ===== */
+        .cyber-visual {
+            position: relative;
+            width: 420px;
+            height: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cv-ambient {
+            position: absolute;
+            width: 320px; height: 320px;
+            background: radial-gradient(circle,
+                rgba(0,242,255,0.07) 0%,
+                rgba(168,85,247,0.04) 40%,
+                transparent 70%);
+            border-radius: 50%;
+            animation: cvGlow 5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes cvGlow {
+            0%,100% { transform: scale(1); opacity: 0.6; }
+            50%      { transform: scale(1.15); opacity: 1; }
+        }
+
+        /* Rotating orbital rings */
+        .cv-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid;
+            pointer-events: none;
+        }
+        .cv-ring-1 {
+            width: 220px; height: 220px;
+            border-color: rgba(0,242,255,0.18);
+            animation: cvSpin 14s linear infinite;
+        }
+        .cv-ring-2 {
+            width: 300px; height: 300px;
+            border-color: rgba(168,85,247,0.14);
+            border-style: dashed;
+            animation: cvSpin 22s linear infinite reverse;
+        }
+        .cv-ring-3 {
+            width: 380px; height: 380px;
+            border-color: rgba(0,242,255,0.06);
+            animation: cvSpin 40s linear infinite;
+        }
+        @keyframes cvSpin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* Node dots on rings */
+        .cv-ring-node {
+            position: absolute;
+            top: -4px; left: 50%;
+            transform: translateX(-50%);
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+        .cv-ring-1 .cv-ring-node {
+            background: #00f2ff;
+            box-shadow: 0 0 10px rgba(0,242,255,0.8);
+        }
+        .cv-ring-2 .cv-ring-node {
+            background: #a855f7;
+            box-shadow: 0 0 10px rgba(168,85,247,0.8);
+        }
+        .cv-ring-3 .cv-ring-node {
+            background: rgba(0,242,255,0.5);
+            box-shadow: 0 0 6px rgba(0,242,255,0.5);
+        }
+
+        /* Central shield */
+        .cv-center {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 140px; height: 140px;
+        }
+        .cv-hex {
+            position: absolute;
+            inset: 0;
+            animation: cvHexPulse 4s ease-in-out infinite;
+        }
+        .cv-hex svg { width: 100%; height: 100%; }
+        @keyframes cvHexPulse {
+            0%,100% { opacity: 0.7; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.04); }
+        }
+        .cv-icon {
+            position: relative;
+            z-index: 2;
+            color: #00f2ff;
+            filter: drop-shadow(0 0 12px rgba(0,242,255,0.7));
+            animation: cvIconPulse 3s ease-in-out infinite;
+        }
+        @keyframes cvIconPulse {
+            0%,100% { filter: drop-shadow(0 0 10px rgba(0,242,255,0.5)); }
+            50%      { filter: drop-shadow(0 0 24px rgba(0,242,255,0.9)) drop-shadow(0 0 50px rgba(0,242,255,0.3)); }
+        }
+
+        /* Floating data tags */
+        .cv-tag {
+            position: absolute;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            letter-spacing: 1.5px;
+            padding: 4px 9px;
+            border-radius: 4px;
+            animation: cvFloat linear infinite;
+        }
+        .cv-tag span { display: block; }
+        .cv-tag-1 { top: 14%; left: 2%;  color: rgba(0,242,255,0.7);  background: rgba(0,242,255,0.06);  border: 1px solid rgba(0,242,255,0.2);  animation-duration: 7s; animation-delay: 0s; }
+        .cv-tag-2 { top: 8%;  right: 5%; color: rgba(168,85,247,0.75); background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.2); animation-duration: 9s; animation-delay: 1.5s; }
+        .cv-tag-3 { bottom: 18%; left: 2%; color: rgba(0,242,255,0.55); background: rgba(0,242,255,0.04); border: 1px solid rgba(0,242,255,0.12); animation-duration: 8s; animation-delay: 2.5s; }
+        .cv-tag-4 { bottom: 14%; right: 3%; color: rgba(0,255,157,0.65); background: rgba(0,255,157,0.05); border: 1px solid rgba(0,255,157,0.15); animation-duration: 6s; animation-delay: 0.8s; }
+        @keyframes cvFloat {
+            0%,100% { transform: translateY(0px); }
+            25%      { transform: translateY(-9px); }
+            75%      { transform: translateY(7px); }
+        }
+
+        /* Status readout panel */
+        .cv-readout {
+            position: absolute;
+            bottom: 12px; right: 0;
+            background: rgba(4,4,10,0.8);
+            border: 1px solid rgba(0,242,255,0.12);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            backdrop-filter: blur(8px);
+            min-width: 130px;
+        }
+        .cv-readout-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            padding: 2px 0;
+        }
+        .cv-key { color: #444; text-transform: uppercase; }
+        .cv-val { color: #00f2ff; text-transform: uppercase; }
+
+        /* Decorative corner brackets */
+        .hero-bracket-tr {
+            position: absolute;
+            top: 2.5rem; right: 3rem;
+            width: 120px; height: 120px;
+            border-top: 1.5px solid rgba(0,242,255,0.25);
+            border-right: 1.5px solid rgba(0,242,255,0.25);
+            animation: bracket-breathe 4s ease-in-out infinite;
+        }
+        .hero-bracket-bl {
+            position: absolute;
+            bottom: 5rem; left: 5rem;
+            width: 80px; height: 80px;
+            border-bottom: 1.5px solid rgba(0,242,255,0.15);
+            border-left: 1.5px solid rgba(0,242,255,0.15);
+            animation: bracket-breathe 4s ease-in-out infinite 2s;
+        }
+        @keyframes bracket-breathe {
+            0%, 100% { opacity: 0.4; }
+            50%       { opacity: 1; }
+        }
+
+        /* Radial ambient glow behind headline */
+        .hero-glow {
+            position: absolute;
+            top: 40%; left: 0;
+            transform: translateY(-50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(0,242,255,0.04) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        /* ===== STATUS PILL ===== */
+        .sys-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: rgba(0,242,255,0.7);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+        }
+        .sys-dot {
+            width: 7px; height: 7px;
+            background: #00f2ff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00f2ff, 0 0 20px rgba(0,242,255,0.5);
+            animation: dot-pulse 1.8s ease-in-out infinite;
+        }
+        @keyframes dot-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50%       { transform: scale(1.5); opacity: 0.6; }
+        }
+        .sys-line {
+            width: 36px; height: 1px;
+            background: linear-gradient(90deg, rgba(0,242,255,0.6), transparent);
+        }
+
+        /* ===== HERO HEADLINE ===== */
+        .hero-headline {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(3.2rem, 8.5vw, 7.5rem);
+            font-weight: 900;
+            line-height: 0.95;
+            letter-spacing: -0.01em;
+            color: #ffffff;
+            margin-bottom: 1.8rem;
+            text-shadow: 0 0 60px rgba(0,242,255,0.08);
+        }
+        .hero-headline .word-exploit {
+            display: inline-block;
+            color: #00f2ff;
+            text-shadow:
+                0 0 15px rgba(0,242,255,0.8),
+                0 0 40px rgba(0,242,255,0.4),
+                0 0 80px rgba(0,242,255,0.15);
+            position: relative;
+        }
+        /* Glitch effect on EXPLOIT */
+        .word-exploit::before,
+        .word-exploit::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .word-exploit::before {
+            color: #ff004c;
+            animation: glitch-a 4s infinite linear;
+            clip-path: polygon(0 15%, 100% 15%, 100% 35%, 0 35%);
+        }
+        .word-exploit::after {
+            color: #00f2ff;
+            animation: glitch-b 4s infinite linear;
+            clip-path: polygon(0 65%, 100% 65%, 100% 85%, 0 85%);
+        }
+        @keyframes glitch-a {
+            0%,88%,100% { transform: translateX(0); opacity: 0; }
+            89% { transform: translateX(-4px); opacity: 0.9; }
+            90% { transform: translateX(4px); opacity: 0.7; }
+            91% { transform: translateX(0); opacity: 0; }
+            93% { transform: translateX(-2px); opacity: 0.8; }
+            94% { opacity: 0; }
+        }
+        @keyframes glitch-b {
+            0%,85%,100% { transform: translateX(0); opacity: 0; }
+            86% { transform: translateX(4px); opacity: 0.9; }
+            87% { transform: translateX(-4px); opacity: 0.7; }
+            88% { opacity: 0; }
+            90% { transform: translateX(2px); opacity: 0.8; }
+            91% { opacity: 0; }
+        }
+
+        /* ===== TYPEWRITER LINE ===== */
+        .hero-typewriter {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: rgba(0,242,255,0.65);
+            letter-spacing: 0.5px;
+            margin-bottom: 1.5rem;
+            min-height: 1.4em;
+        }
+        .hero-typewriter::before {
+            content: '>';
+            color: rgba(0,242,255,0.5);
+        }
+        .tw-cursor {
+            display: inline-block;
+            width: 2px; height: 1em;
+            background: #00f2ff;
+            margin-left: 1px;
+            animation: caret-blink 0.85s step-end infinite;
+        }
+        @keyframes caret-blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0; }
+        }
+
+        /* ===== SUBTITLE ===== */
+        .hero-subtitle {
+            max-width: 520px;
+            font-size: 1.05rem;
+            color: #777;
+            line-height: 1.75;
+            margin-bottom: 2.8rem;
+            font-weight: 300;
+        }
+
+        /* ===== CTA BUTTONS ===== */
+        .hero-cta {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+            margin-bottom: 3.5rem;
+        }
+        .btn-cyber {
+            position: relative;
+            padding: 0.95rem 2.4rem;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #000;
+            background: #00f2ff;
+            border: none;
+            cursor: pointer;
+            overflow: hidden;
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+            transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
+            box-shadow: 0 0 25px rgba(0,242,255,0.35);
+        }
+        .btn-cyber::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            transform: skewX(-20deg);
+            animation: btn-sweep 3s ease-in-out infinite;
+        }
+        @keyframes btn-sweep {
+            0%   { left: -100%; }
+            100% { left: 160%; }
+        }
+        .btn-cyber:hover {
+            background: #ffffff;
+            box-shadow: 0 0 40px rgba(255,255,255,0.5), 0 0 80px rgba(0,242,255,0.2);
+            transform: translateY(-3px);
+        }
+        .btn-cyber-ghost {
+            position: relative;
+            padding: 0.95rem 2.4rem;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(0,242,255,0.85);
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.35);
+            cursor: pointer;
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+            transition: all 0.3s;
+            box-shadow: 0 0 12px rgba(0,242,255,0.08), inset 0 0 12px rgba(0,242,255,0.04);
+        }
+        .btn-cyber-ghost:hover {
+            background: rgba(0,242,255,0.08);
+            border-color: rgba(0,242,255,0.7);
+            box-shadow: 0 0 25px rgba(0,242,255,0.2), inset 0 0 20px rgba(0,242,255,0.06);
+            transform: translateY(-3px);
+        }
+
+        /* ===== HERO STATS ===== */
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            padding-top: 2.5rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .h-stat-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #00f2ff;
+            text-shadow: 0 0 20px rgba(0,242,255,0.5);
+            line-height: 1;
+        }
+        .h-stat-lbl {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #4a4a4a;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0.35rem;
+        }
+
+        /* ===== SCROLL INDICATOR ===== */
+        .scroll-hint {
+            position: absolute;
+            bottom: 2.5rem;
+            left: calc(var(--sidebar-width) / 2 + 50%);
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            color: #333;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+        }
+        .scroll-mouse {
+            width: 20px; height: 32px;
+            border: 1px solid #333;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            padding-top: 5px;
+        }
+        .scroll-wheel {
+            width: 2px; height: 5px;
+            background: #00f2ff;
+            border-radius: 2px;
+            animation: wheel-scroll 1.6s ease-in-out infinite;
+        }
+        @keyframes wheel-scroll {
+            0%   { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(10px); opacity: 0; }
+        }
+
+        /* ===== CYBER DIVIDER ===== */
+        .cyber-divider {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 0 5rem;
+            margin: 0;
+        }
+        .cyber-divider::before,
+        .cyber-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,242,255,0.2), transparent);
+        }
+        .cyber-divider-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            letter-spacing: 5px;
+            color: rgba(0,242,255,0.35);
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* ===== TRACKS SECTION ===== */
+        .tracks-section {
+            padding: 5rem 5rem 4rem;
+        }
+        .section-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: rgba(0,242,255,0.6);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+        .section-eyebrow::before {
+            content: '';
+            width: 24px; height: 1px;
+            background: rgba(0,242,255,0.6);
+        }
+        .section-title-lg {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+        }
+        .section-sub {
+            color: #555;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            margin-bottom: 3rem;
+        }
+        .section-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 3rem;
+        }
+        .view-all-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: #444;
+            text-decoration: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .view-all-link:hover { color: #00f2ff; }
+
+        /* ===== COURSE CARDS ===== */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Override components.css card sizing for flip cards */
+        .card-container {
+            perspective: 1100px;
+            cursor: pointer;
+            height: 430px;
+        }
+        .card-inner {
+            width: 100%; height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-container.flipped .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .card-back { transform: rotateY(180deg); }
+
+        /* Front card body */
+        .card {
+            height: 100%;
+            background: #0a0a0f;
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: border-color 0.4s, box-shadow 0.4s, transform 0.4s;
+        }
+        /* Top neon line on hover */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00f2ff 40%, #00ff9d, transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        /* Holographic shimmer sweep */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -120%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,242,255,0.04), rgba(0,242,255,0.07), rgba(0,242,255,0.04), transparent);
+            transform: skewX(-15deg);
+            transition: left 0.7s ease;
+            pointer-events: none;
+        }
+        .card-container:hover .card::before { left: 160%; }
+        .card-container:hover .card {
+            border-color: rgba(0,242,255,0.35);
+            box-shadow: 0 0 30px rgba(0,242,255,0.1), 0 20px 50px rgba(0,0,0,0.6);
+            transform: translateY(-6px);
+        }
+        .card-container:hover .card::after { opacity: 1; }
+
+        .card img {
+            width: 100%;
+            height: 175px;
+            object-fit: cover;
+            filter: saturate(0.5) brightness(0.75);
+            transition: filter 0.5s;
+        }
+        .card-container:hover .card img {
+            filter: saturate(0.85) brightness(0.85);
+        }
+        .card-body {
+            padding: 1.4rem 1.4rem 1.2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .difficulty {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+            display: block;
+            position: static; /* override components.css absolute positioning */
+        }
+        .card-body h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.7rem;
+            letter-spacing: 0.5px;
+        }
+        .card-body p {
+            font-size: 0.85rem;
+            color: #595959;
+            line-height: 1.65;
+            flex: 1;
+        }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        .card-ft-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #3a3a3a;
+            letter-spacing: 1.5px;
+        }
+        .card-ft-hint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            color: rgba(0,242,255,0.3);
+            letter-spacing: 1px;
+        }
+
+        /* Card back */
+        .course-overview {
+            height: 100%;
+            background: #080810;
+            border: 1px solid rgba(0,242,255,0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 0 40px rgba(0,242,255,0.08), inset 0 0 30px rgba(0,242,255,0.03);
+        }
+        .course-overview h4 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 3px;
+            color: #00f2ff;
+            margin-bottom: 1.1rem;
+            text-transform: uppercase;
+        }
+        .course-overview ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+        .course-overview ul li {
+            font-size: 0.82rem;
+            color: #888;
+            padding-left: 1.1rem;
+            position: relative;
+            line-height: 1.4;
+        }
+        .course-overview ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: rgba(0,242,255,0.6);
+            font-size: 0.65rem;
+            top: 0.1em;
+        }
+        .course-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .course-info-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: #444;
+            letter-spacing: 1px;
+        }
+        .course-info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            color: rgba(0,242,255,0.8);
+        }
+
+        /* ===== PRACTICE / TERMINAL ===== */
+        .practice-section {
+            display: flex;
+            gap: 4rem;
+            padding: 6rem 5rem;
+            align-items: center;
+            background: rgba(4, 4, 10, 0.9);
+            border-top: 1px solid rgba(0,242,255,0.07);
+            border-bottom: 1px solid rgba(0,242,255,0.07);
+            position: relative;
+            overflow: hidden;
+        }
+        .practice-section::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 50%; height: 100%;
+            background: radial-gradient(ellipse at 80% 50%, rgba(0,242,255,0.025) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .practice-content { flex: 1; position: relative; z-index: 1; }
+        .practice-content h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.8rem, 3.5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            line-height: 1.15;
+            color: #fff;
+        }
+        .practice-content > p {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 2.5rem;
+            line-height: 1.75;
+            max-width: 420px;
+        }
+        .practice-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+        .practice-step {
+            padding: 0.9rem 1.1rem;
+            background: rgba(255,255,255,0.015);
+            border: 1px solid rgba(255,255,255,0.045);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            transition: all 0.3s;
+        }
+        .practice-step.active {
+            background: rgba(0,242,255,0.05);
+            border-color: rgba(0,242,255,0.25);
+            box-shadow: 0 0 15px rgba(0,242,255,0.06);
+        }
+        .step-num {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.6rem;
+            color: rgba(0,242,255,0.5);
+            letter-spacing: 1px;
+            min-width: 22px;
+        }
+        .step-text { font-size: 0.88rem; color: #666; }
+        .practice-step.active .step-text { color: #ccc; }
+
+        /* Terminal */
+        .terminal-wrapper {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        /* Moving scan line on terminal */
+        .terminal-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: rgba(0,242,255,0.5);
+            box-shadow: 0 0 12px rgba(0,242,255,0.6);
+            animation: term-scan 5s ease-in-out infinite;
+            pointer-events: none;
+            border-radius: 0 0 2px 2px;
+            z-index: 2;
+        }
+        @keyframes term-scan {
+            0%   { top: 0;    opacity: 0.7; }
+            85%  { top: 100%; opacity: 0.4; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .terminal {
+            background: #030307;
+            border: 1px solid rgba(0,242,255,0.18);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow:
+                0 0 50px rgba(0,242,255,0.08),
+                0 25px 70px rgba(0,0,0,0.9),
+                inset 0 0 30px rgba(0,0,0,0.6);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .terminal-header {
+            display: flex;
+            gap: 6px;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.025);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            align-items: center;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.red    { background: #ff5f57; box-shadow: 0 0 6px rgba(255,95,87,0.5); }
+        .dot.yellow { background: #febc2e; box-shadow: 0 0 6px rgba(254,188,46,0.5); }
+        .dot.green  { background: #28c840; box-shadow: 0 0 6px rgba(40,200,64,0.5); }
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.62rem;
+            color: #333;
+            letter-spacing: 1px;
+        }
+        .terminal-body {
+            padding: 1.5rem;
+            color: #00cc44;
+            font-size: 0.8rem;
+            line-height: 1.85;
+            min-height: 280px;
+        }
+        .terminal-body .command { color: #00f2ff; }
+        .terminal-body p {
+            opacity: 0;
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+        .terminal-body p:nth-child(1)  { animation-delay: 0.4s; }
+        .terminal-body p:nth-child(2)  { animation-delay: 0.8s; }
+        .terminal-body p:nth-child(3)  { animation-delay: 1.2s; }
+        .terminal-body p:nth-child(4)  { animation-delay: 1.6s; }
+        .terminal-body p:nth-child(5)  { animation-delay: 2.0s; }
+        .terminal-body p:nth-child(6)  { animation-delay: 2.4s; }
+        .terminal-body p:nth-child(7)  { animation-delay: 2.8s; }
+        .terminal-body p:nth-child(8)  { animation-delay: 3.2s; }
+        .terminal-body p:nth-child(9)  { animation-delay: 3.6s; }
+        .terminal-body p:nth-child(10) { animation-delay: 4.0s; }
+        .terminal-body p:nth-child(11) { animation-delay: 4.4s; }
+        .terminal-body p:nth-child(12) { animation-delay: 4.8s; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* ===== ABOUT SECTION ===== */
+        .about-section {
+            padding: 7rem 5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
         .about-section h1 {
-            font-size: 3.5rem; font-weight: 700; margin-bottom: 2rem;
-            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 3rem;
         }
-
         .about-content {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 4rem; margin-bottom: 4rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5rem;
+            margin-bottom: 5rem;
         }
-
-        .about-text { color: #aaa; font-size: 1.1rem; line-height: 1.8; }
+        .about-text {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.85;
+        }
         .about-text p { margin-bottom: 1.5rem; }
-
         .about-stats {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
         }
-
         .stat-card {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 2rem; text-align: center;
-            transition: all 0.3s ease;
+            background: #0a0a0f;
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.35s;
+            position: relative;
+            overflow: hidden;
         }
-
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00f2ff, transparent);
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
         .stat-card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-color: rgba(0,242,255,0.25);
+            box-shadow: 0 0 25px rgba(0,242,255,0.07), 0 15px 40px rgba(0,0,0,0.5);
+            transform: translateY(-5px);
         }
-
+        .stat-card:hover::after { opacity: 1; }
         .stat-number {
-            font-size: 3rem; font-weight: 700;
-            color: var(--accent); margin-bottom: 0.5rem;
+            font-family: 'Orbitron', monospace;
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #00f2ff;
+            text-shadow: 0 0 25px rgba(0,242,255,0.4);
+            margin-bottom: 0.5rem;
+            display: block;
         }
-
         .stat-label {
-            color: #888; font-size: 0.9rem;
-            text-transform: uppercase; letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
-
-        /* --- MISSION & VALUES --- */
-        .mission-values { margin-top: 4rem; }
-        .mission-values h2 { font-size: 2.5rem; margin-bottom: 2rem; }
-
+        .mission-values { margin-top: 5rem; }
+        .mission-values h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 2.5rem;
+        }
         .values-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
         }
-
         .value-card {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 2rem; transition: all 0.3s ease;
+            background: #0a0a0f;
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.35s;
         }
-
         .value-card:hover {
-            border-color: var(--accent); transform: translateY(-5px);
+            border-color: rgba(0,242,255,0.25);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(0,242,255,0.05);
         }
-
         .value-icon {
-            width: 50px; height: 50px;
-            background: rgba(0, 242, 255, 0.1); border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
+            width: 48px; height: 48px;
+            background: rgba(0,242,255,0.07);
+            border: 1px solid rgba(0,242,255,0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 1.5rem;
         }
+        .value-card h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #fff;
+            margin-bottom: 0.9rem;
+        }
+        .value-card p { color: #555; font-size: 0.88rem; line-height: 1.7; }
 
-        .value-card h3 { font-size: 1.3rem; margin-bottom: 1rem; }
-        .value-card p { color: #888; line-height: 1.6; }
-
-        /* --- CONTACT SECTION --- */
-        .contact-section { padding: 6rem; max-width: 1200px; margin: 0 auto; }
-
+        /* ===== CONTACT SECTION ===== */
+        .contact-section {
+            padding: 7rem 5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
         .contact-section h1 {
-            font-size: 3.5rem; font-weight: 700; margin-bottom: 1rem;
-            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.75rem;
         }
-
-        .contact-section > p { color: #888; font-size: 1.1rem; margin-bottom: 4rem; }
-
+        .contact-section > p {
+            color: #555;
+            font-size: 0.95rem;
+            margin-bottom: 3.5rem;
+        }
         .contact-container {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
         }
-
         .contact-form {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 3rem;
+            background: #0a0a0f;
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 12px;
+            padding: 2.5rem;
         }
-
-        .contact-form h2 { font-size: 1.8rem; margin-bottom: 2rem; }
-
-        /* Landing contact form fields (different from settings .form-input) */
-        .contact-form .form-group { margin-bottom: 1.5rem; }
-
+        .contact-form h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            color: rgba(0,242,255,0.7);
+            margin-bottom: 2rem;
+        }
+        .contact-form .form-group { margin-bottom: 1.3rem; }
         .contact-form .form-group label {
-            display: block; color: #aaa; font-size: 0.9rem; margin-bottom: 0.5rem;
-            text-transform: uppercase; letter-spacing: 1px;
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            color: #444;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-bottom: 0.45rem;
         }
-
         .contact-form .form-group input,
         .contact-form .form-group textarea {
-            width: 100%; padding: 1rem;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border); border-radius: 6px;
-            color: #fff; font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem; transition: all 0.3s ease;
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 6px;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-
         .contact-form .form-group input:focus,
         .contact-form .form-group textarea:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
+            border-color: rgba(0,242,255,0.4);
+            box-shadow: 0 0 15px rgba(0,242,255,0.1), inset 0 0 10px rgba(0,242,255,0.03);
         }
-
-        .contact-form .form-group textarea { resize: vertical; min-height: 150px; }
-
+        .contact-form .form-group textarea { resize: vertical; min-height: 125px; }
         .submit-btn {
-            width: 100%; padding: 1rem;
-            background: var(--accent); color: #000; border: none;
-            border-radius: 6px; font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease;
+            width: 100%;
+            padding: 1rem;
+            background: #00f2ff;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: background 0.3s, box-shadow 0.3s;
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
         }
-
         .submit-btn:hover {
             background: #fff;
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 35px rgba(255,255,255,0.4);
         }
-
-        .contact-info { display: flex; flex-direction: column; gap: 2rem; }
-
+        .contact-info { display: flex; flex-direction: column; gap: 1.25rem; }
         .info-card {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 2rem; transition: all 0.3s ease;
+            background: #0a0a0f;
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
         }
-
         .info-card:hover {
-            border-color: var(--accent); transform: translateX(5px);
+            border-color: rgba(0,242,255,0.2);
+            transform: translateX(6px);
         }
-
         .info-icon {
-            width: 50px; height: 50px;
-            background: rgba(0, 242, 255, 0.1); border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .info-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
-        .info-card p { color: #888; line-height: 1.6; }
-        .info-card a { color: var(--accent); text-decoration: none; transition: color 0.3s ease; }
-        .info-card a:hover { color: #fff; }
-
-        /* --- TERMINAL TYPEWRITER STAGGER --- */
-        .terminal-body p {
-            opacity: 0;
-            animation: fadeInUp 0.4s ease-out forwards;
-        }
-        .terminal-body p:nth-child(1)  { animation-delay: 0.3s; }
-        .terminal-body p:nth-child(2)  { animation-delay: 0.6s; }
-        .terminal-body p:nth-child(3)  { animation-delay: 0.9s; }
-        .terminal-body p:nth-child(4)  { animation-delay: 1.2s; }
-        .terminal-body p:nth-child(5)  { animation-delay: 1.5s; }
-        .terminal-body p:nth-child(6)  { animation-delay: 1.8s; }
-        .terminal-body p:nth-child(7)  { animation-delay: 2.1s; }
-        .terminal-body p:nth-child(8)  { animation-delay: 2.4s; }
-        .terminal-body p:nth-child(9)  { animation-delay: 2.7s; }
-        .terminal-body p:nth-child(10) { animation-delay: 3.0s; }
-        .terminal-body p:nth-child(11) { animation-delay: 3.3s; }
-        .terminal-body p:nth-child(12) { animation-delay: 3.6s; }
-
-        /* --- PRACTICE STEPS --- */
-        .practice-step {
-            padding: 1.2rem;
-            background: var(--bg-surface);
-            border-radius: var(--radius-lg);
+            width: 40px; height: 40px;
+            background: rgba(0,242,255,0.07);
+            border: 1px solid rgba(0,242,255,0.12);
+            border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: var(--space-md);
-            transition: all var(--transition-base);
+            justify-content: center;
+            margin-bottom: 0.75rem;
         }
-        .practice-step.active {
-            border-left: 3px solid var(--accent);
+        .info-card h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 2.5px;
+            color: rgba(0,242,255,0.7);
+            margin-bottom: 0.5rem;
         }
-        .practice-step.inactive {
-            opacity: 0.7;
+        .info-card p { color: #555; font-size: 0.85rem; line-height: 1.6; }
+        .info-card a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .info-card a:hover { color: #00f2ff; }
+
+        /* ===== HOW IT WORKS SECTION ===== */
+        .how-it-works {
+            padding: 5rem 5rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .how-it-works::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 900px; height: 500px;
+            background: radial-gradient(ellipse, rgba(168,85,247,0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .hiw-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .hiw-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .hiw-steps {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+        }
+        .hiw-step {
+            flex: 1;
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: rgba(10,10,16,0.7);
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 12px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        .hiw-step::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00f2ff, transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .hiw-step:hover::after { opacity: 1; }
+        .hiw-step:hover {
+            border-color: rgba(0,242,255,0.2);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 25px rgba(0,242,255,0.05);
+        }
+        .hiw-step-icon {
+            width: 72px; height: 72px;
+            background: rgba(0,242,255,0.06);
+            border: 1px solid rgba(0,242,255,0.18);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: #00f2ff;
+            transition: all 0.4s;
+        }
+        .hiw-step:hover .hiw-step-icon {
+            box-shadow: 0 0 22px rgba(0,242,255,0.18);
+        }
+        .hiw-icon-purple {
+            background: rgba(168,85,247,0.06) !important;
+            border-color: rgba(168,85,247,0.18) !important;
+            color: #a855f7 !important;
+        }
+        .hiw-step:hover .hiw-icon-purple {
+            box-shadow: 0 0 22px rgba(168,85,247,0.18) !important;
+        }
+        .hiw-icon-success {
+            background: rgba(0,255,157,0.06) !important;
+            border-color: rgba(0,255,157,0.18) !important;
+            color: #00ff9d !important;
+        }
+        .hiw-step:hover .hiw-icon-success {
+            box-shadow: 0 0 22px rgba(0,255,157,0.18) !important;
+        }
+        .hiw-step-num {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.62rem;
+            color: rgba(0,242,255,0.4);
+            letter-spacing: 4px;
+            margin-bottom: 0.9rem;
+            text-transform: uppercase;
+        }
+        .hiw-num-purple { color: rgba(168,85,247,0.5) !important; }
+        .hiw-num-success { color: rgba(0,255,157,0.45) !important; }
+        .hiw-step h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 0.9rem;
+        }
+        .hiw-step p {
+            color: #555;
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+        .hiw-connector {
+            flex: 0 0 56px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: rgba(168,85,247,0.4);
+            font-size: 1.4rem;
+            font-weight: 300;
+            padding-top: 0;
+        }
+        .hiw-line {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(180deg, rgba(0,242,255,0.25), rgba(168,85,247,0.25));
         }
 
-        /* --- LANDING RESPONSIVE OVERRIDES --- */
+        /* ===== SCROLL REVEAL ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-d1 { transition-delay: 0.12s; }
+        .reveal-d2 { transition-delay: 0.22s; }
+        .reveal-d3 { transition-delay: 0.32s; }
+        /* Restore hiw-step hover lift/transitions after reveal uses opacity+transform transitions */
+        .hiw-step.visible:hover { transform: translateY(-6px); }
+        .hiw-step.reveal { transition: opacity 0.7s ease, transform 0.7s ease, border-color 0.4s, box-shadow 0.4s; }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
-            .about-content    { grid-template-columns: 1fr; }
-            .contact-container { grid-template-columns: 1fr; }
-            .values-grid      { grid-template-columns: 1fr; }
+            .hero                 { grid-template-columns: 1fr; padding: 6rem 3rem 4rem; }
+            .hero-right           { display: none; }
+            .about-content        { grid-template-columns: 1fr; gap: 3rem; }
+            .contact-container    { grid-template-columns: 1fr; }
+            .values-grid          { grid-template-columns: 1fr 1fr; }
+            .practice-section     { flex-direction: column; padding: 4rem 3rem; }
+            .tracks-section       { padding: 4rem 3rem; }
+            .cyber-divider        { padding: 0 3rem; }
+            .about-section, .contact-section { padding: 5rem 3rem; }
+            .how-it-works         { padding: 4rem 3rem; }
+            .hiw-steps            { flex-direction: column; align-items: stretch; }
+            .hiw-connector        { flex-direction: row; flex: 0 0 auto; align-self: center; height: 40px; }
+            .hiw-connector        { display: none; }
         }
-
         @media (max-width: 768px) {
-            .sidebar { width: 100%; height: auto; position: relative; }
-            .main-content { margin-left: 0; width: 100%; }
-            .grid-cards { grid-template-columns: 1fr; }
+            .hero                 { padding: 5rem 1.5rem 3rem; }
+            .hero-headline        { font-size: clamp(2.5rem, 11vw, 4rem); }
+            .hero-cta             { flex-direction: column; align-items: flex-start; }
+            .hero-stats           { gap: 1.5rem; flex-wrap: wrap; }
+            .values-grid          { grid-template-columns: 1fr; }
+            .about-section, .contact-section { padding: 4rem 1.5rem; }
+            .tracks-section       { padding: 3rem 1.5rem; }
+            .how-it-works         { padding: 3rem 1.5rem; }
+            * { cursor: auto !important; }
+            .cursor-dot, .cursor-ring { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="grid-background"></div>
+    <!-- Scroll progress indicator -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- Custom cursor -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-ring" id="cursor-ring"></div>
+
+    <!-- Particle network canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Scanlines -->
+    <div class="scanlines"></div>
+
+    <!-- Cursor glow follower (from layout.css) -->
     <div class="grid-cursor-follower" id="grid-glow"></div>
 
+    <!-- ===== SIDEBAR NAV ===== -->
     <nav class="sidebar">
         <div class="logo">
             <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS logo">
             SENTINEL<span>LMS</span>
         </div>
-        
+
         <ul class="nav-menu">
             <li class="nav-item">
                 <a href="#home" class="nav-link active" data-section="home">
@@ -266,43 +1427,198 @@
         </div>
     </nav>
 
+    <!-- ===== MAIN CONTENT ===== -->
     <main class="main-content">
-        
-        <!-- HOME SECTION -->
+
+        <!-- ============================================================
+             HOME SECTION
+             ============================================================ -->
         <section id="home" class="content-section active">
+
+            <!-- ── HERO ── -->
             <section class="hero">
-                <div class="status-pill">System Online â€¢ Security Status: Optimal</div>
-                
-                <h1>TRAIN. EXPLOIT.<br>DEFEND.</h1>
-                
-                <p>Master the art of cybersecurity. Access offensive and defensive labs directly in your browser with our state-of-the-art Pwnbox integration.</p>
-                <div class="hero-actions">
-                    <button class="btn btn-primary" style="width: auto; padding: 1rem 2.5rem;" onclick="location.href='register.html'">START PATH</button>
-                    <button class="btn btn-outline" style="width: auto; padding: 1rem 2.5rem;" onclick="Toast.info('Labs are not available right now. Check back soon.')">EXPLORE LABS</button>
+                <div class="hero-bracket-tr"></div>
+                <div class="hero-bracket-bl"></div>
+
+                <!-- Left column -->
+                <div class="hero-left">
+                    <div class="hero-glow"></div>
+
+                    <!-- Status badge -->
+                    <div class="sys-status">
+                        <span class="sys-dot"></span>
+                        <span class="sys-line"></span>
+                        <span>System Online &bull; Security Status: Optimal</span>
+                    </div>
+
+                    <!-- Headline -->
+                    <h1 class="hero-headline">
+                        TRAIN.<br>
+                        <span class="word-exploit" data-text="EXPLOIT.">EXPLOIT.</span><br>
+                        DEFEND.
+                    </h1>
+
+                    <!-- Typewriter -->
+                    <div class="hero-typewriter">
+                        <span id="tw-out"></span><span class="tw-cursor"></span>
+                    </div>
+
+                    <!-- Subtitle -->
+                    <p class="hero-subtitle">
+                        Master the art of cybersecurity. Access offensive and defensive labs directly in your browser with our state-of-the-art Pwnbox integration.
+                    </p>
+
+                    <!-- CTAs -->
+                    <div class="hero-cta">
+                        <button class="btn-cyber" onclick="location.href='register.html'">START PATH</button>
+                        <button class="btn-cyber-ghost" onclick="Toast.info('Labs are not available right now. Check back soon.')">EXPLORE LABS</button>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="hero-stats">
+                        <div>
+                            <div class="h-stat-val" data-count="50" data-suffix="K+">50K+</div>
+                            <div class="h-stat-lbl">Students</div>
+                        </div>
+                        <div>
+                            <div class="h-stat-val" data-count="500" data-suffix="+">500+</div>
+                            <div class="h-stat-lbl">Modules</div>
+                        </div>
+                        <div>
+                            <div class="h-stat-val" data-count="95" data-suffix="%">95%</div>
+                            <div class="h-stat-lbl">Placement</div>
+                        </div>
+                        <div>
+                            <div class="h-stat-val">24/7</div>
+                            <div class="h-stat-lbl">Lab Access</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column: Animated cyber visual -->
+                <div class="hero-right">
+                    <div class="cyber-visual">
+                        <div class="cv-ambient"></div>
+                        <div class="cv-ring cv-ring-1"><div class="cv-ring-node"></div></div>
+                        <div class="cv-ring cv-ring-2"><div class="cv-ring-node"></div></div>
+                        <div class="cv-ring cv-ring-3"><div class="cv-ring-node"></div></div>
+                        <div class="cv-center">
+                            <div class="cv-hex">
+                                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                                    <polygon points="60,5 112,32.5 112,87.5 60,115 8,87.5 8,32.5" fill="none" stroke="rgba(0,242,255,0.4)" stroke-width="1.5" stroke-dasharray="10 3"/>
+                                    <polygon points="60,20 98,41 98,80 60,100 22,80 22,41" fill="rgba(0,242,255,0.02)" stroke="rgba(0,242,255,0.14)" stroke-width="1"/>
+                                </svg>
+                            </div>
+                            <div class="cv-icon">
+                                <i data-lucide="shield-check" size="52"></i>
+                            </div>
+                        </div>
+                        <!-- Floating data tags -->
+                        <div class="cv-tag cv-tag-1"><span>0x0FF</span></div>
+                        <div class="cv-tag cv-tag-2"><span>CVE-2024</span></div>
+                        <div class="cv-tag cv-tag-3"><span>SECURE</span></div>
+                        <div class="cv-tag cv-tag-4"><span>root@</span></div>
+                        <!-- Status readout -->
+                        <div class="cv-readout">
+                            <div class="cv-readout-line">
+                                <span class="cv-key">STATUS</span>
+                                <span class="cv-val">ACTIVE</span>
+                            </div>
+                            <div class="cv-readout-line">
+                                <span class="cv-key">SHIELD</span>
+                                <span class="cv-val" style="animation: blink 1.5s step-end infinite;">ARMED</span>
+                            </div>
+                            <div class="cv-readout-line">
+                                <span class="cv-key">LEVEL</span>
+                                <span class="cv-val" style="color:var(--accent-2);">ELITE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scroll hint -->
+                <div class="scroll-hint">
+                    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+                    <span>Scroll</span>
                 </div>
             </section>
 
-            <div class="container">
-                <div class="section-header">
-                    <div>
-                        <p style="color: var(--accent); font-size: 0.8rem; letter-spacing: 2px;">TRAINING MODULES</p>
-                        <h2>Featured Tracks</h2>
+            <!-- ── HOW IT WORKS ── -->
+            <section class="how-it-works">
+                <div class="hiw-inner">
+                    <div class="hiw-header">
+                        <p class="section-eyebrow">The Path</p>
+                        <h2 class="section-title-lg">HOW IT WORKS</h2>
+                        <p class="section-sub">Three steps from zero to cybersecurity professional.</p>
                     </div>
-                    <a href="#" style="color: #666; font-size: 0.9rem; text-decoration: none;">VIEW ALL TRACKS &rarr;</a>
+                    <div class="hiw-steps">
+                        <div class="hiw-step hiw-step-1 reveal">
+                            <div class="hiw-step-icon">
+                                <i data-lucide="user-plus" size="28"></i>
+                            </div>
+                            <div class="hiw-step-num">01</div>
+                            <h3>CREATE ACCOUNT</h3>
+                            <p>Sign up in seconds. Choose your learning path based on your experience level and goals.</p>
+                        </div>
+                        <div class="hiw-connector">
+                            <div class="hiw-line"></div>
+                            <span>›</span>
+                        </div>
+                        <div class="hiw-step hiw-step-2 reveal reveal-d1">
+                            <div class="hiw-step-icon hiw-icon-purple">
+                                <i data-lucide="route" size="28"></i>
+                            </div>
+                            <div class="hiw-step-num hiw-num-purple">02</div>
+                            <h3>CHOOSE YOUR PATH</h3>
+                            <p>Access structured learning tracks from foundational security to advanced penetration testing.</p>
+                        </div>
+                        <div class="hiw-connector">
+                            <div class="hiw-line"></div>
+                            <span>›</span>
+                        </div>
+                        <div class="hiw-step hiw-step-3 reveal reveal-d2">
+                            <div class="hiw-step-icon hiw-icon-success">
+                                <i data-lucide="terminal" size="28"></i>
+                            </div>
+                            <div class="hiw-step-num hiw-num-success">03</div>
+                            <h3>HACK &amp; LEVEL UP</h3>
+                            <p>Apply skills in live lab environments. Capture flags, earn tokens, and build your hacker profile.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── DIVIDER ── -->
+            <div class="cyber-divider">
+                <span class="cyber-divider-text">// training modules</span>
+            </div>
+
+            <!-- ── FEATURED TRACKS ── -->
+            <div class="tracks-section">
+                <div class="section-header-row">
+                    <div>
+                        <p class="section-eyebrow">Training Modules</p>
+                        <h2 class="section-title-lg">Featured Tracks</h2>
+                        <p class="section-sub">Structured paths from fundamentals to advanced operations.</p>
+                    </div>
+                    <a href="#" class="view-all-link">View all tracks &nbsp;→</a>
                 </div>
 
-                <div class="grid-cards stagger-children">
-                    <!-- Information Security (Fundamentals) -->
-                    <div class="card-container">
+                <div class="grid-cards">
+                    <!-- Information Security -->
+                    <div class="card-container reveal">
                         <div class="card-inner">
                             <div class="card-front">
                                 <div class="card">
-                                    <span class="difficulty" style="color: #00f2ff;">FUNDAMENTALS</span>
                                     <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400" alt="Information Security">
-                                    <h3>INFORMATION SECURITY</h3>
-                                    <p>Learn the foundational concepts of cybersecurity, including threat modeling, vulnerability assessment, and defense strategies.</p>
-                                    <div class="card-footer">
-                                        <span style="font-size: 0.9rem; color: #777;">Modules: 8</span>
+                                    <div class="card-body">
+                                        <span class="difficulty" style="color: #00f2ff;">// Fundamentals</span>
+                                        <h3>INFORMATION SECURITY</h3>
+                                        <p>Learn the foundational concepts of cybersecurity, including threat modeling, vulnerability assessment, and defense strategies.</p>
+                                        <div class="card-footer">
+                                            <span class="card-ft-tag">Modules: 8</span>
+                                            <span class="card-ft-hint">Click to preview →</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -312,42 +1628,36 @@
                                         <h4>Course Overview</h4>
                                         <ul>
                                             <li>Introduction to Cybersecurity</li>
-                                            <li>CIA Triad & Security Principles</li>
-                                            <li>Threat & Vulnerability Assessment</li>
+                                            <li>CIA Triad &amp; Security Principles</li>
+                                            <li>Threat &amp; Vulnerability Assessment</li>
                                             <li>Secure System Design</li>
                                             <li>Defense in Depth Strategies</li>
                                         </ul>
                                     </div>
                                     <div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Duration:</span>
-                                            <span class="course-info-value">40 Hours</span>
-                                        </div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Difficulty:</span>
-                                            <span class="course-info-value">Fundamentals</span>
-                                        </div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Prerequisites:</span>
-                                            <span class="course-info-value">None</span>
-                                        </div>
+                                        <div class="course-info-row"><span class="course-info-label">Duration</span><span class="course-info-value">40 hrs</span></div>
+                                        <div class="course-info-row"><span class="course-info-label">Difficulty</span><span class="course-info-value">Fundamentals</span></div>
+                                        <div class="course-info-row"><span class="course-info-label">Prereqs</span><span class="course-info-value">None</span></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Computer Networking (Fundamentals) -->
-                    <div class="card-container">
+                    <!-- Computer Networking -->
+                    <div class="card-container reveal reveal-d1">
                         <div class="card-inner">
                             <div class="card-front">
                                 <div class="card">
-                                    <span class="difficulty" style="color: #00f2ff;">FUNDAMENTALS</span>
                                     <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400" alt="Computer Networking">
-                                    <h3>COMPUTER NETWORKING</h3>
-                                    <p>Master network fundamentals, OSI model, TCP/IP protocols, and network architecture essential for security professionals.</p>
-                                    <div class="card-footer">
-                                        <span style="font-size: 0.9rem; color: #777;">Modules: 6</span>
+                                    <div class="card-body">
+                                        <span class="difficulty" style="color: #00f2ff;">// Fundamentals</span>
+                                        <h3>COMPUTER NETWORKING</h3>
+                                        <p>Master network fundamentals, OSI model, TCP/IP protocols, and network architecture essential for security professionals.</p>
+                                        <div class="card-footer">
+                                            <span class="card-ft-tag">Modules: 6</span>
+                                            <span class="card-ft-hint">Click to preview →</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -356,43 +1666,37 @@
                                     <div>
                                         <h4>Course Overview</h4>
                                         <ul>
-                                            <li>OSI & TCP/IP Model</li>
-                                            <li>IP Addressing & Subnetting</li>
+                                            <li>OSI &amp; TCP/IP Model</li>
+                                            <li>IP Addressing &amp; Subnetting</li>
                                             <li>Network Protocols (DNS, HTTP, SMTP)</li>
-                                            <li>Routing & Switching Basics</li>
+                                            <li>Routing &amp; Switching Basics</li>
                                             <li>Network Troubleshooting Tools</li>
                                         </ul>
                                     </div>
                                     <div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Duration:</span>
-                                            <span class="course-info-value">35 Hours</span>
-                                        </div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Difficulty:</span>
-                                            <span class="course-info-value">Fundamentals</span>
-                                        </div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Prerequisites:</span>
-                                            <span class="course-info-value">None</span>
-                                        </div>
+                                        <div class="course-info-row"><span class="course-info-label">Duration</span><span class="course-info-value">35 hrs</span></div>
+                                        <div class="course-info-row"><span class="course-info-label">Difficulty</span><span class="course-info-value">Fundamentals</span></div>
+                                        <div class="course-info-row"><span class="course-info-label">Prereqs</span><span class="course-info-value">None</span></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Ethical Hacking (Intermediate) -->
-                    <div class="card-container">
+                    <!-- Ethical Hacking -->
+                    <div class="card-container reveal reveal-d2">
                         <div class="card-inner">
                             <div class="card-front">
                                 <div class="card">
-                                    <span class="difficulty" style="color: #ffa502;">INTERMEDIATE</span>
                                     <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=400" alt="Ethical Hacking">
-                                    <h3>ETHICAL HACKING</h3>
-                                    <p>Hands-on penetration testing, vulnerability exploitation, and ethical hacking methodologies for security professionals.</p>
-                                    <div class="card-footer">
-                                        <span style="font-size: 0.9rem; color: #777;">Modules: 10</span>
+                                    <div class="card-body">
+                                        <span class="difficulty" style="color: #ffa502;">// Intermediate</span>
+                                        <h3>ETHICAL HACKING</h3>
+                                        <p>Hands-on penetration testing, vulnerability exploitation, and ethical hacking methodologies for security professionals.</p>
+                                        <div class="card-footer">
+                                            <span class="card-ft-tag">Modules: 10</span>
+                                            <span class="card-ft-hint">Click to preview →</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -401,26 +1705,17 @@
                                     <div>
                                         <h4>Course Overview</h4>
                                         <ul>
-                                            <li>Reconnaissance & Enumeration</li>
+                                            <li>Reconnaissance &amp; Enumeration</li>
                                             <li>Vulnerability Scanning</li>
                                             <li>Exploitation Techniques</li>
-                                            <li>Post-Exploitation & Privilege Escalation</li>
-                                            <li>Reporting & Documentation</li>
+                                            <li>Post-Exploitation &amp; Privilege Escalation</li>
+                                            <li>Reporting &amp; Documentation</li>
                                         </ul>
                                     </div>
                                     <div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Duration:</span>
-                                            <span class="course-info-value">60 Hours</span>
-                                        </div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Difficulty:</span>
-                                            <span class="course-info-value">Intermediate</span>
-                                        </div>
-                                        <div class="course-info-row">
-                                            <span class="course-info-label">Prerequisites:</span>
-                                            <span class="course-info-value">Information Security, Networking</span>
-                                        </div>
+                                        <div class="course-info-row"><span class="course-info-label">Duration</span><span class="course-info-value">60 hrs</span></div>
+                                        <div class="course-info-row"><span class="course-info-label">Difficulty</span><span class="course-info-value">Intermediate</span></div>
+                                        <div class="course-info-row"><span class="course-info-label">Prereqs</span><span class="course-info-value">Info Sec, Networking</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -429,121 +1724,137 @@
                 </div>
             </div>
 
+            <!-- ── PRACTICE / TERMINAL ── -->
             <section class="practice-section">
-                <div class="practice-content">
-                    <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2;">HANDS-ON<br>ENVIRONMENT</h2>
-                    <p style="color: #aaa; font-size: 1.1rem; margin-bottom: 2rem;">Don't just watch videos. Connect to our secure VPN and launch attacks against real machines in a sandboxed environment.</p>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="practice-content reveal">
+                    <p class="section-eyebrow">Live Environment</p>
+                    <h2>HANDS-ON<br>ENVIRONMENT</h2>
+                    <p>Don't just watch videos. Connect to our secure VPN and launch attacks against real machines in a sandboxed environment.</p>
+                    <div class="practice-steps">
                         <div class="practice-step active">
-                            <i data-lucide="search" style="color: var(--accent);"></i>
-                            <span>1. Information Gathering & Enum</span>
+                            <span class="step-num">01</span>
+                            <i data-lucide="search" size="15" style="color:#00f2ff;"></i>
+                            <span class="step-text">Information Gathering &amp; Enumeration</span>
                         </div>
-                        <div class="practice-step inactive">
-                            <i data-lucide="zap" style="color: var(--text-primary);"></i>
-                            <span>2. Vulnerability Assessment</span>
+                        <div class="practice-step">
+                            <span class="step-num">02</span>
+                            <i data-lucide="zap" size="15" style="color:#3a3a3a;"></i>
+                            <span class="step-text">Vulnerability Assessment</span>
                         </div>
-                        <div class="practice-step inactive">
-                            <i data-lucide="flag" style="color: var(--text-primary);"></i>
-                            <span>3. Exploitation & Post-Exploitation</span>
+                        <div class="practice-step">
+                            <span class="step-num">03</span>
+                            <i data-lucide="flag" size="15" style="color:#3a3a3a;"></i>
+                            <span class="step-text">Exploitation &amp; Post-Exploitation</span>
                         </div>
                     </div>
                 </div>
-                <div class="terminal">
-                    <div class="terminal-header">
-                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-                        <span style="margin-left: 1rem; color: #555; font-size: 0.7rem;">root@sentinel-pwnbox:~</span>
-                    </div>
-                    <div class="terminal-body">
-                        <p><span class="command">root@sentinel:~$</span> nmap -sC -sV 10.10.11.23</p>
-                        <p style="color: #555;">Starting Nmap 7.92...</p>
-                        <p>Host is up (0.043s latency).</p>
-                        <p>PORT   STATE SERVICE VERSION</p>
-                        <p>22/tcp open  ssh     OpenSSH 8.2p1</p>
-                        <p>80/tcp open  http    Apache httpd 2.4.41</p>
-                        <br>
-                        <p><span class="command">root@sentinel:~$</span> python3 exploit.py -t 10.10.11.23</p>
-                        <p style="color: var(--accent);">[+] Target appears vulnerable!</p>
-                        <p style="color: var(--accent);">[+] Sending payload...</p>
-                        <p style="color: #fff; font-weight: bold;">$ whoami</p>
-                        <p>root</p>
-                        <p><span class="command" style="animation: blink 1s infinite;">_</span></p>
+
+                <div class="terminal-wrapper reveal reveal-d1">
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                            <span class="terminal-title">root@sentinel-pwnbox:~</span>
+                        </div>
+                        <div class="terminal-body">
+                            <p><span class="command">root@sentinel:~$</span> nmap -sC -sV 10.10.11.23</p>
+                            <p style="color:#333;">Starting Nmap 7.92...</p>
+                            <p>Host is up (0.043s latency).</p>
+                            <p>PORT&nbsp;&nbsp; STATE SERVICE VERSION</p>
+                            <p>22/tcp open&nbsp; ssh&nbsp;&nbsp;&nbsp;&nbsp; OpenSSH 8.2p1</p>
+                            <p>80/tcp open&nbsp; http&nbsp;&nbsp;&nbsp; Apache httpd 2.4.41</p>
+                            <br>
+                            <p><span class="command">root@sentinel:~$</span> python3 exploit.py -t 10.10.11.23</p>
+                            <p style="color:#00f2ff;">[+] Target appears vulnerable!</p>
+                            <p style="color:#00f2ff;">[+] Sending payload...</p>
+                            <p style="color:#fff;font-weight:bold;">$ whoami</p>
+                            <p>root</p>
+                            <p><span class="command" style="animation:blink 1s infinite;">_</span></p>
+                        </div>
                     </div>
                 </div>
             </section>
-        </section>
 
-        <!-- ABOUT US SECTION -->
+        </section><!-- /home -->
+
+
+        <!-- ============================================================
+             ABOUT SECTION
+             ============================================================ -->
         <section id="about" class="content-section">
             <div class="about-section">
+                <p class="section-eyebrow">Who We Are</p>
                 <h1>ABOUT SENTINEL LMS</h1>
-                
+
                 <div class="about-content">
                     <div class="about-text">
-                        <p>Sentinel LMS is the world's premier cybersecurity training platform, designed to transform aspiring security professionals into elite defenders and ethical hackers.</p>
-                        
+                        <p>Sentinel LMS is a premier cybersecurity training platform, designed to transform aspiring security professionals into elite defenders and ethical hackers.</p>
                         <p>Founded by industry veterans with decades of combined experience in offensive security, incident response, and security operations, we've created an immersive learning environment that mirrors real-world scenarios.</p>
-                        
-                        <p>Our platform goes beyond traditional video-based learning. Every course includes hands-on labs, capture-the-flag challenges, and access to our proprietary Pwnbox environmentâ€”a fully configured pentesting workstation accessible directly from your browser.</p>
+                        <p>Our platform goes beyond traditional video-based learning. Every course includes hands-on labs, capture-the-flag challenges, and access to our proprietary Pwnbox environment — a fully configured pentesting workstation accessible directly from your browser.</p>
                     </div>
-                    
                     <div class="about-stats">
                         <div class="stat-card">
-                            <div class="stat-number">50K+</div>
-                            <div class="stat-label">Active Students</div>
+                            <span class="stat-number" data-count="50" data-suffix="K+">50K+</span>
+                            <span class="stat-label">Active Students</span>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">500+</div>
-                            <div class="stat-label">Training Modules</div>
+                            <span class="stat-number" data-count="500" data-suffix="+">500+</span>
+                            <span class="stat-label">Training Modules</span>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">95%</div>
-                            <div class="stat-label">Job Placement Rate</div>
+                            <span class="stat-number" data-count="95" data-suffix="%">95%</span>
+                            <span class="stat-label">Job Placement Rate</span>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number">24/7</div>
-                            <div class="stat-label">Lab Availability</div>
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Lab Availability</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="mission-values">
-                    <h2>Our Core Values</h2>
+                    <h2>CORE VALUES</h2>
                     <div class="values-grid">
                         <div class="value-card">
                             <div class="value-icon">
-                                <i data-lucide="target" size="24" style="color: var(--accent);"></i>
+                                <i data-lucide="target" size="20" style="color:#00f2ff;"></i>
                             </div>
-                            <h3>Practical Excellence</h3>
+                            <h3>PRACTICAL EXCELLENCE</h3>
                             <p>We believe in learning by doing. Every concept is reinforced through hands-on exercises in real-world scenarios.</p>
                         </div>
                         <div class="value-card">
                             <div class="value-icon">
-                                <i data-lucide="shield" size="24" style="color: var(--accent);"></i>
+                                <i data-lucide="shield" size="20" style="color:#00f2ff;"></i>
                             </div>
-                            <h3>Ethical Security</h3>
+                            <h3>ETHICAL SECURITY</h3>
                             <p>We emphasize responsible disclosure and ethical hacking principles in all our training materials.</p>
                         </div>
                         <div class="value-card">
                             <div class="value-icon">
-                                <i data-lucide="users" size="24" style="color: var(--accent);"></i>
+                                <i data-lucide="users" size="20" style="color:#00f2ff;"></i>
                             </div>
-                            <h3>Community Driven</h3>
+                            <h3>COMMUNITY DRIVEN</h3>
                             <p>Our platform thrives on collaboration, knowledge sharing, and supporting each other's growth.</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </section><!-- /about -->
 
-        <!-- CONTACT US SECTION -->
+
+        <!-- ============================================================
+             CONTACT SECTION
+             ============================================================ -->
         <section id="contact" class="content-section">
             <div class="contact-section">
+                <p class="section-eyebrow">Reach Out</p>
                 <h1>GET IN TOUCH</h1>
                 <p>Have questions about our courses or need support? We're here to help.</p>
-                
+
                 <div class="contact-container">
                     <div class="contact-form">
-                        <h2>Send Us a Message</h2>
+                        <h2>SEND MESSAGE</h2>
                         <form id="contactForm">
                             <div class="form-group">
                                 <label for="name">Name</label>
@@ -561,85 +1872,328 @@
                                 <label for="message">Message</label>
                                 <textarea id="message" name="message" required></textarea>
                             </div>
-                            <button type="submit" class="submit-btn">SEND MESSAGE</button>
+                            <button type="submit" class="submit-btn">TRANSMIT MESSAGE</button>
                         </form>
                     </div>
 
                     <div class="contact-info">
                         <div class="info-card">
                             <div class="info-icon">
-                                <i data-lucide="mail" size="24" style="color: var(--accent);"></i>
+                                <i data-lucide="mail" size="18" style="color:#00f2ff;"></i>
                             </div>
-                            <h3>Email</h3>
+                            <h3>EMAIL</h3>
                             <p><a href="mailto:support@sentinel-lms.com">support@sentinel-lms.com</a></p>
                             <p><a href="mailto:info@sentinel-lms.com">info@sentinel-lms.com</a></p>
                         </div>
-
                         <div class="info-card">
                             <div class="info-icon">
-                                <i data-lucide="phone" size="24" style="color: var(--accent);"></i>
+                                <i data-lucide="phone" size="18" style="color:#00f2ff;"></i>
                             </div>
-                            <h3>Phone</h3>
+                            <h3>PHONE</h3>
                             <p>Support: <a href="tel:+1234567890">+1 (234) 567-890</a></p>
                             <p>Sales: <a href="tel:+1234567891">+1 (234) 567-891</a></p>
                         </div>
-
                         <div class="info-card">
                             <div class="info-icon">
-                                <i data-lucide="map-pin" size="24" style="color: var(--accent);"></i>
+                                <i data-lucide="map-pin" size="18" style="color:#00f2ff;"></i>
                             </div>
-                            <h3>Location</h3>
-                            <p>Sentinel Security HQ<br>
-                            123 Cyber Street<br>
-                            Tech Valley, CA 94025<br>
-                            United States</p>
+                            <h3>LOCATION</h3>
+                            <p>Sentinel Security HQ<br>123 Cyber Street<br>Tech Valley, CA 94025</p>
                         </div>
-
                         <div class="info-card">
                             <div class="info-icon">
-                                <i data-lucide="clock" size="24" style="color: var(--accent);"></i>
+                                <i data-lucide="clock" size="18" style="color:#00f2ff;"></i>
                             </div>
-                            <h3>Business Hours</h3>
-                            <p>Monday - Friday: 9:00 AM - 6:00 PM PST<br>
-                            Saturday: 10:00 AM - 4:00 PM PST<br>
-                            Sunday: Closed</p>
+                            <h3>HOURS</h3>
+                            <p>Mon–Fri: 9AM–6PM PST<br>Saturday: 10AM–4PM PST<br>Sunday: Closed</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </section><!-- /contact -->
 
     </main>
 
     <script>
         lucide.createIcons();
-        
-        // Card flip functionality
-        document.querySelectorAll('.card-container').forEach(container => {
-            container.addEventListener('click', function(e) {
-                // Only flip if clicking on the card itself, not on interactive elements
-                if (!e.target.closest('button') && !e.target.closest('a')) {
-                    this.classList.toggle('flipped');
+
+        /* ============================================================
+           PARTICLE NETWORK CANVAS
+           Replaces matrix canvas: connected nodes with mouse interaction
+           ============================================================ */
+        const pCanvas = document.getElementById('particle-canvas');
+        const pCtx    = pCanvas.getContext('2d');
+        const PARTICLE_COUNT      = 65;
+        const CONNECTION_DISTANCE = 145;
+        const MOUSE_REPEL_RADIUS  = 90;
+
+        let pW, pH;
+        function resizePCanvas() {
+            pW = pCanvas.width  = window.innerWidth;
+            pH = pCanvas.height = window.innerHeight;
+        }
+        resizePCanvas();
+        window.addEventListener('resize', resizePCanvas);
+
+        let pmX = -9999, pmY = -9999;
+        document.addEventListener('mousemove', e => { pmX = e.clientX; pmY = e.clientY; });
+
+        const COLORS = [
+            'rgba(0,242,255,',
+            'rgba(168,85,247,',
+            'rgba(0,255,157,'
+        ];
+        const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+            x:    Math.random() * window.innerWidth,
+            y:    Math.random() * window.innerHeight,
+            vx:   (Math.random() - 0.5) * 0.35,
+            vy:   (Math.random() - 0.5) * 0.35,
+            r:    Math.random() * 1.8 + 0.8,
+            col:  COLORS[Math.floor(Math.random() * COLORS.length)],
+            op:   Math.random() * 0.35 + 0.15,
+        }));
+
+        function drawParticles() {
+            pCtx.clearRect(0, 0, pW, pH);
+
+            /* connections */
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx   = particles[i].x - particles[j].x;
+                    const dy   = particles[i].y - particles[j].y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < CONNECTION_DISTANCE) {
+                        const a = (1 - dist / CONNECTION_DISTANCE) * 0.12;
+                        const g = pCtx.createLinearGradient(
+                            particles[i].x, particles[i].y,
+                            particles[j].x, particles[j].y
+                        );
+                        g.addColorStop(0, particles[i].col + a + ')');
+                        g.addColorStop(1, particles[j].col + a + ')');
+                        pCtx.beginPath();
+                        pCtx.moveTo(particles[i].x, particles[i].y);
+                        pCtx.lineTo(particles[j].x, particles[j].y);
+                        pCtx.strokeStyle = g;
+                        pCtx.lineWidth = 0.7;
+                        pCtx.stroke();
+                    }
                 }
+            }
+
+            /* dots */
+            for (const p of particles) {
+                const dx   = p.x - pmX;
+                const dy   = p.y - pmY;
+                const dist = Math.hypot(dx, dy);
+                if (dist < MOUSE_REPEL_RADIUS && dist > 0) {
+                    const f = (MOUSE_REPEL_RADIUS - dist) / MOUSE_REPEL_RADIUS;
+                    p.x += (dx / dist) * f * 1.8;
+                    p.y += (dy / dist) * f * 1.8;
+                }
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > pW) p.vx *= -1;
+                if (p.y < 0 || p.y > pH) p.vy *= -1;
+                p.x = Math.max(0, Math.min(pW, p.x));
+                p.y = Math.max(0, Math.min(pH, p.y));
+
+                pCtx.beginPath();
+                pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                pCtx.fillStyle = p.col + p.op + ')';
+                pCtx.fill();
+            }
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+
+
+        /* ============================================================
+           TYPEWRITER EFFECT
+           ============================================================ */
+        const phrases = [
+            'Initializing secure connection...',
+            'Loading penetration test modules...',
+            'Mapping attack surface...',
+            'Your journey starts here.',
+        ];
+        let pIdx = 0, cIdx = 0, deleting = false;
+        const twEl = document.getElementById('tw-out');
+
+        function typeWriter() {
+            const text = phrases[pIdx];
+            if (!deleting) {
+                twEl.textContent = text.slice(0, cIdx + 1);
+                cIdx++;
+                if (cIdx === text.length) {
+                    deleting = true;
+                    setTimeout(typeWriter, 2200);
+                    return;
+                }
+            } else {
+                twEl.textContent = text.slice(0, cIdx - 1);
+                cIdx--;
+                if (cIdx === 0) {
+                    deleting = false;
+                    pIdx = (pIdx + 1) % phrases.length;
+                }
+            }
+            setTimeout(typeWriter, deleting ? 38 : 62);
+        }
+        typeWriter();
+
+
+        /* ============================================================
+           CUSTOM CURSOR
+           ============================================================ */
+        const dot  = document.getElementById('cursor-dot');
+        const ring = document.getElementById('cursor-ring');
+        let mx = 0, my = 0, rx = 0, ry = 0;
+
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX;
+            my = e.clientY;
+            dot.style.left = mx + 'px';
+            dot.style.top  = my + 'px';
+            document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+            document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+        });
+
+        (function animRing() {
+            rx += (mx - rx) * 0.11;
+            ry += (my - ry) * 0.11;
+            ring.style.left = rx + 'px';
+            ring.style.top  = ry + 'px';
+            requestAnimationFrame(animRing);
+        })();
+
+        const hoverables = 'a, button, .card-container, .nav-link, .value-card, .info-card, .stat-card, .practice-step, .hiw-step';
+        document.querySelectorAll(hoverables).forEach(el => {
+            el.addEventListener('mouseenter', () => { dot.classList.add('hovered'); ring.classList.add('hovered'); });
+            el.addEventListener('mouseleave', () => { dot.classList.remove('hovered'); ring.classList.remove('hovered'); });
+        });
+
+
+        /* ============================================================
+           SCROLL PROGRESS BAR
+           ============================================================ */
+        const scrollBar = document.getElementById('scrollProgress');
+        window.addEventListener('scroll', () => {
+            const scrolled = window.scrollY;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const pct = maxScroll > 0 ? (scrolled / maxScroll) * 100 : 0;
+            scrollBar.style.width = pct + '%';
+        }, { passive: true });
+
+
+        /* ============================================================
+           COUNTER ANIMATION (fires on scroll into view)
+           ============================================================ */
+        function animateCounter(el, target, suffix, duration) {
+            const start = performance.now();
+            (function step(ts) {
+                const progress = Math.min((ts - start) / duration, 1);
+                const eased    = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target) + suffix;
+                if (progress < 1) requestAnimationFrame(step);
+            })(performance.now());
+        }
+
+
+        /* ============================================================
+           GSAP SCROLL-TRIGGERED ANIMATIONS
+           ============================================================ */
+        if (window.gsap && window.ScrollTrigger) {
+            gsap.registerPlugin(ScrollTrigger);
+
+            /* Hero left column — staggered entrance on load */
+            gsap.from('.hero-left > *', {
+                y: 35,
+                opacity: 0,
+                stagger: 0.12,
+                duration: 0.75,
+                ease: 'power3.out',
+                delay: 0.2,
+            });
+
+            /* Hero right column — scale + fade in */
+            gsap.from('.hero-right', {
+                scale: 0.88,
+                opacity: 0,
+                duration: 1.1,
+                ease: 'power3.out',
+                delay: 0.5,
+            });
+
+            /* Hero stats counter — fires once on load after delay */
+            setTimeout(() => {
+                document.querySelectorAll('.h-stat-val[data-count]').forEach(el => {
+                    animateCounter(el, parseInt(el.dataset.count), el.dataset.suffix || '', 1800);
+                });
+            }, 900);
+
+            /* How It Works steps, track cards, and practice section use the
+               .reveal / IntersectionObserver system (opacity:0 → visible class).
+               No GSAP ScrollTrigger needed — they're handled by the observer below. */
+
+            /* About stats counter — fires on scroll */
+            ScrollTrigger.create({
+                trigger: '.about-stats',
+                start: 'top 80%',
+                once: true,
+                onEnter: () => {
+                    gsap.from('.stat-card', { y: 30, opacity: 0, stagger: 0.1, duration: 0.65, ease: 'power2.out' });
+                    document.querySelectorAll('.stat-number[data-count]').forEach(el => {
+                        animateCounter(el, parseInt(el.dataset.count), el.dataset.suffix || '', 1800);
+                    });
+                },
+            });
+
+            /* Values grid */
+            ScrollTrigger.create({
+                trigger: '.values-grid',
+                start: 'top 82%',
+                once: true,
+                onEnter: () => {
+                    gsap.from('.value-card', { y: 30, opacity: 0, stagger: 0.12, duration: 0.65, ease: 'power2.out' });
+                },
+            });
+        }
+
+
+        /* ============================================================
+           SCROLL REVEAL (IntersectionObserver — fallback/legacy)
+           ============================================================ */
+        const revealObs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+
+        /* ============================================================
+           CARD FLIP
+           ============================================================ */
+        document.querySelectorAll('.card-container').forEach(c => {
+            c.addEventListener('click', function(e) {
+                if (!e.target.closest('button') && !e.target.closest('a'))
+                    this.classList.toggle('flipped');
             });
         });
-        
-        // Mouse tracking for grid glow effect
-        window.addEventListener('mousemove', (e) => {
-            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-        });
 
-        // Navigation
+
+        /* ============================================================
+           NAVIGATION (shared module)
+           ============================================================ */
         Navigation.init();
 
-        // Contact form submission
-        document.getElementById('contactForm').addEventListener('submit', (e) => {
+
+        /* ============================================================
+           CONTACT FORM
+           ============================================================ */
+        document.getElementById('contactForm').addEventListener('submit', e => {
             e.preventDefault();
-            Toast.success('Thank you for your message! We will get back to you soon.');
+            Toast.success('Message transmitted. We\'ll get back to you soon.');
             e.target.reset();
         });
     </script>
 </body>
 </html>
-

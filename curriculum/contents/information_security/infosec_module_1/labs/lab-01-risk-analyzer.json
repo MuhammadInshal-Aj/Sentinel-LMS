@@ -1,0 +1,25 @@
+{
+  "id": "infosec-m01-lab01",
+  "title": "Risk Score Calculator",
+  "lessonId": "infosec-m01-l03",
+  "tokens": 50,
+  "flag": "FLAG{sentinel-risk-9f2e}",
+  "description": "Apply the risk equation from Lesson 3. Write Python code to calculate risk scores (Risk = Likelihood × Impact) for a set of assets, then identify the highest-risk asset. Complete both tasks — the flag will print when your solution is correct.",
+  "language": "python",
+  "hint": "Risk = Likelihood × Impact — both values on a scale of 1–5. Use a for-loop to iterate the assets list, compute each score, and print in the required format. Use Python's max() with a key= argument to find the highest-risk asset.",
+  "starterCode": "# ── Risk Score Calculator ─────────────────────────────────\n# Lesson 3: Threats, Vulnerabilities, and Risk\n# Formula:  Risk = Likelihood × Impact  (each scored 1–5)\n\nassets = [\n    {\"name\": \"Customer Database\", \"likelihood\": 4, \"impact\": 5},\n    {\"name\": \"Web Server\",         \"likelihood\": 3, \"impact\": 3},\n    {\"name\": \"Internal Wiki\",       \"likelihood\": 2, \"impact\": 2},\n]\n\n# ── TODO 1 ────────────────────────────────────────────────\n# Calculate the risk score for each asset and print:\n#   \"[ASSET NAME]: Risk = [SCORE]\"\n\n\n# ── TODO 2 ────────────────────────────────────────────────\n# Find the highest-risk asset and print exactly:\n#   \"CRITICAL: [ASSET NAME] is the highest risk\"\n\n\n# ── When both TODOs produce the correct output, your flag appears:\nprint(\"FLAG{sentinel-risk-9f2e}\")\n",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Calculate risk scores",
+      "desc": "Print each asset's risk score in the format: <code>[ASSET NAME]: Risk = [SCORE]</code>",
+      "verifyKeyword": "Risk ="
+    },
+    {
+      "id": "t2",
+      "title": "Identify the critical asset",
+      "desc": "Print the highest-risk asset as: <code>CRITICAL: [ASSET NAME] is the highest risk</code>",
+      "verifyKeyword": "CRITICAL"
+    }
+  ]
+}

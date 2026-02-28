@@ -15,12 +15,19 @@
     --bg-surface-alt:   #15151c;
     --bg-input:         #0a0a10;
 
-    /* Accent System */
+    /* Accent System — Primary (Cyan) */
     --accent:           #00f2ff;
     --accent-soft:      rgba(0, 242, 255, 0.1);
     --accent-glow:      rgba(0, 242, 255, 0.4);
     --accent-hover:     rgba(0, 242, 255, 0.2);
     --accent-border:    rgba(0, 242, 255, 0.3);
+
+    /* Accent System — Secondary (Purple) */
+    --accent-2:         #a855f7;
+    --accent-2-soft:    rgba(168, 85, 247, 0.1);
+    --accent-2-glow:    rgba(168, 85, 247, 0.4);
+    --accent-2-hover:   rgba(168, 85, 247, 0.2);
+    --accent-2-border:  rgba(168, 85, 247, 0.3);
 
     /* Semantic Colors */
     --success:          #00ff9d;
@@ -80,6 +87,7 @@
     /* Typography */
     --font-primary: 'Space Grotesk', sans-serif;
     --font-mono:    'JetBrains Mono', monospace;
+    --font-display: 'Orbitron', monospace;
 }
 
 

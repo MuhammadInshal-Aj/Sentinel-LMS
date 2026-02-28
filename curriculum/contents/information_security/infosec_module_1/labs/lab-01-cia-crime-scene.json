@@ -1,0 +1,71 @@
+{
+  "id": "infosec-m01-lab01-cia",
+  "title": "Digital Crime Scene \u2014 CIA Breakdown",
+  "lessonId": "infosec-m01-l02",
+  "tokens": 75,
+  "flag": "FLAG{cia-all-violated-sentinel}",
+  "description": "A hospital has suffered a major security incident. Your job: examine the digital evidence using Bash commands, identify which pillars of the CIA Triad were violated, and decode the hidden flag.",
+  "language": "bash",
+  "hint": "The CIA Triad is Confidentiality, Integrity, and Availability. Use cat to read files, grep to search for keywords, and ls to list files. The flag is base64-encoded \u2014 run: base64 -d hidden_flag.b64",
+  "starterCode": "#!/bin/bash\n# ============================================\n# SENTINEL SECURITY LAB: CIA Crime Scene\n# Meridian General Hospital \u2014 Breach Investigation\n# ============================================\n# Available files:\n#   breach_report.txt  - Incident summary\n#   access_logs.txt    - Server access logs\n#   db_changes.log     - Database change records\n#   availability.log   - System uptime data\n#   hidden_flag.b64    - Encoded flag (find it!)\n#\n# Start your investigation. Run this script,\n# then add commands below to explore each file.\n# ============================================\necho \"=== INVESTIGATION STARTED ===\"\nls",
+  "additionalFiles": [
+    {
+      "name": "breach_report.txt",
+      "content": "=== INCIDENT REPORT #IR-2024-0047 ===\nOrganization: Meridian General Hospital\nDate: 2024-03-15 02:47:00 UTC\nSeverity: CRITICAL\nPrepared by: SOC Team Alpha\n\n--- EVENT 1: DATA BREACH ---\nUnauthorized access to patient management database.\nRecords affected: 47,823 patient files exfiltrated to external IP.\nData exposed: SSNs, medical histories, insurance details, contact info.\nConfidentiality status: COMPROMISED\n\n--- EVENT 2: DATA MANIPULATION ---\nAttacker modified 312 patient medication and lab records post-breach.\nAltered fields: medication dosages, test results, treatment plans.\nIntegrity status: COMPROMISED\n\n--- EVENT 3: SYSTEM OUTAGE ---\nRansomware payload deployed. Hospital management system offline for 8 hours.\nAffected: Emergency dept, ICU, pharmacy, lab results portal.\nAvailability status: COMPROMISED\n\nInitial vector: SQL injection via unpatched patient portal (CVE-2024-1234)\nStatus: UNDER INVESTIGATION\n"
+    },
+    {
+      "name": "access_logs.txt",
+      "content": "2024-03-15 01:12:44 UTC | IP: 185.220.101.45 | FAILED_AUTH    | user: admin\n2024-03-15 01:13:02 UTC | IP: 185.220.101.45 | FAILED_AUTH    | user: admin\n2024-03-15 01:13:19 UTC | IP: 185.220.101.45 | FAILED_AUTH    | user: sysadmin\n2024-03-15 01:14:55 UTC | IP: 185.220.101.45 | SUCCESS_AUTH   | user: dbadmin (unusual_hour=TRUE)\n2024-03-15 01:15:03 UTC | IP: 185.220.101.45 | SQL_INJECTION  | query: ' OR 1=1 -- (WAF bypass)\n2024-03-15 01:15:11 UTC | IP: 185.220.101.45 | DB_ACCESS      | table: patient_records FULL_DUMP\n2024-03-15 01:15:23 UTC | IP: 185.220.101.45 | EXFILTRATION   | bytes: 2147483648 | records: 47823\n2024-03-15 01:16:01 UTC | IP: 185.220.101.45 | PAYLOAD_DEPLOY | file: ransom.exe\n2024-03-15 01:17:44 UTC | IP: 185.220.101.45 | LOGOUT\n"
+    },
+    {
+      "name": "db_changes.log",
+      "content": "=== DATABASE CHANGE LOG ===\nPeriod: 2024-03-15 01:15:00 to 01:17:00 UTC\nAudit source: transaction_log\n\n[01:15:33] UPDATE patient_records SET medication='Warfarin 10mg'      WHERE id=10042 -- UNAUTHORIZED\n[01:15:34] UPDATE patient_records SET medication='Metoprolol 200mg'   WHERE id=10078 -- UNAUTHORIZED\n[01:15:35] UPDATE patient_records SET dosage='500mg'                  WHERE id=10103 -- UNAUTHORIZED\n[01:15:36] UPDATE lab_results    SET test_result='NEGATIVE'           WHERE id=20301 -- UNAUTHORIZED\n[01:15:37] UPDATE lab_results    SET test_result='POSITIVE'           WHERE id=20415 -- UNAUTHORIZED\n...\n[01:17:01] TOTAL UNAUTHORIZED MODIFICATIONS: 312\n[01:17:01] INTEGRITY VIOLATION -- audit trail: DISABLED by attacker\n[01:17:01] Backup hash mismatch detected -- data authenticity: UNVERIFIED\n"
+    },
+    {
+      "name": "availability.log",
+      "content": "=== SYSTEM UPTIME LOG ===\nSystem: Meridian Hospital Management System (HMS)\nMonitoring: Prometheus v2.48 + PagerDuty\n\n2024-03-15 01:17:50 UTC | STATUS: RANSOMWARE_DETECTED (heuristic trigger)\n2024-03-15 01:18:02 UTC | STATUS: SYSTEM_SHUTDOWN   (automatic failsafe)\n2024-03-15 01:18:02 UTC | DOWNTIME_START\n2024-03-15 01:18:10 UTC | ALERT: Emergency dept systems -- UNAVAILABLE\n2024-03-15 01:18:10 UTC | ALERT: ICU patient monitoring -- UNAVAILABLE\n2024-03-15 01:18:11 UTC | ALERT: Pharmacy system -- UNAVAILABLE\n2024-03-15 01:18:11 UTC | ALERT: Lab results portal -- UNAVAILABLE\n...\n2024-03-15 09:18:00 UTC | STATUS: SYSTEM_RESTORED (manual recovery complete)\n2024-03-15 09:18:00 UTC | DOWNTIME_END\n\nTOTAL DOWNTIME: 8 hours 0 minutes\nAVAILABILITY_IMPACT: CRITICAL\nEmergency ambulance diversions during outage: 14\nSLA target: 99.9% | Actual during incident: 66.3%\n"
+    },
+    {
+      "name": "hidden_flag.b64",
+      "content": "RkxBR3tjaWEtYWxsLXZpb2xhdGVkLXNlbnRpbmVsfQ==\n"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Survey the crime scene",
+      "desc": "Run <code>ls</code> to list all evidence files available in the lab environment.",
+      "verifyKeyword": "breach_report.txt"
+    },
+    {
+      "id": "t2",
+      "title": "Read the incident report",
+      "desc": "Run <code>cat breach_report.txt</code> to read the full incident summary.",
+      "verifyKeyword": "47,823"
+    },
+    {
+      "id": "t3",
+      "title": "Find the exfiltration event",
+      "desc": "Run <code>grep -i \"exfil\" access_logs.txt</code> to locate the data theft in the server logs.",
+      "verifyKeyword": "EXFILTRATION"
+    },
+    {
+      "id": "t4",
+      "title": "Confirm the integrity violation",
+      "desc": "Run <code>grep \"INTEGRITY\" db_changes.log</code> to confirm unauthorized database tampering.",
+      "verifyKeyword": "INTEGRITY VIOLATION"
+    },
+    {
+      "id": "t5",
+      "title": "Measure the system downtime",
+      "desc": "Run <code>grep \"DOWNTIME\" availability.log</code> to find the total outage duration.",
+      "verifyKeyword": "8 hours"
+    },
+    {
+      "id": "t6",
+      "title": "Decode the hidden flag",
+      "desc": "Run <code>base64 -d hidden_flag.b64</code> to decode and reveal the lab flag.",
+      "verifyKeyword": "FLAG{"
+    }
+  ]
+}

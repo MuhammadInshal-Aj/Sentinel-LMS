@@ -1,13 +1,16 @@
 {
   "id": "infosec-m01-l04",
-  "title": "Secure by Design",
+  "title": "Security Controls & Defense-in-Depth",
   "order": 4,
   "type": "theory",
   "difficulty": "beginner",
-  "estimated_time": 10,
+  "estimated_time": 20,
   "objectives": [
-    "Understand why security must be built early",
-    "Recognize insecure default design patterns"
+    "Classify security controls by purpose (preventive, detective, corrective, deterrent, compensating)",
+    "Distinguish administrative, technical, and physical control types",
+    "Explain Defense-in-Depth as a layered security strategy",
+    "Map controls to CIA Triad principles",
+    "Identify how frameworks like NIST CSF and CIS Controls guide control selection"
   ],
-  "tags": ["design", "architecture"]
+  "tags": ["controls", "defense-in-depth", "frameworks", "architecture"]
 }

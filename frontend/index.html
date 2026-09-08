@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,9 +10,9 @@
     <!-- Favicon (prevent 404 error) -->
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Shared Stylesheets (order matters: tokens â†’ structure â†’ components â†’ helpers) -->
+    <!-- Shared Stylesheets (order matters: tokens → structure → components → helpers) -->
     <link rel="stylesheet" href="styles/theme.css">
     <link rel="stylesheet" href="styles/layout.css">
     <link rel="stylesheet" href="styles/components.css">
@@ -21,6 +21,9 @@
     <!-- External Libraries -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Animation Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
     <!-- Shared Modules -->
     <script src="config.js"></script>
@@ -46,7 +49,102 @@
         /* This page uses sidebar layout = body needs flex */
         body { display: flex; }
 
-        /* === DASHBOARD: Progress Circles (SVG-based, unique to this page) === */
+        /* ── SCROLL PROGRESS BAR ─────────────────────────── */
+        #scrollProgress {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2, #a855f7));
+            z-index: 9999;
+            box-shadow: 0 0 8px rgba(0,242,255,0.5);
+            transition: width 0.08s linear;
+            pointer-events: none;
+        }
+
+        /* ── DASHBOARD HEADER ─────────────────────────────── */
+        .dashboard-header {
+            background: linear-gradient(135deg,
+                rgba(0,242,255,0.04) 0%,
+                rgba(168,85,247,0.02) 40%,
+                transparent 70%);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Purple ambient accent top-right */
+        .dashboard-header::after {
+            content: '';
+            position: absolute;
+            top: -30px; right: 80px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        /* Header welcome sub-text */
+        .dashboard-header .welcome-line {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: rgba(0,242,255,0.45);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-top: 0.2rem;
+            display: none; /* shown by JS once name is loaded */
+        }
+
+        /* ── STATS STRIP ──────────────────────────────────── */
+        .stats-strip {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid rgba(0,242,255,0.06);
+            background: rgba(0,0,0,0.3);
+        }
+        .stat-chip {
+            flex: 1;
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-right: 1px solid rgba(255,255,255,0.04);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+        .stat-chip:last-child { border-right: none; }
+        .stat-chip:hover { background: rgba(0,242,255,0.03); }
+        .stat-chip::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--chip-color, var(--accent)), transparent);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        .stat-chip:hover::after { transform: scaleX(1); }
+        .stat-chip-icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.07);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            color: var(--chip-color, var(--accent));
+        }
+        .stat-chip-data { display: flex; flex-direction: column; gap: 1px; }
+        .stat-chip-value {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            animation: countUp 0.6s ease-out backwards;
+        }
+        .stat-chip-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* ── DASHBOARD: Progress Circles ─────────────────── */
         .progress-section {
             padding: var(--space-2xl) var(--space-3xl);
             display: grid;
@@ -57,19 +155,67 @@
 
         .progress-circle-card {
             background: var(--bg-surface);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: var(--radius-xl);
             padding: var(--space-xl);
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: all var(--transition-base);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+        .progress-circle-card:nth-child(1) { animation-delay: 0.1s; }
+        .progress-circle-card:nth-child(2) { animation-delay: 0.2s; }
+        .progress-circle-card:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Colored top border per category */
+        .progress-circle-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+            opacity: 0.7;
+        }
+
+        /* Ambient corner glow */
+        .progress-circle-card::after {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--card-accent, var(--accent)) 0%, transparent 70%);
+            opacity: 0.05;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
         .progress-circle-card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transform: translateY(-5px);
+            border-color: var(--card-accent, var(--accent));
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6),
+                        0 0 30px var(--card-glow, var(--accent-glow));
+            transform: translateY(-6px);
+        }
+
+        .progress-circle-card:hover::after {
+            opacity: 0.12;
+            transform: scale(1.5);
+        }
+
+        /* Per-category color tokens */
+        .progress-circle-card.offensive {
+            --card-accent: #ff5555;
+            --card-glow: rgba(255,85,85,0.25);
+        }
+        .progress-circle-card.defensive {
+            --card-accent: #5588ff;
+            --card-glow: rgba(85,136,255,0.25);
+        }
+        .progress-circle-card.general {
+            --card-accent: #44ffaa;
+            --card-glow: rgba(68,255,170,0.25);
         }
 
         .progress-circle {
@@ -79,12 +225,34 @@
             margin-bottom: var(--space-md);
         }
 
+        /* Pulse ring behind circle */
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent, var(--accent));
+            opacity: 0.12;
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes ringPulse {
+            0%, 100% { transform: scale(1);   opacity: 0.12; }
+            50%       { transform: scale(1.05); opacity: 0.25; }
+        }
+
         .progress-circle svg { transform: rotate(-90deg); }
-        .progress-circle-bg { fill: none; stroke: #1a1a1a; stroke-width: 10; }
-        .progress-circle-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
-        .progress-circle-fill.offensive { stroke: #ff4444; }
-        .progress-circle-fill.defensive { stroke: #4444ff; }
-        .progress-circle-fill.general { stroke: #44ff44; }
+        .progress-circle-bg { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 8; }
+        .progress-circle-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 4px currentColor);
+        }
+        .progress-circle-fill.offensive { stroke: #ff5555; }
+        .progress-circle-fill.defensive { stroke: #5588ff; }
+        .progress-circle-fill.general   { stroke: #44ffaa; }
 
         .progress-text {
             position: absolute;
@@ -93,64 +261,140 @@
             text-align: center;
         }
 
-        .progress-percentage { font-size: 1.8rem; font-weight: 700; }
-        .progress-total { font-size: 0.8rem; color: #666; }
-        .progress-label { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+        .progress-percentage {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: 700;
+            animation: countUp 0.8s ease-out backwards;
+            animation-delay: 0.5s;
+        }
+        .progress-total { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); }
+        .progress-label {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
 
-        /* === DASHBOARD: Grid & Enrolled Course === */
+        /* ── DASHBOARD: Grid & Enrolled Course ─────────── */
         .dashboard-grid {
             padding: 0 var(--space-3xl) var(--space-3xl) var(--space-3xl);
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 300px;
             gap: var(--space-xl);
             max-width: 1400px;
         }
 
         .no-courses { text-align: center; padding: var(--space-3xl) var(--space-xl); }
         .no-courses-icon {
-            width: 120px; height: 120px;
+            width: 100px; height: 100px;
             margin: 0 auto var(--space-xl);
             background: var(--accent-soft);
             border-radius: var(--radius-full);
             display: flex; align-items: center; justify-content: center;
-            border: 2px dashed var(--border);
+            border: 1px dashed rgba(0,242,255,0.25);
+            animation: glowPulse 4s ease-in-out infinite;
         }
-        .no-courses h3 { font-size: 1.5rem; margin-bottom: var(--space-md); }
-        .no-courses p { color: var(--text-muted); margin-bottom: var(--space-xl); font-size: 1rem; }
+        .no-courses h3 { font-size: 1.4rem; margin-bottom: var(--space-md); font-family: var(--font-display); letter-spacing: 1px; }
+        .no-courses p { color: var(--text-muted); margin-bottom: var(--space-xl); font-size: 0.95rem; }
 
         .path-content { display: flex; gap: var(--space-xl); align-items: center; }
         .path-image {
-            width: 120px; height: 120px;
+            width: 100px; height: 100px;
             border-radius: var(--radius-lg);
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            background: linear-gradient(135deg, rgba(0,242,255,0.08), rgba(0,168,255,0.04));
+            border: 1px solid rgba(0,242,255,0.15);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
+            animation: glowPulse 4s ease-in-out infinite;
         }
         .path-info { flex: 1; }
-        .path-name { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-sm); }
-        .path-meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md); }
+        .path-name {
+            font-size: 1.4rem; font-weight: 700;
+            font-family: var(--font-display);
+            letter-spacing: 1px;
+            margin-bottom: var(--space-sm);
+        }
+        .path-meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: var(--space-md); font-family: var(--font-mono); }
         .path-actions { display: flex; gap: var(--space-md); }
 
-        /* === DASHBOARD: Streak Widget === */
+        /* ── DASHBOARD: Streak Widget ────────────────── */
         .streak-count {
-            font-size: 3rem; font-weight: 700; color: var(--accent);
+            font-size: 3.5rem; font-weight: 700; color: var(--accent);
             text-align: center; margin: var(--space-md) 0;
             display: flex; align-items: center; justify-content: center; gap: var(--space-sm);
+            font-family: var(--font-display);
         }
-        .streak-label { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md); }
-        .streak-days { display: flex; justify-content: center; gap: var(--space-sm); }
-        .day-dot { width: 10px; height: 10px; border-radius: var(--radius-full); background: #333; transition: all var(--transition-base); }
-        .day-dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+        .streak-count i { animation: flameFlicker 1.5s ease-in-out infinite; }
+        .streak-count span { animation: countUp 0.6s ease-out backwards; }
+        .streak-label {
+            text-align: center; color: var(--text-muted);
+            font-size: 0.75rem; margin-bottom: var(--space-md);
+            font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase;
+        }
+        .streak-days { display: flex; justify-content: center; gap: 6px; }
+        .day-dot {
+            width: 10px; height: 10px;
+            border-radius: var(--radius-full);
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .day-dot.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow), 0 0 16px rgba(0,242,255,0.15);
+        }
 
-        /* === MY COURSES SECTION === */
+        /* ── MY COURSES SECTION ───────────────────────── */
         .courses-container { padding: var(--space-2xl) var(--space-3xl); max-width: 1600px; }
         .courses-page-header { margin-bottom: var(--space-2xl); }
         .courses-page-title {
-            font-size: 2.5rem; font-weight: 700; color: var(--text-primary);
-            margin-bottom: var(--space-sm); display: flex; align-items: center; gap: var(--space-md);
+            font-family: var(--font-display);
+            font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            display: flex; align-items: center; gap: var(--space-md);
+            letter-spacing: 2px;
         }
         .courses-page-title i { color: var(--accent); filter: drop-shadow(0 0 10px var(--accent-glow)); }
-        .courses-page-subtitle { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+        .courses-page-subtitle { font-size: 0.9rem; color: var(--text-muted); font-weight: 400; }
+        .courses-overview {
+            margin-top: var(--space-lg);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+        .overview-pill {
+            min-width: 150px;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+        .overview-pill.upcoming {
+            border-color: rgba(255, 193, 7, 0.45);
+            background: rgba(255, 193, 7, 0.08);
+        }
+        .overview-label {
+            font-size: 0.78rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        .overview-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
 
         .course-category { margin-bottom: var(--space-2xl); }
         .category-header {
@@ -158,32 +402,103 @@
             margin-bottom: var(--space-lg); padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--border);
         }
-        .category-title { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; }
+        .category-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem; font-weight: 700; color: var(--text-primary);
+            text-transform: uppercase; letter-spacing: 3px;
+        }
 
         .course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: var(--space-xl); }
 
         /* Course Cards */
         .course-card {
-            background: var(--bg-surface); border: 1px solid var(--border);
-            border-radius: var(--radius-xl); padding: var(--space-xl);
-            transition: all 0.4s ease; cursor: pointer;
-            position: relative; overflow: hidden;
+            background: var(--bg-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
+        /* Accent top bar */
         .course-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--accent), transparent);
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), #00a8ff, transparent);
             opacity: 0; transition: opacity 0.4s ease;
         }
-        .course-card:hover { background: #111111; border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 40px rgba(0, 242, 255, 0.15); }
+        /* Holographic shimmer on hover */
+        .course-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                transparent 0%,
+                rgba(0,242,255,0.03) 30%,
+                rgba(0,168,255,0.05) 50%,
+                transparent 100%
+            );
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .course-card:hover {
+            border-color: rgba(0,242,255,0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5),
+                        0 0 30px rgba(0,242,255,0.1);
+        }
         .course-card:hover::before { opacity: 1; }
+        .course-card:hover::after  { opacity: 1; }
         .course-card.active-course { border-color: var(--accent); background: linear-gradient(135deg, rgba(0, 242, 255, 0.05) 0%, var(--bg-surface) 100%); box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
         .course-card.active-course::before { opacity: 1; background: linear-gradient(90deg, var(--accent), #00ff88); }
         .course-card.active-course::after {
-            content: 'ACTIVE'; position: absolute; top: 1.5rem; right: 1.5rem;
+            content: 'ACTIVE'; position: absolute; inset: unset; top: 1.5rem; right: 1.5rem;
             padding: 0.4rem 0.8rem; background: var(--accent); color: #000;
             font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
             border-radius: var(--radius-sm); box-shadow: var(--shadow-glow);
+            opacity: 1; transition: none;
         }
+        .course-card.upcoming-course {
+            border-color: rgba(255, 193, 7, 0.35);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.06) 0%, var(--bg-surface) 85%);
+            cursor: default;
+            box-shadow: none;
+        }
+        .course-card.upcoming-course:hover {
+            border-color: rgba(255, 193, 7, 0.5);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.09) 0%, var(--bg-surface) 85%);
+            transform: none;
+            box-shadow: none;
+        }
+        .course-card.upcoming-course::before {
+            opacity: 1;
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.95), rgba(255, 193, 7, 0.1));
+        }
+        .course-card.upcoming-course::after {
+            content: 'PENDING';
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 193, 7, 0.18);
+            color: #ffd666;
+            border: 1px solid rgba(255, 193, 7, 0.45);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Disabled state for overview modal confirm button on pending courses */
+        .modal-btn-confirm.is-upcoming {
+            background: rgba(255, 193, 7, 0.25) !important;
+            color: #a07a00 !important;
+            cursor: not-allowed !important;
+            opacity: 0.75;
+            box-shadow: none !important;
+        }
+        .modal-btn-confirm.is-upcoming:hover { transform: none !important; }
 
         .card-header-courses { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-lg); }
         .course-title-wrapper { flex: 1; }
@@ -196,9 +511,28 @@
             font-family: var(--font-mono);
         }
         .course-card.active-course .course-category-badge { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .course-card.upcoming-course .course-category-badge {
+            background: rgba(255, 193, 7, 0.12);
+            border-color: rgba(255, 193, 7, 0.4);
+            color: #ffd666;
+        }
 
         .card-content-courses { margin-bottom: var(--space-lg); }
         .course-description { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: var(--space-lg); }
+        .upcoming-note {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+            padding: 0.55rem 0.75rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 193, 7, 0.35);
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffd666;
+            font-size: 0.82rem;
+            font-family: var(--font-mono);
+        }
+        .upcoming-note i { width: 15px; height: 15px; }
         .course-meta { display: flex; gap: var(--space-lg); flex-wrap: wrap; margin-bottom: var(--space-lg); }
         .meta-item { display: flex; align-items: center; gap: var(--space-sm); font-size: 0.85rem; color: var(--text-muted); }
         .meta-item i { width: 16px; height: 16px; color: var(--accent); }
@@ -225,6 +559,13 @@
         }
         .progress-status-courses { font-size: 0.8rem; color: var(--text-muted); margin-top: var(--space-sm); font-style: italic; }
         .course-card.active-course .progress-status-courses { color: var(--accent); }
+        .course-card.upcoming-course .progress-percentage-courses,
+        .course-card.upcoming-course .progress-status-courses {
+            color: #ffd666;
+        }
+        .course-card.upcoming-course .progress-label-courses {
+            color: #f6d67a;
+        }
 
         .card-actions-courses { display: flex; gap: var(--space-md); }
         .btn-course-primary {
@@ -236,6 +577,19 @@
             box-shadow: 0 4px 15px rgba(0, 242, 255, 0.3);
         }
         .btn-course-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0, 242, 255, 0.5); }
+        .btn-course-primary:disabled,
+        .btn-course-primary.is-upcoming {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.65), rgba(194, 129, 5, 0.6));
+            color: #1e1400;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+        .btn-course-primary:disabled:hover,
+        .btn-course-primary.is-upcoming:hover {
+            transform: none;
+            box-shadow: none;
+        }
 
         .current-lesson {
             display: flex; align-items: center; gap: var(--space-sm);
@@ -253,13 +607,158 @@
         .course-card:nth-child(2) { animation-delay: 0.2s; }
         .course-card:nth-child(3) { animation-delay: 0.3s; }
 
+        /* Course title in Orbitron */
+        .course-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+            line-height: 1.3;
+            font-family: var(--font-display);
+            letter-spacing: 1px;
+        }
+
+        /* Modal Large */
+        .modal.modal-large { max-width: 700px; }
+
+        /* Dashboard card enhanced */
+        .dashboard-card {
+            border-color: rgba(255,255,255,0.05);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+        .dashboard-card:nth-child(1) { animation-delay: 0.4s; }
+        .dashboard-card:nth-child(2) { animation-delay: 0.5s; }
+        .dashboard-card:hover {
+            border-color: rgba(0,242,255,0.2);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,242,255,0.06);
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* === LABS SECTION ===*/
+        .labs-section-header {
+            padding: 2.5rem var(--space-3xl) 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .labs-section-header h2 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+        .labs-section-header p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .labs-module-group { padding: 1.5rem var(--space-3xl) 0; }
+        .labs-module-label {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent);
+            opacity: 0.55;
+            text-transform: uppercase;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(0,242,255,0.07);
+            margin-bottom: 1rem;
+        }
+        .labs-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .lab-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease-out backwards;
+        }
+        .lab-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,242,255,0.03), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .lab-card:hover { border-color: rgba(0,242,255,0.28); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.35); }
+        .lab-card:hover::before { opacity: 1; }
+        .lab-card.lab-completed { border-color: rgba(0,255,157,0.2); background: rgba(0,255,157,0.015); }
+        .lab-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .lab-card-badges { display: flex; gap: 0.4rem; align-items: center; }
+        .lc-lang {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+        .lc-lang.python { background: rgba(59,125,216,0.2); color: #6ab0f5; border: 1px solid rgba(59,125,216,0.3); }
+        .lc-lang.bash   { background: rgba(0,242,255,0.08); color: var(--accent); border: 1px solid rgba(0,242,255,0.2); }
+        .lc-diff {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+        .lc-diff.easy   { background: rgba(0,255,157,0.08); color: var(--success); border: 1px solid rgba(0,255,157,0.15); }
+        .lc-diff.medium { background: rgba(255,189,46,0.08); color: var(--warning); border: 1px solid rgba(255,189,46,0.2); }
+        .lc-diff.hard   { background: rgba(255,77,77,0.08);  color: var(--danger);  border: 1px solid rgba(255,77,77,0.15); }
+        .lc-done { font-size: 0.65rem; color: var(--success); font-family: var(--font-mono); display: none; }
+        .lab-card.lab-completed .lc-done { display: block; }
+        .lab-card-title {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #e8e8e8;
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.5px;
+        }
+        .lab-card-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1rem; }
+        .lab-card-footer { display: flex; align-items: center; justify-content: space-between; }
+        .lc-tokens { font-family: var(--font-mono); font-size: 0.72rem; color: rgba(255,189,46,0.65); }
+        .lc-launch {
+            padding: 0.35rem 0.9rem;
+            background: rgba(0,242,255,0.07);
+            border: 1px solid rgba(0,242,255,0.2);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .lc-launch:hover { background: rgba(0,242,255,0.18); box-shadow: 0 0 10px rgba(0,242,255,0.12); }
+        .lab-card.lab-completed .lc-launch { border-color: rgba(0,255,157,0.3); color: var(--success); background: rgba(0,255,157,0.05); }
+
         /* === RESPONSIVE === */
         @media (max-width: 1200px) {
             .progress-section { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .dashboard-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Scroll progress indicator -->
+    <div id="scrollProgress"></div>
 
     <div class="grid-background"></div>
     <div class="grid-cursor-follower" id="grid-glow"></div>
@@ -284,7 +783,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link">
+                <a class="nav-link" data-section="labs">
                     <i data-lucide="terminal-square" size="20"></i>
                     <span>Labs & CTFs</span>
                 </a>
@@ -338,11 +837,44 @@
         <section id="dashboard" class="content-section active">
             <div class="dashboard-header">
                 <h1>DASHBOARD</h1>
+                <div class="welcome-line" id="dashboardWelcomeLine"></div>
                 <div class="breadcrumb">Pages / Dashboard</div>
             </div>
 
+            <!-- Quick stats strip -->
+            <div class="stats-strip">
+                <div class="stat-chip" style="--chip-color:#00f2ff">
+                    <div class="stat-chip-icon"><i data-lucide="zap" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="totalTokensStat">—</span>
+                        <span class="stat-chip-label">Tokens Earned</span>
+                    </div>
+                </div>
+                <div class="stat-chip" style="--chip-color:#ff5555">
+                    <div class="stat-chip-icon"><i data-lucide="flame" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="streakStatChip">0d</span>
+                        <span class="stat-chip-label">Streak</span>
+                    </div>
+                </div>
+                <div class="stat-chip" style="--chip-color:#44ffaa">
+                    <div class="stat-chip-icon"><i data-lucide="book-open" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="lessonsCompletedStat">0</span>
+                        <span class="stat-chip-label">Lessons Done</span>
+                    </div>
+                </div>
+                <div class="stat-chip" style="--chip-color:#5588ff">
+                    <div class="stat-chip-icon"><i data-lucide="shield" size="16"></i></div>
+                    <div class="stat-chip-data">
+                        <span class="stat-chip-value" id="rankStatChip">NOVICE</span>
+                        <span class="stat-chip-label">Rank</span>
+                    </div>
+                </div>
+            </div>
+
             <section class="progress-section">
-                <div class="progress-circle-card">
+                <div class="progress-circle-card offensive">
                     <div class="progress-circle">
                         <svg width="150" height="150">
                             <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
@@ -350,38 +882,38 @@
                                     stroke-dasharray="408.407" stroke-dashoffset="408.407" id="offensiveCircle"></circle>
                         </svg>
                         <div class="progress-text">
-                            <div class="progress-percentage" id="offensivePercent" style="color: #ff4444;">0.0%</div>
-                            <div class="progress-total">0/100</div>
+                            <div class="progress-percentage" id="offensivePercent" style="color: #ff5555;">0.0%</div>
+                            <div class="progress-total" id="offensiveTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">Offensive</div>
                 </div>
 
-                <div class="progress-circle-card">
+                <div class="progress-circle-card defensive">
                     <div class="progress-circle">
                         <svg width="150" height="150">
                             <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
-                            <circle class="progress-circle-fill defensive" cx="75" cy="75" r="65" 
+                            <circle class="progress-circle-fill defensive" cx="75" cy="75" r="65"
                                     stroke-dasharray="408.407" stroke-dashoffset="408.407" id="defensiveCircle"></circle>
                         </svg>
                         <div class="progress-text">
-                            <div class="progress-percentage" id="defensivePercent" style="color: #4444ff;">0.0%</div>
-                            <div class="progress-total">0/100</div>
+                            <div class="progress-percentage" id="defensivePercent" style="color: #5588ff;">0.0%</div>
+                            <div class="progress-total" id="defensiveTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">Defensive</div>
                 </div>
 
-                <div class="progress-circle-card">
+                <div class="progress-circle-card general">
                     <div class="progress-circle">
                         <svg width="150" height="150">
                             <circle class="progress-circle-bg" cx="75" cy="75" r="65"></circle>
-                            <circle class="progress-circle-fill general" cx="75" cy="75" r="65" 
+                            <circle class="progress-circle-fill general" cx="75" cy="75" r="65"
                                     stroke-dasharray="408.407" stroke-dashoffset="408.407" id="generalCircle"></circle>
                         </svg>
                         <div class="progress-text">
-                            <div class="progress-percentage" id="generalPercent" style="color: #44ff44;">0.0%</div>
-                            <div class="progress-total">0/100</div>
+                            <div class="progress-percentage" id="generalPercent" style="color: #44ffaa;">0.0%</div>
+                            <div class="progress-total" id="generalTotal">0/0</div>
                         </div>
                     </div>
                     <div class="progress-label">General</div>
@@ -410,7 +942,7 @@
                         </div>
                         <div class="path-info">
                             <div class="path-name" id="courseName">Penetration Tester</div>
-                            <div class="path-meta">Current Path Ã¢â‚¬Â¢ <span id="courseProgress">0%</span> Progress</div>
+                            <div class="path-meta">Current Path â€¢ <span id="courseProgress">0%</span> Progress</div>
                             <div class="path-actions">
                                 <button class="btn-continue" onclick="simulateProgress()">Continue Learning</button>
                                 <button class="btn-secondary">View Details</button>
@@ -552,7 +1084,7 @@
                         <div class="setting-row">
                             <div class="setting-info">
                                 <h4>Current Session</h4>
-                                <p id="sessionInfo">Chrome on Windows Ã¢â‚¬Â¢ Last active: Just now</p>
+                                <p id="sessionInfo">Chrome on Windows â€¢ Last active: Just now</p>
                             </div>
                             <button class="btn-secondary" disabled>Current</button>
                         </div>
@@ -686,6 +1218,20 @@
                         My Courses
                     </h1>
                     <p class="courses-page-subtitle">Track your learning journey and continue where you left off</p>
+                    <div class="courses-overview" id="coursesOverview">
+                        <div class="overview-pill">
+                            <span class="overview-label">Active</span>
+                            <span class="overview-value" id="activeCoursesCount">0</span>
+                        </div>
+                        <div class="overview-pill">
+                            <span class="overview-label">Available</span>
+                            <span class="overview-value" id="availableCoursesCount">0</span>
+                        </div>
+                        <div class="overview-pill upcoming">
+                            <span class="overview-label">Upcoming</span>
+                            <span class="overview-value" id="upcomingCoursesCount">0</span>
+                        </div>
+                    </div>
                 </header>
 
                 <!-- Fundamentals Category -->
@@ -709,6 +1255,17 @@
                         <!-- Intermediate courses will be rendered here -->
                     </div>
                 </section>
+            </div>
+        </section>
+
+        <!-- LABS & CTF SECTION -->
+        <section id="labs" class="content-section">
+            <div class="labs-section-header">
+                <h2>LABS & CTFs</h2>
+                <p>Hands-on security labs tied to your coursework. Complete all tasks, decode the flag, and earn tokens.</p>
+            </div>
+            <div id="labsSectionContent">
+                <!-- Module groups rendered by JS -->
             </div>
         </section>
 
@@ -744,6 +1301,25 @@
             <div class="modal-actions">
                 <button type="button" class="modal-btn modal-btn-cancel" onclick="closeCourseActionModal(); return false;">Cancel</button>
                 <button type="button" class="modal-btn modal-btn-confirm" onclick="confirmCourseAction(); return false;">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COURSE OVERVIEW MODAL -->
+    <div class="modal-overlay" id="courseOverviewModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i data-lucide="book-open" size="24" style="color: var(--accent);"></i>
+                </div>
+                <h2 id="overviewCourseTitle">Course Overview</h2>
+            </div>
+            <div id="overviewContent" style="max-height: 60vh; overflow-y: auto; padding: var(--space-lg) var(--space-xl);">
+                <!-- Content will be populated dynamically -->
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeCourseOverviewModal(); return false;">Close</button>
+                <button type="button" class="modal-btn modal-btn-confirm" onclick="proceedFromOverview(); return false;">Enroll Now</button>
             </div>
         </div>
     </div>
@@ -889,31 +1465,90 @@
         }
     }
 
-    function updateDashboard() {
-        const noCoursesContent = document.getElementById('noCoursesContent');
-        const courseContent = document.getElementById('courseContent');
-        
-        if (userData.enrolledCourse) {
-            noCoursesContent.style.display = 'none';
-            courseContent.style.display = 'flex';
-            document.getElementById('courseName').textContent = userData.enrolledCourse;
-            document.getElementById('courseProgress').textContent = userData.progress[userData.courseType] + '%';
-        } else {
-            noCoursesContent.style.display = 'block';
-            courseContent.style.display = 'none';
-        }
-        setTimeout(animateProgressCircles, 300);
+    async function updateDashboard() {
         updateStreakDisplay();
+
+        const noCoursesContent = document.getElementById('noCoursesContent');
+        const courseContent    = document.getElementById('courseContent');
+
+        try {
+            const data     = await Api.getUserCourses();
+            const enrolled = data.myCourses || [];
+
+            if (enrolled.length > 0) {
+                const primary = enrolled[0];
+                const pct     = primary.overall_progress_percentage || 0;
+
+                // Show the enrolled course card
+                noCoursesContent.style.display = 'none';
+                courseContent.style.display    = 'flex';
+                document.getElementById('courseName').textContent     = primary.title;
+                document.getElementById('courseProgress').textContent = pct.toFixed(1) + '%';
+
+                // Wire "Continue Learning" to the actual enrolled course page
+                const continueBtn = courseContent.querySelector('.btn-continue');
+                if (continueBtn) {
+                    const page = window.COURSE_PAGES?.[primary.slug] || 'infoSec.html';
+                    const slug = window.COURSE_SLUG_MAP?.[primary.slug] || primary.slug;
+                    continueBtn.onclick = () => {
+                        window.location.href = `${page}?course=${encodeURIComponent(slug)}`;
+                    };
+                }
+
+                // Map each enrolled course to its progress circle
+                enrolled.forEach(course => {
+                    const type = COURSE_CIRCLE_MAP[course.slug]
+                              || COURSE_CIRCLE_MAP[course.id]
+                              || 'general';
+                    userData.progress[type] = course.overall_progress_percentage || 0;
+                    if (!userData.courseTotals) userData.courseTotals = {};
+                    userData.courseTotals[type] =
+                        `${course.lessons_completed || 0}/${course.total_lessons || 0}`;
+                });
+
+            } else {
+                // API returned no enrollments — fall back to localStorage if present
+                if (userData.enrolledCourse) {
+                    noCoursesContent.style.display = 'none';
+                    courseContent.style.display    = 'flex';
+                    document.getElementById('courseName').textContent     = userData.enrolledCourse;
+                    document.getElementById('courseProgress').textContent =
+                        (userData.progress[userData.courseType] || 0) + '%';
+                } else {
+                    noCoursesContent.style.display = 'block';
+                    courseContent.style.display    = 'none';
+                }
+            }
+        } catch (err) {
+            console.warn('Dashboard: API unavailable, using local data:', err.message);
+            // Fallback to localStorage only
+            if (userData.enrolledCourse) {
+                noCoursesContent.style.display = 'none';
+                courseContent.style.display    = 'flex';
+                document.getElementById('courseName').textContent     = userData.enrolledCourse;
+                document.getElementById('courseProgress').textContent =
+                    (userData.progress[userData.courseType] || 0) + '%';
+            } else {
+                noCoursesContent.style.display = 'block';
+                courseContent.style.display    = 'none';
+            }
+        }
+
+        setTimeout(animateProgressCircles, 300);
     }
 
     function animateProgressCircles() {
         const circumference = 2 * Math.PI * 65;
         ['offensive', 'defensive', 'general'].forEach(type => {
-            const circle = document.getElementById(`${type}Circle`);
-            const percent = document.getElementById(`${type}Percent`);
-            const progress = userData.progress[type];
+            const circle   = document.getElementById(`${type}Circle`);
+            const percent  = document.getElementById(`${type}Percent`);
+            const totalEl  = document.getElementById(`${type}Total`);
+            const progress = userData.progress[type] || 0;
             circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
             percent.textContent = progress.toFixed(1) + '%';
+            if (totalEl && userData.courseTotals?.[type]) {
+                totalEl.textContent = userData.courseTotals[type];
+            }
         });
     }
 
@@ -1156,6 +1791,58 @@
         localStorage.setItem('sentinelUserData', JSON.stringify(userData));
     }
 
+    // ── LABS SECTION ──────────────────────────────────
+    const INDEX_LABS = [
+        { id: 'infosec-m01-lab01-cia', title: 'Digital Crime Scene \u2014 CIA Breakdown',         desc: 'Investigate a hospital security breach. Identify which CIA Triad pillars were violated using shell commands.',                     module: 'Module 1 \u00b7 Security Mindset',         order: 1, lang: 'bash',   diff: 'easy',   tokens: 75 },
+        { id: 'infosec-m01-lab01',     title: 'Risk Score Calculator',                             desc: 'Apply the Risk = Likelihood \u00d7 Impact formula to score hospital assets and identify the most critical one.',                  module: 'Module 1 \u00b7 Security Mindset',         order: 1, lang: 'python', diff: 'easy',   tokens: 50 },
+        { id: 'infosec-m01-lab02-tvr', title: 'Threat / Vulnerability / Risk Analysis',            desc: 'Analyze CISA threat intelligence and CVE data to identify which asset faces the highest risk score.',                            module: 'Module 1 \u00b7 Security Mindset',         order: 1, lang: 'bash',   diff: 'medium', tokens: 75 },
+        { id: 'infosec-m02-lab01',     title: 'Password Policy Audit \u2014 NIST SP 800-63B',      desc: 'Audit hospital staff passwords against NIST standards. Find breached credentials and calculate the exposure rate.',               module: 'Module 2 \u00b7 Risk Management',           order: 2, lang: 'python', diff: 'easy',   tokens: 75 },
+        { id: 'infosec-m03-lab01',     title: 'Firewall Rule Audit',                               desc: 'Identify misconfigured firewall rules that expose admin ports to unrestricted internet access.',                                  module: 'Module 3 \u00b7 Defensive Architecture',   order: 3, lang: 'bash',   diff: 'medium', tokens: 75 },
+    ];
+
+    function renderLabsSection() {
+        const container = document.getElementById('labsSectionContent');
+        if (!container) return;
+
+        const completedSet = new Set(JSON.parse(localStorage.getItem('sentinel_completed_labs') || '[]'));
+
+        // Group by module
+        const groups = {};
+        INDEX_LABS.forEach(lab => {
+            if (!groups[lab.module]) groups[lab.module] = { order: lab.order, labs: [] };
+            groups[lab.module].labs.push(lab);
+        });
+
+        let html = '';
+        Object.entries(groups).sort((a, b) => a[1].order - b[1].order).forEach(([mod, { labs }]) => {
+            html += `<div class="labs-module-group">
+                <div class="labs-module-label">${mod}</div>
+                <div class="labs-cards-grid">`;
+            labs.forEach((lab, i) => {
+                const done = completedSet.has(lab.id);
+                html += `
+                <div class="lab-card ${done ? 'lab-completed' : ''}" style="animation-delay:${0.05 + i * 0.07}s" onclick="window.location.href='labs.html?id=${lab.id}'"  role="button" tabindex="0">
+                    <div class="lab-card-top">
+                        <div class="lab-card-badges">
+                            <span class="lc-lang ${lab.lang}">${lab.lang}</span>
+                            <span class="lc-diff ${lab.diff}">${lab.diff}</span>
+                        </div>
+                        <span class="lc-done">\u2713 Done</span>
+                    </div>
+                    <div class="lab-card-title">${lab.title}</div>
+                    <div class="lab-card-desc">${lab.desc}</div>
+                    <div class="lab-card-footer">
+                        <span class="lc-tokens">\u26a1 ${lab.tokens} tokens</span>
+                        <a class="lc-launch" href="labs.html?id=${lab.id}">${done ? 'Revisit \u2192' : 'Launch Lab \u2192'}</a>
+                    </div>
+                </div>`;
+            });
+            html += `</div></div>`;
+        });
+        container.innerHTML = html;
+        lucide.createIcons();
+    }
+
     // 7. INITIALIZE PAGE
     document.addEventListener('DOMContentLoaded', () => {
         console.log('DOMContentLoaded fired');
@@ -1172,6 +1859,7 @@
         // Use a dynamic reference to initializeMyCoursesPage (loaded from my-courses.js)
         Navigation.onSectionActivate['my-courses'] = () => window.initializeMyCoursesPage?.();
         Navigation.onSectionActivate['settings'] = loadAccountSettingsData;
+        Navigation.onSectionActivate['labs'] = renderLabsSection;
         Navigation.init();
         Navigation.initProfilePopup();
         Navigation.initSettingsTabs();
@@ -1232,7 +1920,182 @@
     });
 
     // === MY COURSES FUNCTIONALITY ===
-    
+
+    // Maps course slug → which progress circle it contributes to.
+    // 'general'   = foundational/broad courses (InfoSec, Networking basics)
+    // 'defensive' = specialized defensive security modules only
+    // 'offensive' = ethical hacking / red team focused courses
+    const COURSE_CIRCLE_MAP = {
+        'information-security': 'general',   // foundational — covers principles, risk, and architecture
+        'infosec':              'general',
+        'computer-networking':  'general',
+        'ethical-hacking':      'offensive',
+    };
+
+    // Course slug → dedicated page mapping
+    // Add entries here when a course gets its own page
+    window.COURSE_PAGES = {
+        'information-security': 'infoSec.html',
+        'infosec': 'infoSec.html'
+    };
+
+    // Canonical slug mapping (frontend display ID → backend DB slug)
+    window.COURSE_SLUG_MAP = {
+        'information-security': 'information-security',
+        'infosec': 'information-security',
+        'computer-networking': 'computer-networking',
+        'ethical-hacking': 'ethical-hacking'
+    };
+
+    /**
+     * Show course overview modal on card click
+     */
+    function showCourseOverview(courseId) {
+        if (!window.coursesData || !window.coursesData.myCourses) {
+            console.error('coursesData not initialized');
+            return;
+        }
+
+        const course = window.coursesData.myCourses.find(c => c.id === courseId);
+        if (!course) {
+            console.error('Course not found:', courseId);
+            return;
+        }
+
+        const modal = document.getElementById('courseOverviewModal');
+        const title = document.getElementById('overviewCourseTitle');
+        const content = document.getElementById('overviewContent');
+
+        title.textContent = course.title;
+
+        // Build overview content with better formatting
+        const isUpcoming = UPCOMING_COURSE_IDS && UPCOMING_COURSE_IDS.has(courseId);
+        
+        content.innerHTML = `
+            <div style="line-height: 1.8;">
+                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--space-md); color: var(--accent);">About This Course</h3>
+                <p style="margin-bottom: var(--space-lg); color: var(--text-muted); font-size: 0.95rem;">${course.description}</p>
+
+                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--space-md); margin-top: var(--space-xl); color: var(--accent);">Course Details</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-lg);">
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Duration</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">${course.meta.estimatedDuration}</div>
+                    </div>
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Level</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); text-transform: capitalize;">${course.category}</div>
+                    </div>
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Modules</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">${course.meta.modulesCount}</div>
+                    </div>
+                    <div style="padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Lessons</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">${course.meta.lessonsCount}</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--space-md); margin-top: var(--space-xl); color: var(--accent);">What You'll Learn</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Master core concepts and foundational knowledge
+                    </li>
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Gain hands-on experience through practical exercises
+                    </li>
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Develop problem-solving skills in real-world scenarios
+                    </li>
+                    <li style="padding: 0.5rem 0; padding-left: 1.5rem; color: var(--text-muted); position: relative;">
+                        <span style="position: absolute; left: 0; color: var(--accent);">▸</span> Complete assessments and earn course certification
+                    </li>
+                </ul>
+
+                ${isUpcoming ? `
+                    <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.35); border-radius: var(--radius-lg); color: #ffd666;">
+                        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+                            <i data-lucide="clock" style="width: 18px; height: 18px;"></i>
+                            <span style="font-weight: 600;">Pending</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9rem;">This course is currently pending development and is not yet available for enrollment. It will be released soon — check back later!</p>
+                    </div>
+                ` : `
+                    <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.25); border-radius: var(--radius-lg); color: var(--accent);">
+                        <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+                            <i data-lucide="${course.progress.status === 'not-started' ? 'check-circle' : 'book-open'}" style="width: 18px; height: 18px;"></i>
+                            <span style="font-weight: 600;">${course.progress.status === 'not-started' ? 'Ready to Start' : 'In Progress'}</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.9rem;">${course.progress.status === 'not-started'
+                            ? "This course is available for enrollment. Click 'Enroll Now' to get started."
+                            : "You're already enrolled in this course. Click 'Continue' to pick up where you left off."
+                        }</p>
+                    </div>
+                `}
+            </div>
+        `;
+
+        // Update the action button based on course availability and enrollment status
+        const isEnrolled = course.progress.status !== 'not-started';
+        const proceedBtn = document.querySelector('#courseOverviewModal .modal-btn-confirm');
+        if (proceedBtn) {
+            if (isUpcoming) {
+                proceedBtn.textContent = 'Available Soon';
+                proceedBtn.disabled = true;
+                proceedBtn.classList.add('is-upcoming');
+            } else if (isEnrolled) {
+                proceedBtn.textContent = 'Continue';
+                proceedBtn.disabled = false;
+                proceedBtn.classList.remove('is-upcoming');
+            } else {
+                proceedBtn.textContent = 'Enroll Now';
+                proceedBtn.disabled = false;
+                proceedBtn.classList.remove('is-upcoming');
+            }
+        }
+
+        lucide.createIcons();
+        modal.classList.add('active');
+    }
+
+    function closeCourseOverviewModal() {
+        document.getElementById('courseOverviewModal').classList.remove('active');
+    }
+
+    function proceedFromOverview() {
+        // This function will be called when user clicks "Enroll Now" from the overview modal
+        const courseTitle = document.getElementById('overviewCourseTitle').textContent;
+
+        if (!window.coursesData || !window.coursesData.myCourses) {
+            console.error('coursesData not initialized');
+            return;
+        }
+
+        const course = window.coursesData.myCourses.find(c => c.title === courseTitle);
+        if (!course) {
+            console.error('Could not find course from title:', courseTitle);
+            return;
+        }
+
+        // Do nothing for pending/upcoming courses — button should be disabled anyway
+        if (UPCOMING_COURSE_IDS.has(course.id)) {
+            return;
+        }
+
+        closeCourseOverviewModal();
+        handleCourseAction(course.id, course.progress.status);
+    }
+
+    // Course rollout controls for My Courses cards
+    // Add a course ID here when it is not yet developed/available
+    const UPCOMING_COURSE_IDS = new Set(['computer-networking', 'ethical-hacking']);
+    const COURSE_CARD_PRIORITY = {
+        'information-security': 0,
+        'infosec': 0,
+        'computer-networking': 10,
+        'ethical-hacking': 20
+    };
+
     // Course Data Structure (MUST be global for my-courses.js)
     window.coursesData = {
         "myCourses": [
@@ -1240,7 +2103,7 @@
                 "id": "computer-networking",
                 "title": "Computer Networking",
                 "category": "fundamentals",
-                "description": "Learn core networking concepts essential for cybersecurity.",
+                "description": "Learn core networking concepts essential for cybersecurity. Master TCP/IP protocols, routing, switching, DNS, and network security architecture. Build a solid foundation in networking to understand how systems communicate and how to protect them.",
                 "progress": {
                     "percentage": 0,
                     "status": "not-started",
@@ -1256,7 +2119,7 @@
                 "id": "information-security",
                 "title": "Information Security",
                 "category": "fundamentals",
-                "description": "Understand security principles, risk models, and defensive thinking.",
+                "description": "Understand security principles, risk models, and defensive thinking. Explore the CIA triad, threat modeling, vulnerability assessment, and security frameworks. Develop a cybersecurity mindset and learn how to design systems with security at their core.",
                 "progress": {
                     "percentage": 0,
                     "status": "not-started",
@@ -1272,11 +2135,11 @@
                 "id": "ethical-hacking",
                 "title": "Ethical Hacking",
                 "category": "intermediate",
-                "description": "Practice offensive security techniques with hands-on labs.",
+                "description": "Practice offensive security techniques with hands-on labs. Learn penetration testing, vulnerability exploitation, and ethical hacking methodologies. Develop practical skills in identifying and exploiting security weaknesses in a controlled environment.",
                 "progress": {
-                    "percentage": 35,
-                    "status": "in-progress",
-                    "currentLesson": "SQL Injection Basics"
+                    "percentage": 0,
+                    "status": "not-started",
+                    "currentLesson": null
                 },
                 "meta": {
                     "estimatedDuration": "8 weeks",
@@ -1291,72 +2154,97 @@
      * Render a single course card
      */
     function renderCourseCard(course) {
-        const isActive = course.progress.status === 'in-progress';
-        const progressText = course.progress.percentage === 0 
-            ? 'Not started' 
-            : `${course.progress.percentage}% completed`;
-        const buttonText = course.progress.status === 'not-started' 
-            ? 'Start Course' 
-            : 'Resume Course';
-        const buttonIcon = course.progress.status === 'not-started' 
-            ? 'play-circle' 
-            : 'arrow-right';
+        const isUpcoming = UPCOMING_COURSE_IDS.has(course.id);
+        const isActive = course.progress.status === 'in-progress' || course.progress.status === 'completed';
 
-        return `
-            <article class="course-card ${isActive ? 'active-course' : ''}" data-course-id="${course.id}">
+        // ── PENDING COURSE CARD ──────────────────────────────────────────────
+        if (isUpcoming) {
+            return `
+            <article class="course-card upcoming-course" data-course-id="${course.id}" onclick="showCourseOverview('${course.id}')">
                 <div class="card-header-courses">
                     <div class="course-title-wrapper">
                         <h3 class="course-title">${course.title}</h3>
                         <span class="course-category-badge">${course.category}</span>
                     </div>
                 </div>
-
                 <div class="card-content-courses">
                     <p class="course-description">${course.description}</p>
-
-                    ${course.progress.currentLesson ? `
-                        <div class="current-lesson">
-                            <i data-lucide="play-circle"></i>
-                            <span class="current-lesson-text">
-                                Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
-                            </span>
-                        </div>
-                    ` : ''}
-
-                    <div class="course-meta">
-                        <div class="meta-item">
-                            <i data-lucide="clock"></i>
-                            <span>${course.meta.estimatedDuration}</span>
-                        </div>
-                        <div class="meta-item">
-                            <i data-lucide="folder"></i>
-                            <span>${course.meta.modulesCount} modules</span>
-                        </div>
-                        <div class="meta-item">
-                            <i data-lucide="book-open"></i>
-                            <span>${course.meta.lessonsCount} lessons</span>
-                        </div>
-                    </div>
-
-                    <div class="progress-section-courses">
-                        <div class="progress-header-courses">
-                            <span class="progress-label-courses">Progress</span>
-                            <span class="progress-percentage-courses">${course.progress.percentage}%</span>
-                        </div>
-                        <div class="progress-bar-container-courses">
-                            <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
-                        </div>
-                        <p class="progress-status-courses">${progressText}</p>
+                    <div class="upcoming-note">
+                        <i data-lucide="clock"></i>
+                        This course is currently pending and not yet available for enrollment.
                     </div>
                 </div>
-
                 <div class="card-actions-courses">
-                    <button class="btn-course-primary" onclick="handleCourseAction('${course.id}', '${course.progress.status}')">
-                        <i data-lucide="${buttonIcon}"></i>
-                        ${buttonText}
+                    <button class="btn-course-primary is-upcoming" disabled aria-disabled="true">
+                        <i data-lucide="lock"></i>
+                        Available Soon
                     </button>
                 </div>
             </article>
+            `;
+        }
+
+        // ── ACTIVE / AVAILABLE COURSE CARD ───────────────────────────────────
+        const progressText = course.progress.percentage === 0
+            ? 'Not started'
+            : `${course.progress.percentage}% completed`;
+        const buttonText = course.progress.status === 'not-started'
+            ? 'Start Course'
+            : 'Continue Course';
+        const buttonIcon = course.progress.status === 'not-started'
+            ? 'play-circle'
+            : 'arrow-right';
+
+        return `
+        <article class="course-card${isActive ? ' active-course' : ''}" data-course-id="${course.id}" onclick="showCourseOverview('${course.id}')">
+            <div class="card-header-courses">
+                <div class="course-title-wrapper">
+                    <h3 class="course-title">${course.title}</h3>
+                    <span class="course-category-badge">${course.category}</span>
+                </div>
+            </div>
+            <div class="card-content-courses">
+                <p class="course-description">${course.description}</p>
+                ${course.progress.currentLesson ? `
+                    <div class="current-lesson">
+                        <i data-lucide="play-circle"></i>
+                        <span class="current-lesson-text">
+                            Current: <span class="current-lesson-name">${course.progress.currentLesson}</span>
+                        </span>
+                    </div>
+                ` : ''}
+                <div class="course-meta">
+                    <div class="meta-item">
+                        <i data-lucide="clock"></i>
+                        <span>${course.meta.estimatedDuration}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i data-lucide="folder"></i>
+                        <span>${course.meta.modulesCount} modules</span>
+                    </div>
+                    <div class="meta-item">
+                        <i data-lucide="book-open"></i>
+                        <span>${course.meta.lessonsCount} lessons</span>
+                    </div>
+                </div>
+                <div class="progress-section-courses">
+                    <div class="progress-header-courses">
+                        <span class="progress-label-courses">Progress</span>
+                        <span class="progress-percentage-courses">${course.progress.percentage}%</span>
+                    </div>
+                    <div class="progress-bar-container-courses">
+                        <div class="progress-bar-fill-courses" style="width: ${course.progress.percentage}%"></div>
+                    </div>
+                    <p class="progress-status-courses">${progressText}</p>
+                </div>
+            </div>
+            <div class="card-actions-courses">
+                <button class="btn-course-primary" onclick="event.stopPropagation(); handleCourseAction('${course.id}', '${course.progress.status}')">
+                    <i data-lucide="${buttonIcon}"></i>
+                    ${buttonText}
+                </button>
+            </div>
+        </article>
         `;
     }
 
@@ -1366,7 +2254,14 @@
     function renderCoursesByCategory(courses, category) {
         console.log(`renderCoursesByCategory called with category: ${category}, courses:`, courses);
         
-        const filteredCourses = courses.filter(course => course.category === category);
+        const filteredCourses = courses
+            .filter(course => course.category === category)
+            .sort((a, b) => {
+                const priorityA = COURSE_CARD_PRIORITY[a.id] ?? 999;
+                const priorityB = COURSE_CARD_PRIORITY[b.id] ?? 999;
+                if (priorityA !== priorityB) return priorityA - priorityB;
+                return (a.title || '').localeCompare(b.title || '');
+            });
         console.log(`Filtered courses for ${category}:`, filteredCourses);
         
         const gridElement = document.getElementById(`${category}-grid`);
@@ -1404,8 +2299,7 @@
 
     function handleCourseAction(courseId, status) {
         console.log('handleCourseAction called with:', { courseId, status });
-        console.log('window.coursesData available:', !!window.coursesData);
-        
+
         if (!window.coursesData || !window.coursesData.myCourses) {
             console.error('coursesData not initialized');
             alert('Error: Course data not loaded. Please refresh the page.');
@@ -1419,11 +2313,20 @@
             return;
         }
 
-        // Store the action details
-        currentCourseAction = { courseId, status };
-        console.log('currentCourseAction set to:', currentCourseAction);
+        // Check if this course has a dedicated page
+        const dedicatedPage = window.COURSE_PAGES?.[courseId];
+        if (dedicatedPage) {
+            // Resolve to backend slug for the query param
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            const directUrl = `${dedicatedPage}?course=${encodeURIComponent(backendSlug)}`;
+            console.log('Navigating directly to course page:', directUrl);
+            window.location.href = directUrl;
+            return;
+        }
 
-        // Update modal content based on status
+        // No dedicated page — show confirmation modal
+        currentCourseAction = { courseId, status };
+
         const modal = document.getElementById('courseActionModal');
         const title = document.getElementById('courseActionTitle');
         const message = document.getElementById('courseActionMessage');
@@ -1439,12 +2342,8 @@
             icon.setAttribute('data-lucide', 'play-circle');
         }
 
-        // Re-render the icon
         lucide.createIcons();
-
-        // Show modal
         modal.classList.add('active');
-        console.log('Modal shown');
     }
 
     function closeCourseActionModal() {
@@ -1454,54 +2353,40 @@
     }
 
     function confirmCourseAction() {
-        console.log('confirmCourseAction called');
-        console.log('currentCourseAction:', currentCourseAction);
-        
         if (!currentCourseAction) {
-            console.error('currentCourseAction is null or undefined');
             alert('Error: No course selected. Please try again.');
             return;
         }
-        
-        try {
-            const courseId = currentCourseAction.courseId;
-            console.log('Course ID:', courseId);
-            
-            if (!courseId) {
-                console.error('courseId is empty');
-                alert('Error: Course ID is missing');
-                return;
-            }
-            
-            closeCourseActionModal();
-            
-            // Build URL and navigate
-            const url = `infoSec.html?course=${encodeURIComponent(courseId)}`;
-            console.log('Navigating to URL:', url);
-            
-            // Use multiple methods to ensure navigation works
-            setTimeout(() => {
-                window.location.href = url;
-                // Fallback
-                window.location = url;
-            }, 100);
-            
-        } catch (error) {
-            console.error('Error in confirmCourseAction:', error);
-            console.error('Error stack:', error.stack);
-            alert('Error navigating to course: ' + error.message);
+
+        const courseId = currentCourseAction.courseId;
+        if (!courseId) {
+            alert('Error: Course ID is missing');
+            return;
         }
-    } 
+
+        closeCourseActionModal();
+
+        // Check if this course has a dedicated page
+        const dedicatedPage = window.COURSE_PAGES?.[courseId];
+        if (dedicatedPage) {
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            window.location.href = `${dedicatedPage}?course=${encodeURIComponent(backendSlug)}`;
+        } else {
+            // Generic fallback — navigate to infoSec.html (placeholder)
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            window.location.href = `infoSec.html?course=${encodeURIComponent(backendSlug)}`;
+        }
+    }
 
     function simulateProgress() {
         // Get the first enrolled course or use default
         const enrolledCourse = window.coursesData && window.coursesData.myCourses && window.coursesData.myCourses[0];
         if (enrolledCourse) {
-            console.log(`Continuing to course: ${enrolledCourse.id}`);
-            window.location.href = `infoSec.html?course=${enrolledCourse.id}`;
+            const courseId = enrolledCourse.id;
+            const page = window.COURSE_PAGES?.[courseId] || 'infoSec.html';
+            const backendSlug = window.COURSE_SLUG_MAP?.[courseId] || courseId;
+            window.location.href = `${page}?course=${encodeURIComponent(backendSlug)}`;
         } else {
-            // Fallback to info-security course
-            console.log('No enrolled course, using default');
             window.location.href = 'infoSec.html?course=information-security';
         }
     }
@@ -1539,6 +2424,79 @@
         console.log('handleCourseAction:', typeof handleCourseAction);
         console.log('=========================');
     };
+
+    /* ================================================================
+       SCROLL PROGRESS BAR
+       ================================================================ */
+    (function() {
+        const bar = document.getElementById('scrollProgress');
+        if (!bar) return;
+        const mc = document.querySelector('.main-content');
+        const target = mc || window;
+        function updateBar() {
+            const el = mc || document.documentElement;
+            const scrolled = mc ? mc.scrollTop : window.scrollY;
+            const maxScroll = el.scrollHeight - el.clientHeight;
+            bar.style.width = maxScroll > 0 ? (scrolled / maxScroll * 100) + '%' : '0%';
+        }
+        (mc || window).addEventListener('scroll', updateBar, { passive: true });
+    })();
+
+    /* ================================================================
+       CURSOR FOLLOWER (grid glow)
+       ================================================================ */
+    document.addEventListener('mousemove', e => {
+        document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+        document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+    });
+
+    /* ================================================================
+       GSAP DASHBOARD ENTRANCE ANIMATIONS
+       ================================================================ */
+    if (window.gsap) {
+        /* Dashboard header */
+        gsap.from('.dashboard-header', {
+            y: -20,
+            opacity: 0,
+            duration: 0.6,
+            ease: 'power2.out',
+            delay: 0.1,
+        });
+
+        /* Stats strip chips stagger */
+        gsap.from('.stat-chip', {
+            y: 20,
+            opacity: 0,
+            stagger: 0.08,
+            duration: 0.5,
+            ease: 'power2.out',
+            delay: 0.3,
+        });
+
+        /* Progress circle cards and dashboard cards use CSS fadeInUp animations
+           (set in page styles with nth-child delays) — no GSAP needed here. */
+    }
+
+    /* ================================================================
+       WELCOME LINE (shows name once loaded)
+       ================================================================ */
+    (function() {
+        const welcomeLine = document.getElementById('dashboardWelcomeLine');
+        if (!welcomeLine) return;
+        const nameEl = document.getElementById('display-name');
+        if (!nameEl) return;
+        // Poll until name is loaded from auth
+        const poll = setInterval(() => {
+            const name = nameEl.textContent.trim();
+            if (name && name !== 'Loading...') {
+                welcomeLine.textContent = `// Welcome back, ${name.split(' ')[0]}`;
+                welcomeLine.style.display = 'block';
+                gsap.from(welcomeLine, { opacity: 0, x: -10, duration: 0.5, ease: 'power2.out' });
+                clearInterval(poll);
+            }
+        }, 300);
+        setTimeout(() => clearInterval(poll), 5000); // stop after 5s
+    })();
 </script>
 
     <!-- My Courses Backend Integration -->

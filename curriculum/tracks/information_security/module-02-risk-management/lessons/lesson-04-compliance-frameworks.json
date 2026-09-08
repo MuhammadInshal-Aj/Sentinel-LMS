@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m02-l04",
+  "title": "Compliance & Security Frameworks",
+  "order": 4,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 10,
+  "objectives": [
+    "Understand the purpose of security frameworks (NIST, ISO 27001)",
+    "Explain what compliance means and why it matters",
+    "Map controls to framework requirements"
+  ],
+  "tags": ["compliance", "frameworks", "NIST", "ISO"]
+}

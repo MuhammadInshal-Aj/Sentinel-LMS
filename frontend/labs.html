@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labs & CTFs | Sentinel-LMS</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Shared modules -->
+    <link rel="stylesheet" href="Styles/theme.css">
+    <link rel="stylesheet" href="Styles/layout.css">
+    <link rel="stylesheet" href="Styles/components.css">
+    <link rel="stylesheet" href="Styles/utilities.css">
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="toast.js"></script>
+    <script src="navigation.js"></script>
+
+    <!-- Immediate auth guard -->
+    <script>
+        (function() {
+            if (!Auth.getToken()) {
+                window.location.replace('login.html');
+                document.documentElement.style.display = 'none';
+                throw new Error('AUTH_REDIRECT');
+            }
+        })();
+    </script>
+
+    <style>
+        body { display: flex; }
+
+        /* ── MAIN LAYOUT ─────────────────────────────── */
+        .labs-page {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── TOP BAR ─────────────────────────────────── */
+        .labs-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 2.5rem;
+            border-bottom: 1px solid rgba(0,242,255,0.06);
+            background: rgba(4,4,8,0.95);
+            backdrop-filter: blur(20px);
+        }
+        .labs-topbar h1 {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .labs-topbar h1 i { color: var(--accent); filter: drop-shadow(0 0 6px var(--accent-glow)); }
+
+        /* ── LAB SELECTOR ────────────────────────────── */
+        .labs-selector {
+            padding: 1rem 2.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            background: rgba(0,0,0,0.3);
+        }
+        .lab-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.02);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .lab-tab::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,242,255,0.04), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .lab-tab:hover { border-color: rgba(0,242,255,0.3); color: #fff; }
+        .lab-tab:hover::after { opacity: 1; }
+        .lab-tab.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0,242,255,0.07);
+            box-shadow: 0 0 12px rgba(0,242,255,0.1);
+        }
+        .lab-tab .difficulty-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .difficulty-dot.easy   { background: var(--success); box-shadow: 0 0 4px var(--success); }
+        .difficulty-dot.medium { background: var(--warning); box-shadow: 0 0 4px var(--warning); }
+        .difficulty-dot.hard   { background: var(--danger);  box-shadow: 0 0 4px var(--danger); }
+
+        /* ── SPLIT LAYOUT ────────────────────────────── */
+        .labs-split {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* ── INSTRUCTIONS PANEL ──────────────────────── */
+        .lab-instructions {
+            border-right: 1px solid rgba(0,242,255,0.06);
+            background: rgba(5,5,10,0.8);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            height: calc(100vh - 120px);
+        }
+        .instructions-header {
+            padding: 1.5rem 1.8rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: sticky;
+            top: 0;
+            background: rgba(4,4,8,0.98);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        .lab-badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            border: 1px solid rgba(0,242,255,0.25);
+            border-radius: 3px;
+            padding: 2px 8px;
+            margin-bottom: 0.7rem;
+            text-transform: uppercase;
+            background: rgba(0,242,255,0.04);
+        }
+        .lab-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.4rem;
+            letter-spacing: 1px;
+        }
+        .lab-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
+        .instructions-body { padding: 1.5rem 1.8rem; flex: 1; }
+
+        /* Tasks */
+        .task-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
+        .task-item {
+            display: flex;
+            gap: 0.875rem;
+            align-items: flex-start;
+            padding: 0.875rem 1rem;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.015);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.4s ease-out backwards;
+        }
+        .task-item:nth-child(1) { animation-delay: 0.05s; }
+        .task-item:nth-child(2) { animation-delay: 0.1s; }
+        .task-item:nth-child(3) { animation-delay: 0.15s; }
+        .task-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 2px;
+            background: transparent;
+            transition: background 0.3s;
+        }
+        .task-item:hover { border-color: rgba(0,242,255,0.2); background: rgba(0,242,255,0.03); }
+        .task-item:hover::before { background: rgba(0,242,255,0.4); }
+        .task-item.completed {
+            border-color: rgba(0,255,157,0.2);
+            background: rgba(0,255,157,0.03);
+        }
+        .task-item.completed::before { background: var(--success); }
+        .task-item.active-task {
+            border-color: rgba(0,242,255,0.35);
+            background: rgba(0,242,255,0.05);
+            box-shadow: 0 0 15px rgba(0,242,255,0.06);
+        }
+        .task-item.active-task::before { background: var(--accent); }
+        .task-check {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            font-size: 0;
+            transition: all 0.3s;
+        }
+        .task-item.completed .task-check {
+            background: var(--success);
+            border-color: var(--success);
+            font-size: 11px;
+            color: #000;
+            box-shadow: 0 0 10px rgba(0,255,157,0.3);
+        }
+        .task-item.active-task .task-check { border-color: var(--accent); box-shadow: 0 0 8px rgba(0,242,255,0.3); }
+        .task-content h4 { font-size: 0.85rem; font-weight: 600; color: #e8e8e8; margin-bottom: 0.25rem; }
+        .task-content p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin: 0; }
+        .task-content code { font-family: var(--font-mono); font-size: 0.8em; background: rgba(0,242,255,0.06); padding: 1px 5px; border-radius: 3px; color: var(--accent); border: 1px solid rgba(0,242,255,0.1); }
+
+        /* Hint block */
+        .lab-hint {
+            background: rgba(255,189,46,0.04);
+            border: 1px solid rgba(255,189,46,0.15);
+            border-left: 2px solid var(--warning);
+            border-radius: 0 6px 6px 0;
+            padding: 0.9rem 1rem;
+            font-size: 0.82rem;
+            color: #c8c0aa;
+            line-height: 1.6;
+            display: none;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        .lab-hint.visible { display: block; }
+        .hint-toggle {
+            background: none;
+            border: none;
+            color: var(--warning);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 0;
+            font-family: var(--font-mono);
+            margin-bottom: 0.8rem;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .hint-toggle:hover { opacity: 1; text-decoration: underline; }
+
+        /* ── TERMINAL PANEL ──────────────────────────── */
+        .lab-terminal-panel {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            background: #070b10;
+            position: relative;
+        }
+
+        /* Scanline overlay effect */
+        .lab-terminal-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.08) 2px,
+                rgba(0,0,0,0.08) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        .terminal-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.55rem 1.2rem;
+            border-bottom: 1px solid rgba(0,242,255,0.08);
+            background: #050810;
+            position: relative;
+            z-index: 2;
+        }
+        .terminal-toolbar-left { display: flex; align-items: center; gap: 0.8rem; }
+        .terminal-dots { display: flex; gap: 6px; }
+        .terminal-dot {
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .terminal-dot:hover { opacity: 0.8; transform: scale(1.15); }
+        .terminal-dot.red    { background: #ff5f57; box-shadow: 0 0 6px rgba(255,95,87,0.5); }
+        .terminal-dot.yellow { background: #febc2e; box-shadow: 0 0 6px rgba(254,188,46,0.5); }
+        .terminal-dot.green  { background: #28c840; box-shadow: 0 0 6px rgba(40,200,64,0.5); }
+        .terminal-label { font-size: 0.7rem; color: rgba(0,242,255,0.3); font-family: var(--font-mono); letter-spacing: 0.5px; }
+        .lang-selector { display: flex; gap: 0.3rem; }
+        .lang-btn {
+            padding: 0.18rem 0.55rem;
+            border-radius: 3px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: transparent;
+            color: #444;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lang-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,242,255,0.06); }
+        .clear-btn { background: none; border: none; color: #333; font-size: 0.72rem; cursor: pointer; font-family: var(--font-mono); transition: color 0.2s; }
+        .clear-btn:hover { color: #666; }
+
+        /* Terminal output display */
+        .terminal-output {
+            flex: 1;
+            padding: 1.2rem 1.5rem;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            line-height: 1.75;
+            color: #8eafc8;
+            background: transparent;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Blinking cursor at end of output */
+        .terminal-output::after {
+            content: '█';
+            display: inline;
+            color: var(--accent);
+            animation: blink 1s step-end infinite;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .terminal-output .output-line { margin-bottom: 2px; word-break: break-all; white-space: pre-wrap; }
+        .terminal-output .output-line.command { color: var(--accent); }
+        .terminal-output .output-line.command::before { content: '❯ '; opacity: 0.5; }
+        .terminal-output .output-line.stdout { color: #8eafc8; }
+        .terminal-output .output-line.stderr { color: #ff6b6b; }
+        .terminal-output .output-line.system { color: rgba(0,242,255,0.25); font-style: italic; }
+        .terminal-output .output-line.success { color: #4dffb8; }
+        .terminal-output .output-line.prompt { color: #4dff6b; font-weight: 700; white-space: pre; }
+
+        /* Input area */
+        .terminal-input-area {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.75rem 1.5rem;
+            border-top: 1px solid rgba(0,242,255,0.06);
+            background: #050810;
+            position: relative;
+            z-index: 2;
+        }
+        .terminal-prompt {
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            flex-shrink: 0;
+            text-shadow: 0 0 8px var(--accent-glow);
+        }
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #d0e0f0;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            outline: none;
+            caret-color: var(--accent);
+        }
+        .terminal-run-btn {
+            padding: 0.35rem 0.85rem;
+            background: rgba(0,242,255,0.08);
+            border: 1px solid rgba(0,242,255,0.2);
+            color: var(--accent);
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .terminal-run-btn:hover { background: rgba(0,242,255,0.18); box-shadow: 0 0 10px rgba(0,242,255,0.15); }
+        .terminal-run-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Multi-line editor */
+        .code-editor-area {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #8eafc8;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 1.2rem 1.5rem;
+            resize: none;
+            outline: none;
+            line-height: 1.75;
+            position: relative;
+            z-index: 2;
+        }
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1.2rem;
+            border-top: 1px solid rgba(0,242,255,0.06);
+            background: #050810;
+            position: relative;
+            z-index: 2;
+        }
+        .run-code-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(0,242,255,0.2);
+        }
+        .run-code-btn:hover { background: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.3); }
+        .run-code-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        .editor-mode-label { font-size: 0.68rem; color: rgba(0,242,255,0.25); font-family: var(--font-mono); letter-spacing: 0.5px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── FLAG SUBMISSION PANEL ───────────────────── */
+        .flag-submit-panel {
+            margin-top: 1.5rem;
+            padding: 1rem 1.2rem;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(0,242,255,0.04), rgba(0,168,255,0.02));
+            display: none;
+            animation: fadeInUp 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .flag-submit-panel::before {
+            content: 'FLAG';
+            position: absolute;
+            right: -10px; top: -5px;
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 900;
+            color: rgba(0,242,255,0.03);
+            letter-spacing: 5px;
+            pointer-events: none;
+        }
+        .flag-panel-label {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-family: var(--font-display);
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.8rem;
+        }
+        .flag-input-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .flag-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 0.48rem 0.75rem;
+            outline: none;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .flag-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,242,255,0.1); }
+        .flag-input:disabled { opacity: 0.5; }
+        .flag-submit-btn {
+            padding: 0.48rem 1rem;
+            background: var(--accent);
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .flag-submit-btn:hover { background: #fff; }
+        .flag-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .flag-feedback {
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            min-height: 1.2rem;
+        }
+        .flag-feedback .flag-ok  { color: var(--success); font-weight: 600; }
+        .flag-feedback .flag-err { color: var(--danger); }
+        .return-to-course-btn {
+            display: none;
+            width: 100%;
+            margin-top: 1rem;
+            padding: 0.6rem 1rem;
+            background: rgba(0, 255, 157, 0.08);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            border-radius: 6px;
+            color: var(--success);
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .return-to-course-btn:hover { background: rgba(0, 255, 157, 0.15); }
+
+        /* Hide lab selector tabs when launched from course */
+        .labs-selector.hidden { display: none; }
+
+        /* ── LAB CONTEXT BOX ─────────────────────────── */
+        .lab-context {
+            margin-bottom: 1.2rem;
+            padding: 0.8rem 1rem;
+            background: rgba(0,242,255,0.03);
+            border: 1px solid rgba(0,242,255,0.1);
+            border-left: 2px solid var(--accent);
+            border-radius: 0 6px 6px 0;
+            font-size: 0.8rem;
+            color: #a0b8cc;
+            line-height: 1.6;
+        }
+        .lab-context-label {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            opacity: 0.7;
+            text-transform: uppercase;
+            margin-bottom: 0.35rem;
+        }
+
+        /* ── LABS HUB (landing view) ─────────────────── */
+        .labs-hub {
+            flex: 1;
+            padding: 2rem 2.5rem;
+            overflow-y: auto;
+        }
+        .hub-header { margin-bottom: 2.5rem; }
+        .hub-header h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+        .hub-header p { font-size: 0.85rem; color: var(--text-muted); }
+        .hub-module-section { margin-bottom: 2.5rem; }
+        .hub-module-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent);
+            opacity: 0.6;
+            text-transform: uppercase;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid rgba(0,242,255,0.08);
+            margin-bottom: 1rem;
+        }
+        .hub-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .hub-lab-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .hub-lab-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,242,255,0.04), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .hub-lab-card:hover { border-color: rgba(0,242,255,0.3); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .hub-lab-card:hover::before { opacity: 1; }
+        .hub-lab-card.completed { border-color: rgba(0,255,157,0.25); background: rgba(0,255,157,0.02); }
+        .hub-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .hub-card-badges { display: flex; gap: 0.4rem; align-items: center; }
+        .hub-lang-tag {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: var(--accent);
+            letter-spacing: 0.5px;
+        }
+        .hub-lang-tag.python { background: #3b7dd8; color: #fff; }
+        .hub-lang-tag.bash   { background: var(--accent); color: #000; }
+        .hub-diff-tag {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+        .hub-diff-tag.easy   { background: rgba(0,255,157,0.1); color: var(--success); border: 1px solid rgba(0,255,157,0.2); }
+        .hub-diff-tag.medium { background: rgba(255,189,46,0.1); color: var(--warning); border: 1px solid rgba(255,189,46,0.2); }
+        .hub-diff-tag.hard   { background: rgba(255,77,77,0.1);  color: var(--danger);  border: 1px solid rgba(255,77,77,0.2); }
+        .hub-card-complete-badge {
+            font-size: 0.65rem;
+            color: var(--success);
+            font-family: var(--font-mono);
+            display: none;
+        }
+        .hub-lab-card.completed .hub-card-complete-badge { display: block; }
+        .hub-card-title {
+            font-family: var(--font-display);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #e8e8e8;
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.5px;
+        }
+        .hub-card-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1rem; }
+        .hub-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .hub-token-reward {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: rgba(255,189,46,0.7);
+        }
+        .hub-launch-btn {
+            padding: 0.35rem 0.9rem;
+            background: rgba(0,242,255,0.08);
+            border: 1px solid rgba(0,242,255,0.25);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .hub-launch-btn:hover { background: rgba(0,242,255,0.18); box-shadow: 0 0 10px rgba(0,242,255,0.15); }
+        .hub-lab-card.completed .hub-launch-btn { border-color: rgba(0,255,157,0.3); color: var(--success); background: rgba(0,255,157,0.06); }
+
+        /* Exploration sandbox section */
+        .hub-sandbox-section { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); }
+        .hub-sandbox-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+        .hub-sandbox-tag {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: rgba(168,85,247,0.1);
+            border: 1px solid rgba(168,85,247,0.25);
+            color: #a855f7;
+            letter-spacing: 0.5px;
+        }
+        .hub-sandbox-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #a855f7;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        /* ── TERMINAL MODE TOGGLE ────────────────────── */
+        .labs-split.hub-mode .labs-split { display: none; }
+        .mode-indicator {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: rgba(0,242,255,0.35);
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink { 0%, 100% { opacity: 0.7; } 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="logo">
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS">
+            SENTINEL<span>LMS</span>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" onclick="window.location.href='index.html'">
+                    <i data-lucide="arrow-left" size="20"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active">
+                    <i data-lucide="terminal-square" size="20"></i>
+                    <span>Labs & CTFs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="window.location.href='infoSec.html'">
+                    <i data-lucide="book-open" size="20"></i>
+                    <span>Info Security</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="profile-popup" id="profilePopup">
+                <div class="popup-item logout" onclick="handleLogout()">
+                    <i data-lucide="log-out" size="18"></i><span>Logout</span>
+                </div>
+            </div>
+            <button class="profile-btn" id="profileBtn">
+                <div class="profile-avatar" id="display-avatar">??</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="display-name">Loading...</div>
+                    <div class="profile-email" id="display-email">Please wait...</div>
+                </div>
+                <i data-lucide="chevron-up" size="18"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN LABS PAGE -->
+    <div class="labs-page">
+        <!-- TOP BAR -->
+        <div class="labs-topbar">
+            <h1><i data-lucide="terminal-square" size="22"></i> Labs & CTFs</h1>
+            <span style="font-size:0.8rem; color:var(--text-muted)">Powered by Piston API · Sandboxed Execution</span>
+        </div>
+
+        <!-- HUB LANDING VIEW (shown when no ?id= param) -->
+        <div class="labs-hub" id="labsHub" style="display:none">
+            <div class="hub-header">
+                <h2>LABS & CTFs</h2>
+                <p>Hands-on security labs tied to your coursework. Complete all tasks in the terminal, decode your flag, and submit it to earn tokens.</p>
+            </div>
+            <!-- Course labs by module — rendered by JS -->
+            <div id="hubModules"></div>
+
+            <!-- Exploration sandbox -->
+            <div class="hub-sandbox-section">
+                <div class="hub-sandbox-header">
+                    <span class="hub-sandbox-tag">SANDBOX</span>
+                    <span class="hub-sandbox-label">Exploration Labs</span>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem">Free-practice labs — no tokens, no flag required. Just explore.</p>
+                <div class="hub-cards">
+                    <div class="hub-lab-card" onclick="enterSandboxLab('hash-intro')">
+                        <div class="hub-card-top">
+                            <div class="hub-card-badges">
+                                <span class="hub-lang-tag python">python</span>
+                                <span class="hub-diff-tag easy">easy</span>
+                            </div>
+                        </div>
+                        <div class="hub-card-title">Hash Basics</div>
+                        <div class="hub-card-desc">Learn SHA-256 hashing, determinism, and the avalanche effect in Python.</div>
+                        <div class="hub-card-footer">
+                            <span class="hub-token-reward">Free Practice</span>
+                            <button class="hub-launch-btn">Open →</button>
+                        </div>
+                    </div>
+                    <div class="hub-lab-card" onclick="enterSandboxLab('file-inspect')">
+                        <div class="hub-card-top">
+                            <div class="hub-card-badges">
+                                <span class="hub-lang-tag python">python</span>
+                                <span class="hub-diff-tag easy">easy</span>
+                            </div>
+                        </div>
+                        <div class="hub-card-title">File Inspection</div>
+                        <div class="hub-card-desc">Parse and filter file-like data — a core skill for log analysis and forensics.</div>
+                        <div class="hub-card-footer">
+                            <span class="hub-token-reward">Free Practice</span>
+                            <button class="hub-launch-btn">Open →</button>
+                        </div>
+                    </div>
+                    <div class="hub-lab-card" onclick="enterSandboxLab('password-audit')">
+                        <div class="hub-card-top">
+                            <div class="hub-card-badges">
+                                <span class="hub-lang-tag python">python</span>
+                                <span class="hub-diff-tag medium">medium</span>
+                            </div>
+                        </div>
+                        <div class="hub-card-title">Password Strength Audit</div>
+                        <div class="hub-card-desc">Build a password policy checker and understand what attackers exploit first.</div>
+                        <div class="hub-card-footer">
+                            <span class="hub-token-reward">Free Practice</span>
+                            <button class="hub-launch-btn">Open →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAB SELECTOR TABS (sandbox mode only) -->
+        <div class="labs-selector" id="labSelector" style="display:none">
+            <button class="lab-tab active" onclick="selectLab('hash-intro')" id="tab-hash-intro">
+                <span class="difficulty-dot easy"></span> Hash Basics
+            </button>
+            <button class="lab-tab" onclick="selectLab('file-inspect')" id="tab-file-inspect">
+                <span class="difficulty-dot easy"></span> File Inspection
+            </button>
+            <button class="lab-tab" onclick="selectLab('password-audit')" id="tab-password-audit">
+                <span class="difficulty-dot medium"></span> Password Audit
+            </button>
+            <button class="lab-tab" onclick="showHub()" style="margin-left:auto">
+                <i data-lucide="grid" size="13"></i> All Labs
+            </button>
+        </div>
+
+        <!-- SPLIT: INSTRUCTIONS + TERMINAL -->
+        <div class="labs-split">
+
+            <!-- LEFT: INSTRUCTIONS -->
+            <div class="lab-instructions">
+                <div class="instructions-header">
+                    <div class="lab-badge" id="lab-badge">LAB</div>
+                    <div class="lab-title" id="lab-title">Hash Basics</div>
+                    <div class="lab-desc" id="lab-desc">Learn how cryptographic hash functions work.</div>
+                </div>
+                <div class="instructions-body">
+                    <!-- Scenario context (shown for course labs) -->
+                    <div class="lab-context" id="labContext" style="display:none">
+                        <div class="lab-context-label">Scenario</div>
+                        <div id="labContextText"></div>
+                    </div>
+                    <div class="task-list" id="taskList">
+                        <!-- Tasks rendered by JS -->
+                    </div>
+                    <button class="hint-toggle" onclick="toggleHint()">
+                        <i data-lucide="lightbulb" size="13" style="display:inline;vertical-align:middle"></i>
+                        Show Hint
+                    </button>
+                    <div class="lab-hint" id="labHint"></div>
+
+                    <!-- FLAG SUBMISSION (revealed after all tasks complete, course-lab mode only) -->
+                    <div class="flag-submit-panel" id="flagPanel">
+                        <div class="flag-panel-label">
+                            <i data-lucide="flag" size="13"></i>
+                            Submit Flag
+                        </div>
+                        <div class="flag-input-row">
+                            <input id="flagInput" class="flag-input" type="text"
+                                   placeholder="FLAG{sentinel-...}" autocomplete="off" spellcheck="false" />
+                            <button class="flag-submit-btn" id="flagSubmitBtn" onclick="submitFlag()">Submit</button>
+                        </div>
+                        <div class="flag-feedback" id="flagFeedback"></div>
+                        <button class="return-to-course-btn" id="returnBtn" onclick="returnToCourse()">
+                            ← Return to Course
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: TERMINAL -->
+            <div class="lab-terminal-panel">
+                <div class="terminal-toolbar">
+                    <div class="terminal-toolbar-left">
+                        <div class="terminal-dots">
+                            <div class="terminal-dot red"></div>
+                            <div class="terminal-dot yellow"></div>
+                            <div class="terminal-dot green"></div>
+                        </div>
+                        <span class="terminal-label" id="terminal-label">sentinel-lab ~ python3</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <div class="lang-selector" id="langSelector">
+                            <button class="lang-btn" id="lang-bash" onclick="setLang('bash')">bash</button>
+                            <button class="lang-btn active" id="lang-python" onclick="setLang('python')">python3</button>
+                        </div>
+                        <span class="mode-indicator" id="modeIndicator"></span>
+                        <button class="clear-btn" onclick="clearTerminal()">clear</button>
+                    </div>
+                </div>
+
+                <!-- OUTPUT DISPLAY -->
+                <div class="terminal-output" id="terminalOutput">
+                    <div class="output-line prompt"> ███████ ███████ ███    ██ ████████</div>
+                    <div class="output-line prompt"> ██      ██      ████   ██    ██   </div>
+                    <div class="output-line prompt"> ███████ █████   ██ ██  ██    ██   </div>
+                    <div class="output-line prompt">      ██ ██      ██  ██ ██    ██   </div>
+                    <div class="output-line prompt"> ███████ ███████ ██   ████    ██   </div>
+                    <div class="output-line system">─────────────────────────────────────────────────</div>
+                    <div class="output-line prompt">  SENTINEL SECURITY LAB  ·  Powered by Piston API</div>
+                    <div class="output-line system">─────────────────────────────────────────────────</div>
+                    <div class="output-line system">[ Select a lab or type code below and press Run ]</div>
+                </div>
+
+                <!-- CLI INTERACTIVE INPUT (bash labs) -->
+                <div class="terminal-input-area" id="cliInputArea" style="display:none">
+                    <span class="terminal-prompt">sentinel-lab ~$</span>
+                    <input class="terminal-input" id="cliInput" type="text"
+                           placeholder="type a command and press Enter…"
+                           autocomplete="off" spellcheck="false" />
+                    <button class="terminal-run-btn" id="cliRunBtn">↵ Enter</button>
+                </div>
+
+                <!-- SCRIPT EDITOR (python labs) -->
+                <textarea class="code-editor-area" id="codeEditor" placeholder="# Write your code here and click Run...
+# Example: print('Hello, Security World!')" spellcheck="false"></textarea>
+
+                <div class="editor-toolbar" id="editorToolbar">
+                    <span class="editor-mode-label" id="editorModeLabel">python3 · sandbox</span>
+                    <button class="run-code-btn" id="runBtn" onclick="runCode()">
+                        <i data-lucide="play" size="15"></i> Run
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // LABS PAGE — PISTON API TERMINAL
+        // ============================================
+
+        const PISTON_API = 'https://emkc.org/api/v2/piston';
+
+        // ── LAB DEFINITIONS ──────────────────────────
+        const LABS = {
+            'hash-intro': {
+                id: 'hash-intro',
+                badge: 'MODULE 01 · LAB',
+                title: 'Hash Basics',
+                desc: 'Learn how cryptographic hash functions work and why they are fundamental to information security.',
+                defaultLang: 'python',
+                hint: 'Hash functions are one-way — you can hash a value but cannot reverse it. Two different inputs should never produce the same hash (collision resistance). Try hashing the same string twice to confirm determinism.',
+                starterCode: {
+                    python: `import hashlib
+
+# ── TASK 1: Hash a password string ──────────────────
+password = "sentinel123"
+hashed = hashlib.sha256(password.encode()).hexdigest()
+print(f"SHA-256 of '{password}':")
+print(hashed)
+print()
+
+# ── TASK 2: Hash is deterministic ───────────────────
+hash2 = hashlib.sha256(password.encode()).hexdigest()
+print("Same input, same hash?", hashed == hash2)
+print()
+
+# ── TASK 3: Different input = different hash ─────────
+other = "Sentinel123"  # capital S
+hash3 = hashlib.sha256(other.encode()).hexdigest()
+print(f"SHA-256 of '{other}':")
+print(hash3)
+print()
+print("Hashes match?", hashed == hash3)
+`,
+                    bash: `# Hash a string using SHA-256
+echo -n "sentinel123" | sha256sum
+
+# Hash with MD5 (deprecated but common)
+echo -n "sentinel123" | md5sum
+
+# Show hash is deterministic
+echo -n "sentinel123" | sha256sum
+echo -n "sentinel123" | sha256sum`
+                },
+                tasks: [
+                    { id: 't1', title: 'Run the hash demo', desc: 'Execute the starter code to see SHA-256 hashing in action.', verifyKeyword: 'sha-256' },
+                    { id: 't2', title: 'Verify determinism', desc: 'Confirm that hashing the same input twice produces identical output.', verifyKeyword: 'same input' },
+                    { id: 't3', title: 'Observe avalanche effect', desc: 'Change just one character (capital S) and see how the entire hash changes dramatically.', verifyKeyword: 'match' }
+                ]
+            },
+            'file-inspect': {
+                id: 'file-inspect',
+                badge: 'MODULE 01 · LAB',
+                title: 'File Inspection',
+                desc: 'Practice reading and analyzing file-like data structures — a fundamental skill for log analysis and forensics.',
+                defaultLang: 'python',
+                hint: 'In real security work, you often parse log files or config files. This lab simulates that with in-memory data. Look for patterns, split on delimiters, and filter based on conditions.',
+                starterCode: {
+                    python: `# Simulated /etc/passwd-style data (sanitized, not real)
+passwd_data = """root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+agent47:x:1000:1000:Agent 47:/home/agent47:/bin/bash
+service_account:x:999:999:Service:/var/lib/service:/bin/false
+analyst:x:1001:1001:Security Analyst:/home/analyst:/bin/bash"""
+
+print("=== All Users ===")
+for line in passwd_data.strip().split('\\n'):
+    parts = line.split(':')
+    username = parts[0]
+    shell = parts[-1]
+    print(f"  {username:<20} shell: {shell}")
+
+print()
+print("=== Users with interactive shells ===")
+for line in passwd_data.strip().split('\\n'):
+    parts = line.split(':')
+    if parts[-1] in ['/bin/bash', '/bin/sh']:
+        uid = int(parts[2])
+        status = "ADMIN" if uid == 0 else "user"
+        print(f"  [{status}] {parts[0]} (UID: {uid})")
+`,
+                    bash: `# Print each user with their UID
+echo "=== User accounts ==="
+echo "root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+agent47:x:1000:1000::/home/agent47:/bin/bash
+analyst:x:1001:1001::/home/analyst:/bin/bash" | awk -F: '{print $1, "UID:", $3}'`
+                },
+                tasks: [
+                    { id: 't1', title: 'List all users', desc: 'Run the script to enumerate all accounts and their shells.', verifyKeyword: 'users' },
+                    { id: 't2', title: 'Identify interactive accounts', desc: 'Filter for accounts with /bin/bash or /bin/sh shells — these can log in interactively.', verifyKeyword: 'interactive' },
+                    { id: 't3', title: 'Flag the admin account', desc: 'Identify which account has UID 0 (root/admin) — highest privilege.', verifyKeyword: 'admin' }
+                ]
+            },
+            'password-audit': {
+                id: 'password-audit',
+                badge: 'MODULE 01 · LAB',
+                title: 'Password Strength Audit',
+                desc: 'Build a basic password strength checker — understanding what makes a password weak is the first step to enforcing strong policies.',
+                defaultLang: 'python',
+                hint: 'A strong password needs length, mixed case, numbers, AND special characters. Think about what attackers do: they try common passwords, dictionary words, and simple patterns first. Your checker should flag these weaknesses.',
+                starterCode: {
+                    python: `import re
+
+def audit_password(password):
+    """Return a strength score and list of issues."""
+    issues = []
+    score = 0
+
+    if len(password) >= 12:
+        score += 2
+    elif len(password) >= 8:
+        score += 1
+    else:
+        issues.append("Too short (minimum 8 characters)")
+
+    if re.search(r'[A-Z]', password):
+        score += 1
+    else:
+        issues.append("Missing uppercase letter")
+
+    if re.search(r'[a-z]', password):
+        score += 1
+    else:
+        issues.append("Missing lowercase letter")
+
+    if re.search(r'[0-9]', password):
+        score += 1
+    else:
+        issues.append("Missing number")
+
+    if re.search(r'[!@#$%^&*()_+\\-=]', password):
+        score += 2
+    else:
+        issues.append("Missing special character")
+
+    common = ['password', '123456', 'qwerty', 'admin', 'letmein']
+    if password.lower() in common:
+        score = 0
+        issues.append("Common password — immediately crackable")
+
+    labels = {0: "CRITICAL", 1: "WEAK", 2: "WEAK", 3: "FAIR", 4: "FAIR", 5: "GOOD", 6: "STRONG", 7: "STRONG"}
+    return {"score": score, "label": labels.get(score, "UNKNOWN"), "issues": issues}
+
+# ── Test passwords ────────────────────────────────
+test_passwords = ["password", "Summer2024", "S3cr3t!", "X#9mK@pL2$vQ"]
+
+for pwd in test_passwords:
+    result = audit_password(pwd)
+    print(f"Password: {pwd!r:<20} [{result['label']:<8}] score={result['score']}/7")
+    for issue in result['issues']:
+        print(f"  ⚠  {issue}")
+    print()
+`
+                },
+                tasks: [
+                    { id: 't1', title: 'Run the audit', desc: 'Execute the password auditor to see ratings for each test password.', verifyKeyword: 'critical' },
+                    { id: 't2', title: 'Test a strong password', desc: 'Add a new test password that scores 7/7. What makes it strong?', verifyKeyword: 'strong' },
+                    { id: 't3', title: 'Modify the policy', desc: 'Change the minimum length requirement to 16 characters. Re-run and observe which passwords now fail.', verifyKeyword: 'too short' }
+                ]
+            }
+        };
+
+        // ── COURSE LAB METADATA (for hub display) ────
+        const COURSE_LABS = [
+            {
+                id: 'infosec-m01-lab01-cia',
+                title: 'Digital Crime Scene \u2014 CIA Breakdown',
+                desc: 'Investigate a hospital security breach using shell commands. Identify which CIA Triad pillars were violated.',
+                module: 'Module 1 \u00b7 Security Mindset & Core Principles',
+                moduleOrder: 1,
+                language: 'bash',
+                difficulty: 'easy',
+                tokens: 75,
+            },
+            {
+                id: 'infosec-m01-lab01',
+                title: 'Risk Score Calculator',
+                desc: 'Apply the Risk = Likelihood \u00d7 Impact formula. Write Python to score hospital assets and identify the critical one.',
+                module: 'Module 1 \u00b7 Security Mindset & Core Principles',
+                moduleOrder: 1,
+                language: 'python',
+                difficulty: 'easy',
+                tokens: 50,
+            },
+            {
+                id: 'infosec-m01-lab02-tvr',
+                title: 'Threat / Vulnerability / Risk Analysis',
+                desc: 'Analyze CISA threat intelligence and CVE scan data to calculate which hospital asset faces the highest risk.',
+                module: 'Module 1 \u00b7 Security Mindset & Core Principles',
+                moduleOrder: 1,
+                language: 'bash',
+                difficulty: 'medium',
+                tokens: 75,
+            },
+            {
+                id: 'infosec-m02-lab01',
+                title: 'Password Policy Audit \u2014 NIST SP 800-63B',
+                desc: 'Audit hospital staff passwords against NIST standards. Find breached credentials and calculate the exposure rate.',
+                module: 'Module 2 \u00b7 Risk Management',
+                moduleOrder: 2,
+                language: 'python',
+                difficulty: 'easy',
+                tokens: 75,
+            },
+            {
+                id: 'infosec-m03-lab01',
+                title: 'Firewall Rule Audit',
+                desc: 'Audit exported firewall rules. Find misconfigured rules that expose admin ports to any IP on the internet.',
+                module: 'Module 3 \u00b7 Defensive Architecture',
+                moduleOrder: 3,
+                language: 'bash',
+                difficulty: 'medium',
+                tokens: 75,
+            },
+        ];
+
+        // ── TERMINAL STATE ────────────────────────────
+        const TERMINAL = {
+            currentLab: 'hash-intro',
+            currentLang: 'python',
+            terminalMode: 'editor',   // 'cli' for bash labs, 'editor' for python
+            history: [],              // display history for up/down arrow
+            historyIdx: -1,
+            completedTasks: new Set(),
+            allDoneShown: false,
+            courseLab: false,         // true when launched via ?id= from a course page
+            additionalFiles: [],      // lab files re-injected on each CLI command
+            commandHistory: [],       // accumulated bash commands for session-state persistence
+        };
+
+        // Piston language version cache
+        const LANG_VERSIONS = { python: '3.10.0', bash: '5.2.0' };
+
+        // ── INIT ──────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            Navigation.initProfilePopup();
+            loadUserProfile();
+
+            // Ctrl+Enter in script editor runs code
+            document.getElementById('codeEditor').addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    runCode();
+                }
+            });
+
+            // CLI input: Enter runs command, Up/Down arrow for history
+            const cliInput = document.getElementById('cliInput');
+            cliInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    runCliCommand();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (TERMINAL.history.length > 0) {
+                        TERMINAL.historyIdx = Math.min(TERMINAL.historyIdx + 1, TERMINAL.history.length - 1);
+                        cliInput.value = TERMINAL.history[TERMINAL.historyIdx];
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (TERMINAL.historyIdx > 0) {
+                        TERMINAL.historyIdx--;
+                        cliInput.value = TERMINAL.history[TERMINAL.historyIdx];
+                    } else {
+                        TERMINAL.historyIdx = -1;
+                        cliInput.value = '';
+                    }
+                } else if (e.key === 'l' && e.ctrlKey) {
+                    e.preventDefault();
+                    clearTerminal();
+                }
+            });
+            document.getElementById('cliRunBtn').addEventListener('click', runCliCommand);
+
+            // Check if launched from a course (e.g. labs.html?id=infosec-m01-lab01)
+            const urlLabId = new URLSearchParams(window.location.search).get('id');
+            if (urlLabId) {
+                TERMINAL.courseLab = true;
+                // Hide hub, hide sandbox tabs, show split terminal view
+                document.getElementById('labsHub').style.display = 'none';
+                document.getElementById('labSelector').style.display = 'none';
+                document.querySelector('.labs-split').style.display = 'grid';
+                loadLabFromAPI(urlLabId);
+            } else {
+                // Show hub landing page
+                showHub();
+            }
+
+            // Load Piston versions dynamically
+            try {
+                const resp = await fetch(`${PISTON_API}/runtimes`);
+                const runtimes = await resp.json();
+                const py = runtimes.find(r => r.language === 'python3' || r.language === 'python');
+                const sh = runtimes.find(r => r.language === 'bash');
+                if (py) LANG_VERSIONS.python = py.version;
+                if (sh) LANG_VERSIONS.bash = sh.version;
+            } catch (_) { /* use defaults */ }
+        });
+
+        // ── API LAB LOADING (course-linked labs) ──────
+        async function loadLabFromAPI(labId) {
+            appendLine('system', `[ Loading lab ${labId}... ]`);
+            try {
+                const lab = await Auth.fetchJSON(`/api/labs/${labId}`);
+                if (lab.error) { appendLine('stderr', `Error: ${lab.error}`); return; }
+
+                // Normalise to the same shape as hardcoded LABS entries
+                LABS[labId] = {
+                    id:              lab.id,
+                    badge:           'COURSE LAB',
+                    title:           lab.title,
+                    desc:            lab.description,
+                    context:         lab.context || '',
+                    defaultLang:     lab.language || 'python',
+                    hint:            lab.hint || '',
+                    starterCode:     { [lab.language || 'python']: lab.starterCode },
+                    tasks:           lab.tasks,
+                    tokens:          lab.tokens,
+                    additionalFiles: lab.additionalFiles || []
+                };
+
+                TERMINAL.currentLab     = labId;
+                TERMINAL.completedTasks = new Set();
+                TERMINAL.allDoneShown   = false;
+                TERMINAL.additionalFiles = lab.additionalFiles || [];
+                TERMINAL.commandHistory  = [];
+
+                const l = LABS[labId];
+                document.getElementById('lab-badge').textContent = l.badge;
+                document.getElementById('lab-title').textContent = l.title;
+                document.getElementById('lab-desc').textContent  = l.desc;
+                document.getElementById('labHint').textContent   = l.hint;
+                document.getElementById('labHint').classList.remove('visible');
+
+                // Show scenario context box if present
+                const ctxEl = document.getElementById('labContext');
+                const ctxTxt = document.getElementById('labContextText');
+                if (l.context) {
+                    ctxTxt.textContent = l.context;
+                    ctxEl.style.display = 'block';
+                } else {
+                    ctxEl.style.display = 'none';
+                }
+
+                renderTasks(l);
+                switchTerminalMode(l.defaultLang === 'bash' ? 'cli' : 'editor');
+                clearTerminal(false);
+                appendLine('system', `─────────────────────────────────────────────────`);
+                appendLine('prompt', `  ${l.title}`);
+                appendLine('system', `─────────────────────────────────────────────────`);
+
+                if (l.defaultLang === 'bash') {
+                    // Auto-run the starter code to set up initial terminal state
+                    appendLine('system', '[ Running lab setup... ]');
+                    await pistonExecute(l.starterCode['bash'] || 'ls', l.additionalFiles, 'bash');
+                } else {
+                    // Load starter code into script editor
+                    if (l.starterCode['python']) {
+                        document.getElementById('codeEditor').value = l.starterCode['python'];
+                    }
+                    appendLine('system', `[ python3 · Write your code in the editor below, then click Run ]`);
+                }
+                appendLine('system', `─────────────────────────────────────────────────`);
+                lucide.createIcons();
+            } catch (err) {
+                appendLine('stderr', `Failed to load lab: ${err.message}`);
+            }
+        }
+
+        // ── HUB VIEW ──────────────────────────────────
+        function showHub() {
+            document.getElementById('labsHub').style.display = 'block';
+            document.getElementById('labSelector').style.display = 'none';
+            document.querySelector('.labs-split').style.display = 'none';
+            document.getElementById('labContext').style.display = 'none';
+            renderHub();
+            lucide.createIcons();
+        }
+
+        function renderHub() {
+            const container = document.getElementById('hubModules');
+            // Group labs by module
+            const modules = {};
+            COURSE_LABS.forEach(lab => {
+                if (!modules[lab.module]) modules[lab.module] = { order: lab.moduleOrder, labs: [] };
+                modules[lab.module].labs.push(lab);
+            });
+
+            // Get completed lab IDs from localStorage (persisted)
+            const completedSet = new Set(JSON.parse(localStorage.getItem('sentinel_completed_labs') || '[]'));
+
+            let html = '';
+            Object.entries(modules)
+                .sort((a, b) => a[1].order - b[1].order)
+                .forEach(([moduleName, { labs }]) => {
+                    html += `<div class="hub-module-section">
+                        <div class="hub-module-label">${moduleName}</div>
+                        <div class="hub-cards">`;
+                    labs.forEach(lab => {
+                        const done = completedSet.has(lab.id);
+                        html += `
+                        <div class="hub-lab-card ${done ? 'completed' : ''}" onclick="window.location.href='labs.html?id=${lab.id}'">
+                            <div class="hub-card-top">
+                                <div class="hub-card-badges">
+                                    <span class="hub-lang-tag ${lab.language}">${lab.language}</span>
+                                    <span class="hub-diff-tag ${lab.difficulty}">${lab.difficulty}</span>
+                                </div>
+                                <span class="hub-card-complete-badge">\u2713 Done</span>
+                            </div>
+                            <div class="hub-card-title">${lab.title}</div>
+                            <div class="hub-card-desc">${lab.desc}</div>
+                            <div class="hub-card-footer">
+                                <span class="hub-token-reward">\u26a1 ${lab.tokens} tokens</span>
+                                <button class="hub-launch-btn">${done ? 'Revisit \u2192' : 'Launch Lab \u2192'}</button>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                });
+            container.innerHTML = html;
+        }
+
+        function enterSandboxLab(labId) {
+            // Show the split terminal view with sandbox tabs
+            document.getElementById('labsHub').style.display = 'none';
+            document.getElementById('labSelector').style.display = 'flex';
+            document.querySelector('.labs-split').style.display = 'grid';
+            selectLab(labId);
+        }
+
+        // ── TERMINAL MODE SWITCHING ────────────────────
+        function switchTerminalMode(mode) {
+            TERMINAL.terminalMode = mode;
+            const cliArea    = document.getElementById('cliInputArea');
+            const codeEditor = document.getElementById('codeEditor');
+            const editorBar  = document.getElementById('editorToolbar');
+            const langSel    = document.getElementById('langSelector');
+            const modeLbl    = document.getElementById('modeIndicator');
+
+            if (mode === 'cli') {
+                cliArea.style.display    = 'flex';
+                codeEditor.style.display = 'none';
+                editorBar.style.display  = 'none';
+                langSel.style.display    = 'none';
+                modeLbl.textContent      = 'interactive bash';
+                document.getElementById('terminal-label').textContent = 'sentinel-lab ~ bash';
+                // Focus CLI input after brief delay
+                setTimeout(() => document.getElementById('cliInput').focus(), 200);
+            } else {
+                cliArea.style.display    = 'none';
+                codeEditor.style.display = 'block';
+                editorBar.style.display  = 'flex';
+                langSel.style.display    = 'flex';
+                modeLbl.textContent      = '';
+            }
+        }
+
+        // ── INTERACTIVE CLI EXECUTION ─────────────────
+        async function runCliCommand() {
+            const input = document.getElementById('cliInput');
+            const command = input.value.trim();
+            if (!command) return;
+
+            const btn = document.getElementById('cliRunBtn');
+            btn.disabled = true;
+            input.value = '';
+            TERMINAL.historyIdx = -1;
+
+            // Add to display history (up/down arrow)
+            TERMINAL.history.unshift(command);
+            if (TERMINAL.history.length > 50) TERMINAL.history.pop();
+
+            // Handle terminal built-ins locally — no Piston round-trip needed
+            if (['clear', 'cls', 'reset', 'exit', 'quit'].includes(command)) {
+                clearTerminal();
+                btn.disabled = false;
+                input.focus();
+                return;
+            }
+
+            appendLine('prompt', `\u276f ${command}`);
+
+            const lab = LABS[TERMINAL.currentLab];
+            const files = (lab && lab.additionalFiles) ? lab.additionalFiles : [];
+
+            // Build cumulative script so shell state (cd, variables) persists
+            const script = buildCumulativeScript(command);
+            await pistonExecute(script, files, 'bash');
+
+            // Track command for state persistence (keep last 30 to avoid timeout)
+            TERMINAL.commandHistory.push(command);
+            if (TERMINAL.commandHistory.length > 30) TERMINAL.commandHistory.shift();
+
+            btn.disabled = false;
+            input.focus();
+            scrollTerminalToBottom();
+        }
+
+        // Build a bash script that silently replays all previous commands to restore
+        // shell state (working directory, env vars), then runs the new command.
+        // This makes 'cd', 'export', variable assignments persist across inputs.
+        function buildCumulativeScript(newCommand) {
+            const prev = TERMINAL.commandHistory;
+            if (prev.length === 0) return newCommand;
+
+            // Wrap previous commands in a group-redirect so their output is hidden
+            // but side-effects (cd, exports) still apply to the current shell process
+            const replayLines = prev.map(cmd => `  ${cmd}`).join('\n');
+            return `{\n${replayLines}\n} >/dev/null 2>&1\n\n${newCommand}`;
+        }
+
+        // ── PISTON EXECUTE (shared by CLI and script modes) ──
+        async function pistonExecute(code, extraFiles, lang) {
+            try {
+                const langId  = lang === 'python' ? 'python' : 'bash';
+                const version = LANG_VERSIONS[lang === 'python' ? 'python' : 'bash'] || '*';
+
+                const response = await fetch(`${PISTON_API}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        language: langId,
+                        version:  version,
+                        files: [
+                            { name: lang === 'python' ? 'main.py' : 'main.sh', content: code },
+                            ...(extraFiles || [])
+                        ],
+                        stdin: '',
+                        args: [],
+                        compile_timeout: 10000,
+                        run_timeout: 8000
+                    })
+                });
+
+                const result = await response.json();
+                const stdout = result.run?.stdout || '';
+                const stderr = result.run?.stderr || '';
+
+                if (stdout) stdout.split('\n').forEach(line => { if (line) appendLine('stdout', line); });
+                if (stderr) stderr.split('\n').forEach(line => { if (line) appendLine('stderr', line); });
+                if (!stdout && !stderr) appendLine('system', '(no output)');
+
+                checkTaskCompletion(stdout);
+                scrollTerminalToBottom();
+                return stdout;
+            } catch (err) {
+                appendLine('stderr', `Execution error: ${err.message}`);
+                appendLine('system', 'Tip: Check your internet connection or try again in a moment.');
+                return '';
+            }
+        }
+
+        // ── LAB SELECTION (sandbox labs) ──────────────
+        function selectLab(labId) {
+            const lab = LABS[labId];
+            if (!lab) return;
+
+            TERMINAL.currentLab     = labId;
+            TERMINAL.completedTasks = new Set();
+            TERMINAL.allDoneShown   = false;
+            TERMINAL.additionalFiles = [];
+            TERMINAL.commandHistory  = [];
+
+            // Update tab styles
+            document.querySelectorAll('.lab-tab').forEach(t => t.classList.remove('active'));
+            const tab = document.getElementById(`tab-${labId}`);
+            if (tab) tab.classList.add('active');
+
+            // Update instructions
+            document.getElementById('lab-badge').textContent = lab.badge;
+            document.getElementById('lab-title').textContent = lab.title;
+            document.getElementById('lab-desc').textContent  = lab.desc;
+            document.getElementById('labHint').textContent   = lab.hint;
+            document.getElementById('labHint').classList.remove('visible');
+            document.getElementById('labContext').style.display = 'none';
+
+            // Render tasks
+            renderTasks(lab);
+
+            // Sandbox labs always use editor mode (python by default)
+            switchTerminalMode('editor');
+            setLang(lab.defaultLang);
+
+            // Clear terminal
+            clearTerminal(false);
+            appendLine('system', `[ Lab: ${lab.title} ]`);
+            appendLine('system', `[ python3 · Write code in the editor below, then Ctrl+Enter to run ]`);
+        }
+
+        function renderTasks(lab) {
+            const list = document.getElementById('taskList');
+            list.innerHTML = lab.tasks.map((t, i) => `
+                <div class="task-item" id="task-${t.id}" onclick="setActiveTask(${i})">
+                    <div class="task-check" id="check-${t.id}"></div>
+                    <div class="task-content">
+                        <h4>${i + 1}. ${t.title}</h4>
+                        <p>${t.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setActiveTask(idx) {
+            document.querySelectorAll('.task-item').forEach(t => t.classList.remove('active-task'));
+            const lab = LABS[TERMINAL.currentLab];
+            if (lab?.tasks[idx]) {
+                const taskEl = document.getElementById(`task-${lab.tasks[idx].id}`);
+                if (taskEl) taskEl.classList.add('active-task');
+            }
+        }
+
+        function toggleHint() {
+            const hint = document.getElementById('labHint');
+            hint.classList.toggle('visible');
+            document.querySelector('.hint-toggle').textContent = hint.classList.contains('visible') ? '▲ Hide Hint' : '▼ Show Hint';
+        }
+
+        // ── LANGUAGE SELECTION ────────────────────────
+        function setLang(lang) {
+            TERMINAL.currentLang = lang;
+
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`lang-${lang === 'python' ? 'python' : 'bash'}`).classList.add('active');
+            document.getElementById('terminal-label').textContent = `sentinel-lab ~ ${lang === 'python' ? 'python3' : 'bash'}`;
+            document.getElementById('editorModeLabel').textContent = `${lang === 'python' ? 'python3' : 'bash'} · sandbox`;
+
+            // Load starter code
+            const lab = LABS[TERMINAL.currentLab];
+            if (lab?.starterCode?.[lang]) {
+                document.getElementById('codeEditor').value = lab.starterCode[lang];
+            }
+        }
+
+        // ── CODE EXECUTION (script editor mode) ──────
+        async function runCode() {
+            const code = document.getElementById('codeEditor').value.trim();
+            if (!code) return;
+
+            const btn = document.getElementById('runBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite" size="15"></i> Running...';
+            lucide.createIcons();
+
+            const lang = TERMINAL.currentLang;
+            const currentLab = LABS[TERMINAL.currentLab];
+            const extraFiles = (currentLab && currentLab.additionalFiles) ? currentLab.additionalFiles : [];
+            const labIdForPrompt = currentLab ? currentLab.id : 'lab';
+
+            appendLine('prompt', `\u276f python3 ${labIdForPrompt}`);
+            await pistonExecute(code, extraFiles, lang);
+
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="play" size="15"></i> Run';
+            lucide.createIcons();
+            scrollTerminalToBottom();
+        }
+
+        function checkTaskCompletion(output) {
+            const lab = LABS[TERMINAL.currentLab];
+            if (!lab) return;
+
+            lab.tasks.forEach(task => {
+                if (!TERMINAL.completedTasks.has(task.id) && task.verifyKeyword) {
+                    if (output.toLowerCase().includes(task.verifyKeyword.toLowerCase())) {
+                        TERMINAL.completedTasks.add(task.id);
+                        const taskEl = document.getElementById(`task-${task.id}`);
+                        const checkEl = document.getElementById(`check-${task.id}`);
+                        if (taskEl) { taskEl.classList.add('completed'); taskEl.classList.remove('active-task'); }
+                        if (checkEl) checkEl.textContent = '✓';
+                        appendLine('success', `✓ Task "${task.title}" completed!`);
+                    }
+                }
+            });
+
+            const allDone = lab.tasks.every(t => TERMINAL.completedTasks.has(t.id));
+            if (allDone && !TERMINAL.allDoneShown) {
+                TERMINAL.allDoneShown = true;
+                if (TERMINAL.courseLab) {
+                    appendLine('success', '🎯 All tasks completed! Copy the flag from your output and submit it below.');
+                    Toast.success('Tasks complete — submit your flag!');
+                    const flagPanel = document.getElementById('flagPanel');
+                    flagPanel.style.display = 'block';
+                    setTimeout(() => flagPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150);
+                    lucide.createIcons();
+                } else {
+                    appendLine('success', '🎯 All tasks completed! Well done.');
+                    Toast.success('Lab Complete! Great work.');
+                }
+            }
+        }
+
+        // ── FLAG SUBMISSION ───────────────────────────
+        async function submitFlag() {
+            const flag    = document.getElementById('flagInput').value.trim();
+            const labId   = new URLSearchParams(window.location.search).get('id');
+            const feedback = document.getElementById('flagFeedback');
+            const btn      = document.getElementById('flagSubmitBtn');
+
+            if (!flag || !labId) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+            feedback.innerHTML = '';
+
+            try {
+                const result = await Auth.fetchJSON(`/api/labs/${labId}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ flag })
+                });
+
+                if (result.correct) {
+                    const msg = result.alreadyCompleted
+                        ? 'Already captured — no new tokens awarded.'
+                        : `Flag accepted! +${result.tokensEarned} tokens`;
+                    feedback.innerHTML = `<span class="flag-ok">✓ ${msg}</span>`;
+                    document.getElementById('flagInput').disabled = true;
+                    btn.style.display = 'none';
+                    document.getElementById('returnBtn').style.display = 'block';
+                    appendLine('success', `\u{1F3C1} Flag accepted! +${result.tokensEarned} tokens earned.`);
+                    if (result.tokensEarned > 0) Toast.success(`+${result.tokensEarned} tokens!`);
+                    // Persist lab completion to localStorage for hub display
+                    try {
+                        const done = new Set(JSON.parse(localStorage.getItem('sentinel_completed_labs') || '[]'));
+                        done.add(labId);
+                        localStorage.setItem('sentinel_completed_labs', JSON.stringify([...done]));
+                    } catch (_) {}
+                } else {
+                    feedback.innerHTML = `<span class="flag-err">✗ ${result.message || 'Incorrect flag. Try again.'}</span>`;
+                    btn.disabled = false;
+                    btn.textContent = 'Submit';
+                }
+            } catch (err) {
+                feedback.innerHTML = `<span class="flag-err">Error: ${err.message}</span>`;
+                btn.disabled = false;
+                btn.textContent = 'Submit';
+            }
+        }
+
+        function returnToCourse() {
+            // Go back to referring course page, or default to infoSec.html
+            const ref = document.referrer;
+            if (ref && ref.includes('infoSec.html')) {
+                window.location.href = ref;
+            } else {
+                window.location.href = 'infoSec.html';
+            }
+        }
+
+        // Allow Enter key on flag input (wired in main DOMContentLoaded above)
+        document.addEventListener('DOMContentLoaded', () => {
+            const flagInput = document.getElementById('flagInput');
+            if (flagInput) flagInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitFlag(); });
+        });
+
+        // ── TERMINAL HELPERS ──────────────────────────
+        function appendLine(type, text) {
+            const output = document.getElementById('terminalOutput');
+            const div = document.createElement('div');
+            div.className = `output-line ${type}`;
+            div.textContent = text;
+            output.appendChild(div);
+        }
+
+        function scrollTerminalToBottom() {
+            const output = document.getElementById('terminalOutput');
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearTerminal(addHeader = true) {
+            const output = document.getElementById('terminalOutput');
+            output.innerHTML = '';
+            TERMINAL.commandHistory = [];  // reset bash session state
+            if (addHeader) {
+                appendLine('system', '[ Terminal cleared \u2014 session state reset ]');
+                appendLine('system', '[ Lab files are still available. Type commands below. ]');
+            }
+        }
+
+        // ── NAVIGATION & PROFILE ──────────────────────
+        function handleLogout() { Auth.clearAuth(); Auth.logout('login.html'); }
+
+        function loadUserProfile() {
+            try {
+                const user = Auth.getUser();
+                if (!user) return;
+                document.getElementById('display-name').textContent = user.display_name || user.name || 'Agent';
+                document.getElementById('display-email').textContent = user.email || '';
+                const initials = (user.display_name || user.name || 'A').split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
+            } catch (e) {}
+        }
+
+        window.addEventListener('popstate', () => {
+            if (!Auth.getToken()) window.location.replace('login.html');
+        });
+    </script>
+</body>
+</html>

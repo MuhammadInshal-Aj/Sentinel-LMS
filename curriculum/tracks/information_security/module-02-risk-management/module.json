@@ -1,0 +1,19 @@
+{
+  "id": "infosec-m02",
+  "track_id": "infosec",
+  "title": "Risk Management",
+  "order": 2,
+  "description": "Identifying, assessing, and treating information security risks using industry frameworks",
+  "estimated_time": 60,
+  "lessons": [
+    "infosec-m02-l01",
+    "infosec-m02-l02",
+    "infosec-m02-l03",
+    "infosec-m02-l04",
+    "infosec-m02-l05"
+  ],
+  "checkpoint": {
+    "type": "reflection",
+    "unlock_condition": "all_lessons_completed"
+  }
+}

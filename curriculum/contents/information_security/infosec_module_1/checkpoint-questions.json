@@ -1,0 +1,68 @@
+{
+  "id": "infosec-m01-checkpoint",
+  "title": "Module 1 — Security Mindset Checkpoint",
+  "passing_score": 70,
+  "tokens": 100,
+  "questions": [
+    {
+      "id": "q1",
+      "topic": "CIA Triad",
+      "question": "The CIA Triad is the foundational model of information security. What do the three letters stand for?",
+      "choices": [
+        { "text": "Confidentiality, Integrity, Availability", "isCorrect": true },
+        { "text": "Control, Infrastructure, Assets", "isCorrect": false },
+        { "text": "Credentials, Identity, Access", "isCorrect": false },
+        { "text": "Compromise, Impact, Assessment", "isCorrect": false }
+      ],
+      "explanation": "The CIA Triad stands for Confidentiality (only authorized parties see data), Integrity (data is accurate and untampered), and Availability (systems are accessible when needed). These three properties are the core goals of any security program."
+    },
+    {
+      "id": "q2",
+      "topic": "Attacker/Defender Asymmetry",
+      "question": "Which statement best describes the asymmetry between attackers and defenders in information security?",
+      "choices": [
+        { "text": "Defenders have more tools and resources than attackers.", "isCorrect": false },
+        { "text": "An attacker needs to succeed only once; a defender must succeed every time.", "isCorrect": true },
+        { "text": "Attackers always target the most expensive assets first.", "isCorrect": false },
+        { "text": "Defenders can achieve perfect security with enough budget.", "isCorrect": false }
+      ],
+      "explanation": "This asymmetry is one of the hardest realities in security. Attackers need to find just one exploitable weakness, while defenders must close every gap. This is why defense in depth and risk prioritization matter more than attempting to block every attack."
+    },
+    {
+      "id": "q3",
+      "topic": "Threats, Vulnerabilities, Risk",
+      "question": "A developer pushes code without input validation, allowing users to inject SQL commands into the database. What does the missing input validation represent?",
+      "choices": [
+        { "text": "A threat", "isCorrect": false },
+        { "text": "A risk", "isCorrect": false },
+        { "text": "A vulnerability", "isCorrect": true },
+        { "text": "An exploit", "isCorrect": false }
+      ],
+      "explanation": "Missing input validation is a vulnerability — a weakness in the system that can be exploited. The attacker who performs SQL injection is the threat. The risk is the combined probability of exploitation and the potential damage to the database."
+    },
+    {
+      "id": "q4",
+      "topic": "Defense in Depth",
+      "question": "Your organization deploys a firewall, antivirus software, intrusion detection, and mandatory two-factor authentication. This strategy is best described as:",
+      "choices": [
+        { "text": "Perfect security — all bases are covered.", "isCorrect": false },
+        { "text": "Zero trust architecture.", "isCorrect": false },
+        { "text": "Defense in Depth — multiple overlapping layers of security controls.", "isCorrect": true },
+        { "text": "Perimeter security — keeping threats outside the network.", "isCorrect": false }
+      ],
+      "explanation": "Defense in Depth means using multiple layers of security controls so that if one fails, others still protect the system. No single control is perfect — layering them reduces the probability of a successful attack reaching your critical assets."
+    },
+    {
+      "id": "q5",
+      "topic": "Security Mindset",
+      "question": "Which statement most accurately reflects the concept of 'perfect security'?",
+      "choices": [
+        { "text": "Perfect security is achievable with a large enough budget and team.", "isCorrect": false },
+        { "text": "Only air-gapped systems with no internet access are perfectly secure.", "isCorrect": false },
+        { "text": "Perfect security does not exist — security is about managing and reducing risk to an acceptable level.", "isCorrect": true },
+        { "text": "A system is perfectly secure once all known vulnerabilities are patched.", "isCorrect": false }
+      ],
+      "explanation": "Perfect security is a myth. Even patched systems have unknown vulnerabilities (zero-days), human error, and physical attack vectors. Security professionals don't aim for perfection — they reduce risk to a level acceptable to the organization and prepare to detect and respond when defenses fail."
+    }
+  ]
+}

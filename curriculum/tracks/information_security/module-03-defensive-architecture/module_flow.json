@@ -1,0 +1,43 @@
+{
+  "module": "infosec-m03",
+
+  "flow": [
+    {
+      "type": "lesson",
+      "id": "infosec-m03-l01",
+      "required": true,
+      "unlocks": ["infosec-m03-l02"]
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m03-l02",
+      "required": true,
+      "unlocks": ["infosec-m03-l03"]
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m03-l03",
+      "required": true,
+      "unlocks": ["infosec-m03-l04"]
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m03-l04",
+      "required": true,
+      "unlocks": ["infosec-m03-l05"]
+    },
+    {
+      "type": "lesson",
+      "id": "infosec-m03-l05",
+      "required": true
+    },
+    {
+      "type": "checkpoint",
+      "id": "infosec-m03-checkpoint",
+      "required": true,
+      "unlock_condition": {
+        "lessons_completed": "all"
+      }
+    }
+  ]
+}

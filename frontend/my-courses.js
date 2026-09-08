@@ -22,18 +22,23 @@ async function fetchMyCourses() {
 
         let data = null;
 
-        try {
-            console.log('📡 Attempting API call to fetch courses...');
-            data = await Api.getUserCourses();
-            console.log('✅ API call succeeded, data:', data);
+        // Keep a copy of the catalog courses before the API call
+        const catalogCourses = [...(window.coursesData?.myCourses || [])];
 
-            // Transform API response into the coursesData format used by inline renderer
-            if (data.myCourses) {
-                console.log('Converting API courses to local format...');
-                window.coursesData.myCourses = data.myCourses.map(c => ({
+        try {
+            console.log('Attempting API call to fetch courses...');
+            data = await Api.getUserCourses();
+            console.log('API call succeeded, enrolled courses:', data?.myCourses?.length || 0);
+
+            // Transform API response and merge with catalog
+            if (data.myCourses && data.myCourses.length > 0) {
+                const enrolledCourses = data.myCourses.map(c => ({
                     id: c.slug || c.id,
                     title: c.title,
-                    category: c.level === 'foundation' ? 'fundamentals' : (c.level || c.category || 'fundamentals'),
+                    category: (c.level === 'foundation' || c.level === 'fundamentals')
+                        ? 'fundamentals'
+                        : 'intermediate',
+
                     description: c.description || '',
                     progress: {
                         percentage: c.overall_progress_percentage || 0,
@@ -48,28 +53,51 @@ async function fetchMyCourses() {
                         lessonsCount: c.total_lessons || 0
                     }
                 }));
-                console.log('✅ Courses converted from API format');
+
+                // Merge: update catalog courses with API progress, keep unenrolled ones
+                const enrolledIds = new Set(enrolledCourses.map(c => c.id));
+                const unenrolledCatalog = catalogCourses.filter(c => {
+                    // Keep catalog course if its ID (or mapped slug) isn't in the enrolled set
+                    const mappedSlug = window.COURSE_SLUG_MAP?.[c.id] || c.id;
+                    return !enrolledIds.has(c.id) && !enrolledIds.has(mappedSlug);
+                });
+                // Only update progress, NEVER replace catalog order
+window.coursesData.myCourses = catalogCourses.map(cat => {
+    const match = enrolledCourses.find(e =>
+        e.id === cat.id ||
+        e.id === (window.COURSE_SLUG_MAP?.[cat.id] || cat.id)
+    );
+    return match ? { ...cat, progress: match.progress, meta: match.meta } : cat;
+});
+
+                console.log(`Merged: ${enrolledCourses.length} enrolled + ${unenrolledCatalog.length} catalog = ${window.coursesData.myCourses.length} total`);
+            } else {
+                // API succeeded but user has no enrollments — keep catalog as-is
+                console.log('No enrolled courses from API, keeping catalog data');
             }
         } catch (apiError) {
-            console.warn('⚠️  API unavailable, falling back to local data:', apiError.message);
-            
-            // FALLBACK: Use the hardcoded window.coursesData from index.html
+            console.warn('API unavailable, falling back to local data:', apiError.message);
+            // Keep the original catalog courses
             if (!window.coursesData) {
-                console.error('❌ window.coursesData is undefined!');
                 throw new Error('Courses data not available (API failed and local data missing)');
             }
-            
             if (!window.coursesData.myCourses) {
-                console.error('❌ window.coursesData.myCourses is undefined!');
                 window.coursesData.myCourses = [];
             }
-            
-            console.log(`✅ Using local fallback data (${window.coursesData.myCourses.length} courses)`);
+            console.log(`Using local fallback data (${window.coursesData.myCourses.length} courses)`);
         }
 
         // Ensure we have valid data
         if (!window.coursesData || !window.coursesData.myCourses) {
             throw new Error('No course data available');
+        }
+
+        // Refresh token balance for My Courses header widgets.
+        try {
+            const tokenRes = await Api.getUserTokens();
+            CoursesState.tokenBalance = tokenRes.tokens?.tokens_available ?? 0;
+        } catch (tokenError) {
+            console.warn('Could not refresh token balance:', tokenError.message);
         }
 
         CoursesState.courses = window.coursesData.myCourses;
@@ -126,6 +154,9 @@ async function initializeMyCoursesPage() {
             
             console.log('✅ Rendering intermediate courses...');
             renderCoursesByCategory(window.coursesData.myCourses, 'intermediate');
+
+            // Update tab counts after rendering
+            updateCoursesTabCounts(window.coursesData.myCourses);
         } else {
             console.error('❌ renderCoursesByCategory function not found!');
         }
@@ -141,7 +172,28 @@ async function initializeMyCoursesPage() {
         console.log('✅ My Courses initialized successfully');
     } else {
         console.error('❌ Failed to initialize My Courses. Data:', { data, coursesData: window.coursesData });
+        // Show zeroes if no data
+        updateCoursesTabCounts([]);
     }
+}
+
+// Count and update the tab values for Active, Available, Upcoming
+function updateCoursesTabCounts(courses) {
+    let active = 0, available = 0, upcoming = 0;
+    if (Array.isArray(courses)) {
+        courses.forEach(c => {
+            if (window.UPCOMING_COURSE_IDS && window.UPCOMING_COURSE_IDS.has(c.id)) {
+                upcoming++;
+            } else if (c.progress && (c.progress.status === 'in-progress' || c.progress.status === 'completed')) {
+                active++;
+            } else {
+                available++;
+            }
+        });
+    }
+    document.getElementById('activeCoursesCount').textContent = active;
+    document.getElementById('availableCoursesCount').textContent = available;
+    document.getElementById('upcomingCoursesCount').textContent = upcoming;
 }
 
 // Token display update
@@ -154,8 +206,10 @@ function updateTokenDisplay() {
 
 // Course navigation
 function navigateToCourse(slug) {
-    console.log('Navigating to:', slug);
-    window.location.href = `infoSec.html?course=${slug}`;
+    const page = window.COURSE_PAGES?.[slug] || 'infoSec.html';
+    const backendSlug = window.COURSE_SLUG_MAP?.[slug] || slug;
+    console.log('Navigating to:', backendSlug, 'via', page);
+    window.location.href = `${page}?course=${encodeURIComponent(backendSlug)}`;
 }
 
 // --- UI States ---

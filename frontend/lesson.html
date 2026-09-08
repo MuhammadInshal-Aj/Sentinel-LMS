@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson | Sentinel-LMS</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Markdown renderer + syntax highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Shared modules -->
+    <link rel="stylesheet" href="Styles/theme.css">
+    <link rel="stylesheet" href="Styles/layout.css">
+    <link rel="stylesheet" href="Styles/components.css">
+    <link rel="stylesheet" href="Styles/utilities.css">
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="toast.js"></script>
+    <script src="navigation.js"></script>
+
+    <!-- Immediate auth guard -->
+    <script>
+        (function() {
+            if (!Auth.getToken()) {
+                window.location.replace('login.html');
+                document.documentElement.style.display = 'none';
+                throw new Error('AUTH_REDIRECT');
+            }
+        })();
+    </script>
+
+    <style>
+        :root { --lesson-font-scale: 1; }
+        body { display: flex; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        /* ── MAIN LAYOUT ────────────────────────────────── */
+        .lesson-page {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        /* ── TOP BAR ─────────────────────────────────────── */
+        .lesson-topbar {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.9rem 2.5rem;
+            border-bottom: 1px solid rgba(0,242,255,0.06);
+            background: rgba(4,4,8,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .lesson-breadcrumbs {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+        }
+        .lesson-breadcrumbs a { color: var(--text-muted); text-decoration: none; cursor: pointer; transition: color 0.2s; }
+        .lesson-breadcrumbs a:hover { color: var(--accent); }
+        .lesson-topbar-actions { display: flex; align-items: center; gap: 1rem; }
+        .reading-readout {
+            font-size: 0.72rem;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            min-width: 66px;
+            text-align: right;
+            letter-spacing: 0.5px;
+        }
+        .reading-progress {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 2px;
+            background: rgba(0,242,255,0.05);
+            pointer-events: none;
+        }
+        .reading-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #00ffaa, var(--accent));
+            background-size: 200% 100%;
+            transition: width 0.15s ease;
+            box-shadow: 0 0 12px var(--accent-glow), 0 0 24px rgba(0,242,255,0.15);
+            animation: shimmer 3s linear infinite;
+        }
+
+        /* ── LESSON CONTENT AREA ─────────────────────────── */
+        .lesson-content-area {
+            padding: 3rem 3.5rem;
+            max-width: 860px;
+            overflow-x: hidden; /* contain zoomed lesson body horizontally */
+        }
+
+        .lesson-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            animation: fadeInUp 0.5s ease-out backwards;
+        }
+        .lesson-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 60px; height: 1px;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+        .lesson-meta-row { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+        .lesson-number {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 2px;
+            color: var(--accent); text-transform: uppercase;
+            font-family: var(--font-mono);
+            padding: 0.25rem 0.6rem;
+            border: 1px solid rgba(0,242,255,0.2);
+            border-radius: 3px;
+            background: rgba(0,242,255,0.05);
+        }
+        .lesson-title-main {
+            font-family: var(--font-display);
+            font-size: 1.7rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #fff;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+        .lesson-time-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); }
+
+        .objectives-box {
+            background: rgba(0,242,255,0.03);
+            border: 1px solid rgba(0,242,255,0.12);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s 0.15s ease-out backwards;
+        }
+        .objectives-box::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            background: radial-gradient(circle, rgba(0,242,255,0.06), transparent 70%);
+            pointer-events: none;
+        }
+        .objectives-box h4 {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+        }
+        .objectives-box ul { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+        .objectives-box li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.9rem; color: #ccc; line-height: 1.5; }
+        .objectives-box li::before { content: '›'; color: var(--accent); font-weight: 700; margin-top: 1px; flex-shrink: 0; }
+
+        /* ── MARKDOWN RENDERED CONTENT ───────────────────── */
+        .lesson-body { line-height: 1.9; color: #d0d0d0; font-size: calc(1.05rem * var(--lesson-font-scale)); animation: fadeInUp 0.5s 0.3s ease-out backwards; }
+        .lesson-body h1 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: #fff; margin: 2.5rem 0 1rem; letter-spacing: 1.5px; }
+        .lesson-body h2 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: #fff; margin: 3rem 0 1rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(0,242,255,0.1); letter-spacing: 1px; position: relative; }
+        .lesson-body h2::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 40px; height: 1px; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+        .lesson-body h3 { font-size: 1.05rem; font-weight: 600; color: var(--accent); margin: 2.2rem 0 0.7rem; }
+        .lesson-body h4 { font-size: 0.95rem; font-weight: 600; color: #e0e0e0; text-transform: uppercase; letter-spacing: 0.5px; margin: 1.5rem 0 0.5rem; }
+        .lesson-body p { margin: 0 0 1.4rem; }
+        .lesson-body ul, .lesson-body ol { list-style: none; padding-left: 0; margin-bottom: 1.4rem; }
+        .lesson-body ul > li, .lesson-body ol > li {
+            position: relative; padding-left: 1.6rem;
+            margin-bottom: 0.55rem; line-height: 1.75; color: #d4d4d4;
+        }
+        .lesson-body ul > li::before {
+            content: '▸'; position: absolute; left: 0; top: 0.05em;
+            color: var(--accent); font-size: 0.8em; font-weight: 700; line-height: 1.75;
+        }
+        .lesson-body ol { counter-reset: lesson-ol; }
+        .lesson-body ol > li { counter-increment: lesson-ol; }
+        .lesson-body ol > li::before {
+            content: counter(lesson-ol) '.'; position: absolute; left: 0; top: 0;
+            color: var(--accent); font-size: 0.8em; font-family: var(--font-mono);
+            font-weight: 700; line-height: 1.75;
+        }
+        .lesson-body ul ul > li::before { content: '›'; color: rgba(0,242,255,0.55); font-size: 0.9em; }
+        .lesson-body ul ul, .lesson-body ol ol, .lesson-body ul ol, .lesson-body ol ul {
+            margin-top: 0.4rem; margin-bottom: 0.4rem; padding-left: 1.4rem;
+        }
+        .lesson-body strong { color: #fff; font-weight: 700; background: rgba(0,242,255,0.06); padding: 0.05em 0.3em; border-radius: 3px; }
+        .lesson-body em { color: #b0b0b0; }
+        .lesson-body blockquote {
+            position: relative; border: 1px solid rgba(0,242,255,0.18);
+            border-left: 3px solid var(--accent); padding: 1rem 1.2rem 1rem 3rem;
+            margin: 1.8rem 0; background: rgba(0,242,255,0.04);
+            border-radius: 0 8px 8px 0; color: #c0c8cc; font-style: normal;
+        }
+        .lesson-body blockquote::before {
+            content: 'ℹ'; position: absolute; left: 0.85rem; top: 1rem;
+            color: var(--accent); font-size: 1rem; opacity: 0.9; line-height: 1;
+        }
+        .lesson-body blockquote p { margin: 0; line-height: 1.7; }
+        .lesson-body blockquote strong { color: var(--accent); background: none; padding: 0; border-radius: 0; }
+        .lesson-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: rgba(255,255,255,0.07); padding: 0.15em 0.4em; border-radius: 3px; color: var(--accent); }
+        .lesson-body pre { position: relative; background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px; padding: 0; margin: 1.5rem 0; overflow: hidden; }
+        .lesson-body pre code { display: block; padding: 1.2rem 1.4rem; overflow-x: auto; background: none; color: inherit; font-size: 0.875rem; line-height: 1.6; }
+        .lesson-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .lesson-body thead { background: rgba(0,242,255,0.06); }
+        .lesson-body th { color: var(--accent); padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid rgba(0,242,255,0.15); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; font-family: var(--font-mono); }
+        .lesson-body td { padding: 0.7rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #ccc; }
+        .lesson-body td:first-child { color: #e8e8e8; font-weight: 500; }
+        .lesson-body tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .lesson-body tbody tr:hover { background: rgba(0,242,255,0.04); }
+        .lesson-body tr:last-child td { border-bottom: none; }
+        .lesson-body hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,242,255,0.15) 20%, rgba(0,242,255,0.15) 80%, transparent); margin: 3rem 0; }
+        .lesson-body a { color: var(--accent); text-decoration: none; }
+        .lesson-body a:hover { text-decoration: underline; }
+
+        /* Skeleton loader */
+        .lesson-skeleton { animation: shimmer 1.5s infinite; }
+        .skeleton-line { height: 18px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-bottom: 12px; }
+        .skeleton-line.wide { width: 85%; }
+        .skeleton-line.medium { width: 65%; }
+        .skeleton-line.narrow { width: 40%; }
+        @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+        /* ── RIGHT PANEL ─────────────────────────────────── */
+        .lesson-panel {
+            padding: 2rem 1.75rem;
+            border-left: 1px solid rgba(0,242,255,0.06);
+            background: rgba(6,6,12,0.6);
+            position: sticky;
+            top: 61px;
+            height: calc(100vh - 61px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-section { }
+        .panel-label {
+            font-family: var(--font-display);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+        }
+
+        /* Progress in panel */
+        .panel-progress-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+            animation: countUp 0.6s ease-out backwards;
+        }
+        .panel-progress-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Outline in panel */
+        .outline-list { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
+        .outline-item { font-size: 0.85rem; color: var(--text-muted); border-radius: 4px; transition: all 0.2s; display: flex; align-items: center; }
+        .outline-item-btn {
+            width: 100%;
+            padding: 0.3rem 0.5rem;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: inherit;
+            text-align: left;
+            cursor: pointer;
+            border-radius: inherit;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .outline-item:hover { color: var(--accent); background: rgba(0,242,255,0.05); }
+        .outline-item.h3 { padding-left: 1.2rem; font-size: 0.8rem; }
+        .outline-item-btn::before { content: '·'; color: var(--accent); flex-shrink: 0; }
+        .outline-item.active { color: var(--accent); background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.2); }
+
+        /* Complete button */
+        .complete-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--accent);
+            color: #000;
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .complete-btn:hover { background: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.3); }
+        .complete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .complete-btn.done { background: rgba(0,255,157,0.15); color: var(--success); border: 1px solid rgba(0,255,157,0.3); box-shadow: none; cursor: default; }
+        .next-lesson-pulse { animation: pulseNext 1.2s ease-in-out 3; }
+        @keyframes pulseNext {
+            0%, 100% { box-shadow: 0 0 0 rgba(0, 242, 255, 0); }
+            50% { box-shadow: 0 0 20px var(--accent-glow); }
+        }
+
+        /* Hint box */
+        .hint-form { display: flex; flex-direction: column; gap: 0.6rem; }
+        .hint-input { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem; color: #e0e0e0; font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; resize: none; height: 60px; }
+        .hint-input:focus { outline: none; border-color: var(--accent); }
+        .hint-btn { padding: 0.5rem; background: rgba(0,242,255,0.1); border: 1px solid rgba(0,242,255,0.2); color: var(--accent); border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; }
+        .hint-btn:hover { background: rgba(0,242,255,0.15); }
+        .hint-result { background: rgba(0,242,255,0.05); border: 1px solid rgba(0,242,255,0.15); border-radius: 6px; padding: 0.8rem; font-size: 0.85rem; color: #ccc; line-height: 1.6; display: none; }
+
+        /* ── BOTTOM NAV ──────────────────────────────────── */
+        .lesson-footnav {
+            grid-column: 1 / 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2.5rem;
+            border-top: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)),
+                rgba(5,5,5,0.92);
+            backdrop-filter: blur(6px);
+            gap: 1rem;
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+        }
+        .footnav-lesson-info { text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+        .footnav-lesson-info strong { display: block; color: #fff; font-size: 0.9rem; }
+        .lesson-footnav .btn-outline,
+        .lesson-footnav .btn-primary {
+            min-width: 170px !important;
+            min-height: 42px;
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: all 0.22s ease;
+        }
+        .lesson-footnav .btn-outline {
+            border: 1px solid rgba(0, 242, 255, 0.32);
+            background: rgba(0, 242, 255, 0.06);
+            color: #d8fcff;
+        }
+        .lesson-footnav .btn-outline:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: rgba(0, 242, 255, 0.12);
+            transform: translateY(-1px);
+            box-shadow: 0 0 14px rgba(0, 242, 255, 0.25);
+        }
+        .lesson-footnav .btn-primary {
+            border: 1px solid rgba(0, 242, 255, 0.75);
+            background: linear-gradient(135deg, var(--accent), #00b8ff);
+            color: #03161a;
+            box-shadow: 0 0 18px rgba(0, 242, 255, 0.35);
+        }
+        .lesson-footnav .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 0 24px rgba(0, 242, 255, 0.5);
+            filter: saturate(1.1);
+        }
+        .lesson-footnav .btn-outline:disabled,
+        .lesson-footnav .btn-primary:disabled {
+            opacity: 0.6;
+            box-shadow: none;
+            transform: none;
+        }
+        .lesson-footnav .btn-outline i,
+        .lesson-footnav .btn-primary i {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 1360px) {
+            .lesson-page { grid-template-columns: minmax(0, 1fr) 250px; }
+            .lesson-content-area { padding: 2.5rem; max-width: none; }
+            .lesson-panel { padding: 2rem 1.4rem; }
+        }
+
+        @media (max-width: 1140px) {
+            .lesson-page {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+            }
+            .lesson-content-area { padding: 2rem; }
+            .lesson-panel {
+                position: static;
+                top: auto;
+                height: auto;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                padding: 1.5rem 2rem;
+                overflow-y: visible;
+            }
+            .lesson-footnav {
+                grid-column: 1 / -1;
+                padding: 1rem 2rem;
+                border-right: none;
+            }
+            .lesson-title-main { font-size: 1.9rem; }
+        }
+
+        @media (max-width: 900px) {
+            .lesson-topbar { padding: 0.9rem 1.2rem; }
+            .lesson-content-area { padding: 1.5rem 1.2rem; }
+            .lesson-panel { padding: 1.2rem; }
+            .lesson-footnav { flex-wrap: wrap; justify-content: center; }
+            .footnav-lesson-info { width: 100%; order: 3; }
+            .lesson-footnav .btn-outline,
+            .lesson-footnav .btn-primary { min-width: 145px !important; }
+        }
+
+        @media (max-width: 768px) {
+            .lesson-page {
+                margin-left: 0;
+                width: 100%;
+            }
+            .lesson-title-main { font-size: 1.6rem; }
+            .lesson-body { font-size: calc(1rem * var(--lesson-font-scale)); }
+            .complete-btn,
+            #prevBtn,
+            #nextBtn { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .lesson-skeleton { animation: none; }
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── CODE BLOCK ENHANCEMENTS ─────────────────────── */
+        .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 1rem; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); }
+        .code-lang-label { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; color: rgba(0,242,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; }
+        .code-copy-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-muted); font-size: 0.7rem; font-family: var(--font-mono); padding: 0.2rem 0.55rem; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s; }
+        .code-copy-btn:hover { color: var(--accent); border-color: rgba(0,242,255,0.35); background: rgba(0,242,255,0.06); }
+        .code-copy-btn.copied { color: var(--success); border-color: rgba(0,255,157,0.35); }
+
+        /* ── ZOOM INDICATOR ──────────────────────────────── */
+        .zoom-indicator {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: rgba(10,10,16,0.88);
+            border: 1px solid rgba(0,242,255,0.25);
+            border-radius: 6px;
+            padding: 0.3rem 0.65rem;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--accent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 9999;
+            backdrop-filter: blur(6px);
+        }
+        .zoom-indicator.visible { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="logo">
+            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS">
+            SENTINEL<span>LMS</span>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" data-course-link href="infoSec.html" onclick="goBackToCourse(); return false;">
+                    <i data-lucide="arrow-left" size="20"></i>
+                    <span>Back to Course</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="index.html" onclick="goBackToDashboard(); return false;">
+                    <i data-lucide="layout-dashboard" size="20"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="labs.html">
+                    <i data-lucide="terminal-square" size="20"></i>
+                    <span>Labs & CTFs</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-status" style="font-size:0.75rem; color:var(--text-muted); padding:0.5rem 0.8rem;">
+                <i data-lucide="zap" size="12" style="display:inline;vertical-align:middle;color:var(--accent)"></i>
+                <span id="sidebar-tokens" style="font-family:'JetBrains Mono',monospace; color:var(--accent)">0</span> tokens
+            </div>
+            <div class="profile-popup" id="profilePopup">
+                <div class="popup-item logout" onclick="handleLogout()">
+                    <i data-lucide="log-out" size="18"></i><span>Logout</span>
+                </div>
+            </div>
+            <button class="profile-btn" id="profileBtn">
+                <div class="profile-avatar" id="display-avatar">??</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="display-name">Loading...</div>
+                    <div class="profile-email" id="display-email">Please wait...</div>
+                </div>
+                <i data-lucide="chevron-up" size="18"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN LESSON PAGE -->
+    <div class="lesson-page">
+
+        <!-- TOP BAR -->
+        <div class="lesson-topbar">
+            <div class="lesson-breadcrumbs">
+                <a href="index.html" aria-label="Back to Dashboard" onclick="goBackToDashboard(); return false;"><i data-lucide="home" size="14"></i></a> /
+                <a data-course-link href="infoSec.html" onclick="goBackToCourse(); return false;" id="breadcrumb-course">Information Security</a> /
+                <span id="breadcrumb-lesson">Lesson</span>
+            </div>
+            <div class="lesson-topbar-actions">
+                <span class="reading-readout" id="readingReadout">0% read</span>
+                <span id="topbar-status" style="font-size:0.8rem; color:var(--text-muted);" aria-live="polite"></span>
+            </div>
+            <div class="reading-progress" aria-hidden="true">
+                <div class="reading-progress-fill" id="readingProgressFill"></div>
+            </div>
+        </div>
+
+        <!-- LESSON READING AREA -->
+        <div class="lesson-content-area">
+            <div class="lesson-header">
+                <div class="lesson-meta-row">
+                    <span class="lesson-number" id="lesson-number">LESSON</span>
+                    <span class="lesson-time-badge">
+                        <i data-lucide="clock" size="13"></i>
+                        <span id="lesson-time">-- min</span>
+                    </span>
+                </div>
+                <h1 class="lesson-title-main" id="lesson-title">Loading lesson...</h1>
+            </div>
+
+            <div class="objectives-box" id="objectivesBox" style="display:none">
+                <h4>Learning Objectives</h4>
+                <ul id="objectivesList"></ul>
+            </div>
+
+            <!-- Markdown content renders here -->
+            <div class="lesson-body" id="lessonBody">
+                <div class="lesson-skeleton">
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line narrow"></div>
+                    <br>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line wide"></div>
+                    <div class="skeleton-line narrow"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <aside class="lesson-panel">
+            <div class="panel-section">
+                <div class="panel-label">Module Progress</div>
+                <div class="panel-progress-value" id="panel-progress">–</div>
+                <div class="panel-progress-label">lessons completed</div>
+            </div>
+
+            <div class="panel-section">
+                <button class="complete-btn" id="completeBtn" type="button" onclick="markComplete()">
+                    <i data-lucide="check-circle" size="18"></i>
+                    Mark as Complete
+                </button>
+            </div>
+
+            <div class="panel-section" id="outlineSection" style="display:none">
+                <div class="panel-label">On This Page</div>
+                <ul class="outline-list" id="outlineList"></ul>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-label">Need a Hint?</div>
+                <div class="hint-form">
+                    <textarea class="hint-input" id="hintInput" placeholder="What are you stuck on? e.g. 'explain the CIA Triad in simple terms'"></textarea>
+                    <button class="hint-btn" type="button" onclick="getHint()">ASK AI MENTOR</button>
+                    <div class="hint-result" id="hintResult" aria-live="polite"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- BOTTOM NAVIGATION -->
+        <div class="lesson-footnav">
+            <button class="btn-outline" id="prevBtn" type="button" onclick="navigateLesson('prev')">
+                <i data-lucide="arrow-left" size="16"></i> Previous
+            </button>
+            <div class="footnav-lesson-info" id="footnav-info">
+                <strong id="footnav-title">–</strong>
+                <span id="footnav-course">Information Security · Module 01</span>
+            </div>
+            <button class="btn-primary" id="nextBtn" type="button" onclick="navigateLesson('next')">
+                Next <i data-lucide="arrow-right" size="16"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Pinch-to-zoom level indicator -->
+    <div class="zoom-indicator" id="zoomIndicator">100%</div>
+
+    <script>
+        // ============================================
+        // LESSON VIEWER — CONFIGURATION
+        // ============================================
+
+        // Ordered lesson sequence for Module 1
+        // Simulations and checkpoints are handled in infoSec.html, not here
+        const DEFAULT_TRACK_SLUG = 'information-security';
+        const TRACK_SLUG_ALIASES = {
+            'information-security': 'information-security',
+            'infosec': 'information-security'
+        };
+
+        function normalizeTrackSlug(slug) {
+            if (!slug) return DEFAULT_TRACK_SLUG;
+            return TRACK_SLUG_ALIASES[slug] || DEFAULT_TRACK_SLUG;
+        }
+
+        const COURSE_SEQUENCE = {
+            'infosec': {
+                slug: 'infosec',
+                title: 'Information Security',
+                courseUrl: 'infoSec.html',
+                lessons: [
+                    { id: 'infosec-m01-l01', label: '1.1 What Is Information Security?' },
+                    { id: 'infosec-m01-l02', label: '1.3 The CIA Triad' },
+                    { id: 'infosec-m01-l03', label: '1.4 Threats, Vulnerabilities, and Risk' },
+                    { id: 'infosec-m01-l04', label: '1.6 Secure by Design' },
+                    { id: 'infosec-m01-l05', label: '1.7 Defense in Depth' }
+                ]
+            },
+            'information-security': {
+                slug: 'information-security',
+                title: 'Information Security',
+                courseUrl: 'infoSec.html',
+                lessons: [
+                    { id: 'infosec-m01-l01', label: '1.1 What Is Information Security?' },
+                    { id: 'infosec-m01-l02', label: '1.3 The CIA Triad' },
+                    { id: 'infosec-m01-l03', label: '1.4 Threats, Vulnerabilities, and Risk' },
+                    { id: 'infosec-m01-l04', label: '1.6 Secure by Design' },
+                    { id: 'infosec-m01-l05', label: '1.7 Defense in Depth' }
+                ]
+            }
+        };
+
+        // ── PAGE STATE ───────────────────────────────
+        const LESSON = {
+            id: null,
+            courseSlug: DEFAULT_TRACK_SLUG,
+            isCompleted: false,
+            sequence: [],
+            currentIndex: -1
+        };
+
+        const VIEW_STATE = {
+            reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            outlineEntries: []
+        };
+
+        // ── INIT ─────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            Navigation.initProfilePopup();
+            loadUserProfile();
+            window.history.pushState({ page: 'lesson' }, '', window.location.href);
+
+            const params = new URLSearchParams(window.location.search);
+            LESSON.id = params.get('id');
+            LESSON.courseSlug = normalizeTrackSlug(params.get('course'));
+
+            const courseData = COURSE_SEQUENCE[LESSON.courseSlug] || COURSE_SEQUENCE[DEFAULT_TRACK_SLUG];
+            if (courseData) {
+                LESSON.courseSlug = courseData.slug;
+                LESSON.sequence = courseData.lessons;
+                LESSON.currentIndex = courseData.lessons.findIndex(l => l.id === LESSON.id);
+            }
+
+            // Set up breadcrumb and footnav
+            const course = COURSE_SEQUENCE[LESSON.courseSlug];
+            if (course) {
+                document.getElementById('breadcrumb-course').textContent = course.title;
+                const courseHref = `${course.courseUrl}?course=${encodeURIComponent(LESSON.courseSlug)}`;
+                document.querySelectorAll('[data-course-link]').forEach((link) => {
+                    link.setAttribute('href', courseHref);
+                });
+            }
+            updateNavButtons();
+            window.addEventListener('scroll', handleViewportUpdates, { passive: true });
+            window.addEventListener('resize', handleViewportUpdates);
+            handleViewportUpdates();
+
+            // Load token balance
+            try {
+                const t = await Api.getUserTokens();
+                document.getElementById('sidebar-tokens').textContent = t.tokens?.tokens_available ?? 0;
+            } catch (_) {}
+
+            if (!LESSON.id) {
+                document.getElementById('lessonBody').innerHTML = '<p style="color:var(--danger)">No lesson ID specified in the URL.</p>';
+                return;
+            }
+
+            await loadLesson(LESSON.id);
+            handleViewportUpdates();
+        });
+
+        // ── LOAD & RENDER LESSON ─────────────────────
+        async function loadLesson(lessonId) {
+            try {
+                const data = await Api.getLessonContent(lessonId);
+
+                // Update page title
+                document.title = `${data.title} | Sentinel-LMS`;
+                document.getElementById('lesson-title').textContent = data.title;
+                document.getElementById('breadcrumb-lesson').textContent = data.title;
+
+                const seq = LESSON.sequence[LESSON.currentIndex];
+                document.getElementById('lesson-number').textContent = seq ? seq.label.split(' ')[0] : 'LESSON';
+                document.getElementById('lesson-time').textContent = `${data.estimatedTime || '--'} min`;
+
+                // Objectives
+                if (data.objectives?.length) {
+                    const list = document.getElementById('objectivesList');
+                    list.innerHTML = data.objectives.map(o => `<li>${o}</li>`).join('');
+                    document.getElementById('objectivesBox').style.display = 'block';
+                }
+
+                // Render markdown — html:true passes raw HTML blocks through unchanged.
+                // Use marked.use() (v9+ API) with setOptions fallback for older versions.
+                try { marked.use({ html: true, gfm: true, breaks: false }); } catch (e) {}
+                marked.setOptions({ gfm: true, breaks: false, html: true });
+                const html = marked.parse(data.content || '');
+                document.getElementById('lessonBody').innerHTML = html;
+
+                // Syntax highlight
+                document.querySelectorAll('.lesson-body pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+
+                // Inject copy buttons + language labels into code blocks
+                document.querySelectorAll('.lesson-body pre').forEach(pre => {
+                    const codeEl = pre.querySelector('code');
+                    if (!codeEl || pre.querySelector('.code-block-header')) return;
+                    const langClass = [...codeEl.classList].find(c => c.startsWith('language-'));
+                    const lang = langClass ? langClass.replace('language-', '') : 'code';
+                    const header = document.createElement('div');
+                    header.className = 'code-block-header';
+                    const langLabel = document.createElement('span');
+                    langLabel.className = 'code-lang-label';
+                    langLabel.textContent = lang;
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'code-copy-btn';
+                    copyBtn.type = 'button';
+                    copyBtn.textContent = 'copy';
+                    copyBtn.setAttribute('aria-label', 'Copy code');
+                    copyBtn.addEventListener('click', async () => {
+                        try {
+                            await navigator.clipboard.writeText(codeEl.innerText);
+                            copyBtn.textContent = 'copied!';
+                            copyBtn.classList.add('copied');
+                            setTimeout(() => { copyBtn.textContent = 'copy'; copyBtn.classList.remove('copied'); }, 1800);
+                        } catch { copyBtn.textContent = 'failed'; setTimeout(() => { copyBtn.textContent = 'copy'; }, 1800); }
+                    });
+                    header.appendChild(langLabel);
+                    header.appendChild(copyBtn);
+                    pre.insertBefore(header, codeEl);
+                });
+
+                // Build outline from headings
+                buildOutline();
+                handleViewportUpdates();
+
+                // Restore completion state
+                try {
+                    const progress = await Api.getTrackProgress(LESSON.courseSlug);
+                    const lp = progress.lessonProgress || [];
+                    const entry = lp.find(l => l.lesson_id === lessonId);
+                    if (entry?.status === 'completed') markAsAlreadyDone();
+                    const done = lp.filter(l => l.status === 'completed').length;
+                    document.getElementById('panel-progress').textContent = `${done}/${LESSON.sequence.length}`;
+                } catch (_) {}
+
+                // Update footnav
+                const current = LESSON.sequence[LESSON.currentIndex];
+                if (current) {
+                    document.getElementById('footnav-title').textContent = current.label;
+                    document.getElementById('footnav-course').textContent = `Information Security · Module 01`;
+                }
+
+                // Update topbar status
+                if (!LESSON.isCompleted) {
+                    const statusEl = document.getElementById('topbar-status');
+                    statusEl.textContent = `${data.estimatedTime || 0} min read`;
+                    statusEl.style.color = 'var(--text-muted)';
+                }
+
+            } catch (err) {
+                document.getElementById('lessonBody').innerHTML = `<p style="color:var(--danger)">Failed to load lesson: ${err.message}</p>`;
+                console.error('Lesson load error:', err);
+            }
+        }
+
+        // ── OUTLINE ───────────────────────────────────
+        function buildOutline() {
+            const headings = [...document.querySelectorAll('.lesson-body h2, .lesson-body h3')];
+            const list = document.getElementById('outlineList');
+            const section = document.getElementById('outlineSection');
+            list.innerHTML = '';
+            VIEW_STATE.outlineEntries = [];
+
+            if (headings.length < 2) {
+                section.style.display = 'none';
+                return;
+            }
+
+            headings.forEach((heading, i) => {
+                const id = `heading-${i}`;
+                heading.id = id;
+
+                const li = document.createElement('li');
+                li.className = `outline-item ${heading.tagName === 'H3' ? 'h3' : ''}`;
+                li.dataset.headingId = id;
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'outline-item-btn';
+                button.textContent = heading.textContent;
+                button.setAttribute('aria-label', `Jump to ${heading.textContent}`);
+                button.onclick = () => {
+                    heading.scrollIntoView({
+                        behavior: VIEW_STATE.reducedMotion ? 'auto' : 'smooth',
+                        block: 'start'
+                    });
+                    updateActiveOutline();
+                };
+
+                li.appendChild(button);
+                list.appendChild(li);
+                VIEW_STATE.outlineEntries.push({ id, item: li });
+            });
+            section.style.display = 'block';
+            updateActiveOutline();
+        }
+
+        function handleViewportUpdates() {
+            updateReadingProgress();
+            updateActiveOutline();
+        }
+
+        function updateReadingProgress() {
+            const fill = document.getElementById('readingProgressFill');
+            const readout = document.getElementById('readingReadout');
+            const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
+            const ratio = maxScroll === 0 ? 0 : Math.min(window.scrollY / maxScroll, 1);
+            const percentage = Math.round(ratio * 100);
+
+            if (fill) fill.style.width = `${percentage}%`;
+            if (readout) readout.textContent = `${percentage}% read`;
+        }
+
+        function updateActiveOutline() {
+            if (!VIEW_STATE.outlineEntries.length) return;
+
+            let activeId = VIEW_STATE.outlineEntries[0].id;
+            const headingOffset = 150;
+
+            VIEW_STATE.outlineEntries.forEach(({ id }) => {
+                const heading = document.getElementById(id);
+                if (heading && heading.getBoundingClientRect().top <= headingOffset) {
+                    activeId = id;
+                }
+            });
+
+            VIEW_STATE.outlineEntries.forEach(({ id, item }) => {
+                const isActive = id === activeId;
+                item.classList.toggle('active', isActive);
+                const button = item.querySelector('.outline-item-btn');
+                if (button) {
+                    if (isActive) button.setAttribute('aria-current', 'location');
+                    else button.removeAttribute('aria-current');
+                }
+            });
+        }
+
+        // ── MARK COMPLETE ────────────────────────────
+        async function markComplete() {
+            const btn = document.getElementById('completeBtn');
+            if (btn.classList.contains('done') || btn.disabled) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite" size="18"></i> Saving...';
+            lucide.createIcons();
+
+            try {
+                const result = await Api.completeLesson(LESSON.id);
+                markAsAlreadyDone();
+                const tokens = result.tokensEarned || 20;
+                const newBalance = result.newBalance ?? result.tokens_available;
+
+                Toast.success(`+${tokens} Tokens - Lesson complete.`);
+
+                // Update token display
+                if (newBalance !== undefined && newBalance !== null) {
+                    document.getElementById('sidebar-tokens').textContent = newBalance;
+                }
+
+                incrementPanelProgress();
+                highlightNextLessonAction();
+
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="check-circle" size="18"></i> Mark as Complete';
+                lucide.createIcons();
+                if (err.message?.includes('already')) {
+                    markAsAlreadyDone();
+                } else {
+                    Toast.error(err.message || 'Could not save progress. Try again.');
+                }
+            }
+        }
+
+        function markAsAlreadyDone() {
+            const btn = document.getElementById('completeBtn');
+            btn.classList.add('done');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="check-circle" size="18"></i> Completed';
+            lucide.createIcons();
+            document.getElementById('topbar-status').textContent = 'Completed';
+            document.getElementById('topbar-status').style.color = 'var(--success)';
+            LESSON.isCompleted = true;
+        }
+
+        function incrementPanelProgress() {
+            const progressEl = document.getElementById('panel-progress');
+            if (!progressEl) return;
+
+            const parts = progressEl.textContent.split('/');
+            if (parts.length !== 2) return;
+
+            const completed = Number(parts[0]);
+            const total = Number(parts[1]);
+            if (!Number.isFinite(completed) || !Number.isFinite(total)) return;
+
+            progressEl.textContent = `${Math.min(completed + 1, total)}/${total}`;
+        }
+
+        function highlightNextLessonAction() {
+            const nextBtn = document.getElementById('nextBtn');
+            if (!nextBtn) return;
+            nextBtn.classList.add('next-lesson-pulse');
+            setTimeout(() => nextBtn.classList.remove('next-lesson-pulse'), 3600);
+        }
+
+        // ── NAVIGATION ────────────────────────────────
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (LESSON.currentIndex <= 0) {
+                prevBtn.textContent = '← Back to Course';
+                prevBtn.onclick = goBackToCourse;
+            }
+            if (LESSON.currentIndex >= LESSON.sequence.length - 1) {
+                nextBtn.innerHTML = 'Back to Course <i data-lucide="arrow-right" size="16"></i>';
+                nextBtn.onclick = goBackToCourse;
+                lucide.createIcons();
+            }
+        }
+
+        function navigateLesson(direction) {
+            const newIndex = direction === 'next' ? LESSON.currentIndex + 1 : LESSON.currentIndex - 1;
+
+            if (newIndex < 0 || newIndex >= LESSON.sequence.length) {
+                goBackToCourse();
+                return;
+            }
+
+            const nextLesson = LESSON.sequence[newIndex];
+            window.location.href = `lesson.html?id=${nextLesson.id}&course=${LESSON.courseSlug}`;
+        }
+
+        // ── AI HINT ───────────────────────────────────
+        async function diagnoseAiMentorAvailability(initialMessage = '') {
+            const apiUrl = window.CONFIG?.API_URL || window.API_URL || 'http://localhost:3000';
+
+            try {
+                const status = await Api.getAiStatus();
+                if (!status.configured) {
+                    return `AI mentor is unavailable on ${apiUrl}. Add GROQ_API_KEY in backend/.env and restart backend.`;
+                }
+                return 'AI mentor is configured but hint requests are still failing. Restart backend, then refresh and log in again.';
+            } catch (statusErr) {
+                const statusMessage = String(statusErr?.message || '').toLowerCase();
+                if (statusMessage.includes('404')) {
+                    return `Backend at ${apiUrl} is running an older build. Restart backend from this project and try again.`;
+                }
+                if (statusMessage.includes('failed to fetch') || statusMessage.includes('network')) {
+                    return `Cannot reach backend at ${apiUrl}. Start backend server and try again.`;
+                }
+                return initialMessage || `AI mentor is temporarily unavailable on ${apiUrl}.`;
+            }
+        }
+
+        async function getHint() {
+            const input = document.getElementById('hintInput');
+            const result = document.getElementById('hintResult');
+            const question = input.value.trim();
+
+            if (!question) { Toast.info('Type what you are stuck on first.'); return; }
+
+            const btn = document.querySelector('.hint-btn');
+            btn.textContent = 'THINKING...';
+            btn.disabled = true;
+            result.style.display = 'none';
+
+            try {
+                const data = await Api.getHint(LESSON.id, question);
+                result.textContent = data.hint;
+                result.style.display = 'block';
+            } catch (err) {
+                const message = String(err?.message || '').trim();
+                const lower = message.toLowerCase();
+                if (
+                    lower.includes('ai mentor is unavailable') ||
+                    lower.includes('ai not configured') ||
+                    lower.includes('failed to generate hint')
+                ) {
+                    Toast.error(await diagnoseAiMentorAvailability(message));
+                } else {
+                    Toast.error(message || 'Could not get hint right now.');
+                }
+            } finally {
+                btn.textContent = 'ASK AI MENTOR';
+                btn.disabled = false;
+            }
+        }
+
+        // ── HELPERS ───────────────────────────────────
+        function goBackToCourse() {
+            const course = COURSE_SEQUENCE[LESSON.courseSlug];
+            window.location.href = course ? course.courseUrl : 'index.html';
+        }
+        function goBackToDashboard() { window.location.href = 'index.html'; }
+        function handleLogout() { Auth.clearAuth(); Auth.logout('login.html'); }
+
+        function loadUserProfile() {
+            try {
+                const user = Auth.getUser();
+                if (!user) return;
+                document.getElementById('display-name').textContent = user.display_name || user.name || 'Agent';
+                document.getElementById('display-email').textContent = user.email || '';
+                const initials = (user.display_name || user.name || 'A').split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('display-avatar').textContent = initials.slice(0, 2) || '??';
+            } catch (e) {}
+        }
+
+        // ── ZOOM CONTROL (PINCH / CTRL+SCROLL) ───────────────────────
+        (function initZoom() {
+            const SCALE_MIN = 0.5, SCALE_MAX = 2.0, SCALE_STEP = 0.04;
+            let scale = parseFloat(localStorage.getItem('lessonPageZoom')) || 1.0;
+            let hideTimer = null;
+
+            const indicator = document.getElementById('zoomIndicator');
+
+            function applyScale(s) {
+                scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, parseFloat(s.toFixed(3))));
+                // Zoom only the lesson body — sidebar and right panel stay at native size
+                const body = document.getElementById('lessonBody');
+                if (body) body.style.zoom = scale;
+                localStorage.setItem('lessonPageZoom', scale);
+
+                // Show indicator briefly
+                if (indicator) {
+                    indicator.textContent = Math.round(scale * 100) + '%';
+                    indicator.classList.add('visible');
+                    clearTimeout(hideTimer);
+                    hideTimer = setTimeout(() => indicator.classList.remove('visible'), 1200);
+                }
+            }
+
+            applyScale(scale);
+
+            // Trackpad pinch = wheel event with ctrlKey: true
+            // Spreading fingers (zoom in) → deltaY < 0
+            // Compressing fingers (zoom out) → deltaY > 0
+            window.addEventListener('wheel', (e) => {
+                if (!e.ctrlKey) return;
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? SCALE_STEP : -SCALE_STEP;
+                applyScale(scale + delta);
+            }, { passive: false });
+
+            // Ctrl+0 resets to 100%
+            window.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === '0') {
+                    e.preventDefault();
+                    applyScale(1.0);
+                }
+            });
+        })();
+
+        window.addEventListener('popstate', () => {
+            if (!Auth.getToken()) window.location.replace('login.html');
+        });
+    </script>
+</body>
+</html>

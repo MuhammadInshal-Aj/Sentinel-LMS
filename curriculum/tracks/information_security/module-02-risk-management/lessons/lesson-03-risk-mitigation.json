@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m02-l03",
+  "title": "Risk Mitigation & Treatment",
+  "order": 3,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 15,
+  "objectives": [
+    "Identify the four risk treatment options: Accept, Avoid, Transfer, Reduce",
+    "Select appropriate controls for a given risk",
+    "Understand residual risk and risk appetite"
+  ],
+  "tags": ["risk", "mitigation", "controls"]
+}

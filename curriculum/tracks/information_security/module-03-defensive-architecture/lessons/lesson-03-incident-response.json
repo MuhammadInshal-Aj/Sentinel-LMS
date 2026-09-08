@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m03-l03",
+  "title": "Incident Response Planning",
+  "order": 3,
+  "type": "theory",
+  "difficulty": "intermediate",
+  "estimated_time": 15,
+  "objectives": [
+    "Describe the six phases of incident response",
+    "Understand the role of a CSIRT",
+    "Draft a basic incident response playbook for a common scenario"
+  ],
+  "tags": ["incident response", "CSIRT", "playbook", "IR"]
+}

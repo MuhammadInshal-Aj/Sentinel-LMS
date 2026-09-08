@@ -1,0 +1,74 @@
+{
+  "id": "infosec-m03-lab01",
+  "title": "Firewall Rule Audit \u2014 Spot the Misconfiguration",
+  "lessonId": "infosec-m03-l01",
+  "tokens": 75,
+  "flag": "FLAG{firewall-rule-004-exposed-sentinel}",
+  "context": "You are a network security engineer. Meridian Hospital's firewall configuration has been exported for a security review. Use shell commands to audit the rules, find dangerously permissive entries, and identify the misconfigured rule that violates least-privilege. Type each command and press Enter.",
+  "description": "Audit Meridian Hospital's exported firewall rules. Use grep and cat to identify rules that allow unrestricted access to internal services, pinpoint exposed admin ports, and flag the misconfigured rule.",
+  "language": "bash",
+  "hint": "Use 'cat firewall_rules.csv' to read all rules. Use 'grep \"0.0.0.0\" firewall_rules.csv' to find rules with ANY source. Use 'grep -E \"22|3306|5432\" firewall_rules.csv' to find exposed admin ports. The hidden flag is base64-encoded: type 'base64 -d hidden_flag.b64' to reveal it.",
+  "starterCode": "#!/bin/bash\n# ============================================\n# SENTINEL SECURITY LAB: Firewall Audit\n# Meridian General Hospital \u2014 Network Review\n# ============================================\n# Evidence files available:\n#   firewall_rules.csv   - Exported firewall rules\n#   service_map.txt      - Port-to-service mapping\n#   risk_matrix.txt      - Risk levels for exposures\n#   hidden_flag.b64      - Encoded flag\n#\n# Start with: cat firewall_rules.csv\n# Then work through each task below.\n# ============================================\necho \"=== FIREWALL AUDIT STARTED ===\"\nls",
+  "additionalFiles": [
+    {
+      "name": "firewall_rules.csv",
+      "content": "RULE_ID,DIRECTION,SOURCE,DESTINATION,PORT,PROTOCOL,ACTION,DESCRIPTION\nRULE-001,INBOUND,10.0.0.0/24,10.0.1.0/24,80,TCP,ALLOW,Internal web traffic\nRULE-002,INBOUND,10.0.0.0/24,10.0.1.0/24,443,TCP,ALLOW,Internal HTTPS traffic\nRULE-003,INBOUND,203.0.113.0/28,10.0.2.10,8080,TCP,ALLOW,Partner API access (restricted range)\nRULE-004,INBOUND,0.0.0.0/0,10.0.2.20,22,TCP,ALLOW,SSH admin access -- ANY SOURCE\nRULE-005,INBOUND,0.0.0.0/0,10.0.2.21,3306,TCP,ALLOW,MySQL database -- ANY SOURCE\nRULE-006,INBOUND,10.0.1.0/24,10.0.3.10,5432,TCP,ALLOW,PostgreSQL (internal subnet only)\nRULE-007,INBOUND,0.0.0.0/0,10.0.4.0/24,443,TCP,ALLOW,Patient portal HTTPS (public)\nRULE-008,OUTBOUND,10.0.0.0/8,0.0.0.0/0,*,ANY,ALLOW,Unrestricted outbound -- REVIEW\nRULE-009,INBOUND,192.168.1.0/24,10.0.2.20,22,TCP,ALLOW,SSH admin from management VLAN\nRULE-010,INBOUND,0.0.0.0/0,10.0.2.22,5900,TCP,ALLOW,VNC remote desktop -- ANY SOURCE\n"
+    },
+    {
+      "name": "service_map.txt",
+      "content": "=== PORT-TO-SERVICE MAPPING ===\nCommon admin and sensitive ports:\n\nPORT  | SERVICE        | RISK IF EXPOSED TO INTERNET\n------+----------------+----------------------------\n22    | SSH            | CRITICAL -- brute force, credential theft\n23    | Telnet         | CRITICAL -- plaintext credentials\n80    | HTTP           | MEDIUM   -- acceptable for web servers\n443   | HTTPS          | MEDIUM   -- acceptable for web servers\n3306  | MySQL          | CRITICAL -- database direct exposure\n5432  | PostgreSQL     | CRITICAL -- database direct exposure\n5900  | VNC            | CRITICAL -- remote desktop, full control\n8080  | HTTP-alt       | HIGH     -- often unpatched dev services\n3389  | RDP            | CRITICAL -- remote desktop, ransomware vector\n\nPRINCIPLE OF LEAST PRIVILEGE:\n  Firewall rules should restrict SOURCE to the minimum required IP range.\n  ANY SOURCE (0.0.0.0/0) for admin ports is a critical misconfiguration.\n"
+    },
+    {
+      "name": "risk_matrix.txt",
+      "content": "=== FIREWALL RISK MATRIX ===\nFramework: CIS Benchmark for Network Security\n\nCRITICAL RISK INDICATORS:\n  - Admin port (22, 3389, 5900) exposed to 0.0.0.0/0 (any IP)\n  - Database port (3306, 5432) exposed to 0.0.0.0/0\n  - Unrestricted outbound rules (potential data exfiltration path)\n\nRISK SCORING:\n  0.0.0.0/0 source on admin port = RISK SCORE: 25 (CRITICAL)\n  0.0.0.0/0 source on DB port    = RISK SCORE: 20 (CRITICAL)\n  Restricted subnet on admin port = RISK SCORE: 8  (MEDIUM)\n  Restricted subnet on HTTP/S     = RISK SCORE: 3  (LOW)\n\nMOST DANGEROUS MISCONFIGURATION:\n  An SSH rule (port 22) with source 0.0.0.0/0 allows any attacker\n  on the internet to attempt to log into your server.\n  This is the #1 cause of server compromises.\n"
+    },
+    {
+      "name": "hidden_flag.b64",
+      "content": "RkxBR3tmaXJld2FsbC1ydWxlLTAwNC1leHBvc2VkLXNlbnRpbmVsfQ==\n"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t0",
+      "title": "Start the audit",
+      "desc": "Type: <code>ls</code> \u2014 lists all files in this audit environment. (This runs automatically when the lab loads.)",
+      "verifyKeyword": "FIREWALL AUDIT STARTED"
+    },
+    {
+      "id": "t1",
+      "title": "Read all firewall rules",
+      "desc": "Type: <code>cat firewall_rules.csv</code> \u2014 displays the full exported firewall configuration. How many rules are there?",
+      "verifyKeyword": "RULE-010"
+    },
+    {
+      "id": "t2",
+      "title": "Find any-source rules",
+      "desc": "Type: <code>grep \"0.0.0.0/0\" firewall_rules.csv</code> \u2014 finds rules that allow access from ANY IP address on the internet.",
+      "verifyKeyword": "RULE-004"
+    },
+    {
+      "id": "t3",
+      "title": "Identify exposed admin ports",
+      "desc": "Type: <code>grep -E \"22|3306|5900\" firewall_rules.csv</code> \u2014 finds rules for high-risk admin and database ports.",
+      "verifyKeyword": "SSH admin"
+    },
+    {
+      "id": "t4",
+      "title": "Look up the risk level",
+      "desc": "Type: <code>grep \"SSH\" service_map.txt</code> \u2014 check what risk level an exposed SSH port carries.",
+      "verifyKeyword": "brute force"
+    },
+    {
+      "id": "t5",
+      "title": "Flag the misconfigured rule",
+      "desc": "RULE-004 allows SSH (port 22) from 0.0.0.0/0 \u2014 the most dangerous rule. Type: <code>echo \"VULN: RULE-004 exposes SSH to ANY SOURCE\"</code>",
+      "verifyKeyword": "VULN: RULE-004"
+    },
+    {
+      "id": "t6",
+      "title": "Decode the hidden flag",
+      "desc": "Type: <code>base64 -d hidden_flag.b64</code> \u2014 decodes and reveals your lab flag. Copy the FLAG{...} and submit it above.",
+      "verifyKeyword": "FLAG{"
+    }
+  ]
+}

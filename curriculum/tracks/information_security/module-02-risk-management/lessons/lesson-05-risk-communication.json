@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m02-l05",
+  "title": "Risk Communication & Reporting",
+  "order": 5,
+  "type": "theory",
+  "difficulty": "beginner",
+  "estimated_time": 10,
+  "objectives": [
+    "Communicate risk findings clearly to technical and non-technical audiences",
+    "Produce a basic risk register",
+    "Understand the role of risk reporting in security governance"
+  ],
+  "tags": ["risk", "communication", "reporting", "governance"]
+}

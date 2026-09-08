@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m03-l02",
+  "title": "Identity & Access Management",
+  "order": 2,
+  "type": "theory",
+  "difficulty": "intermediate",
+  "estimated_time": 15,
+  "objectives": [
+    "Explain authentication, authorization, and accounting (AAA)",
+    "Describe multi-factor authentication and why it matters",
+    "Apply role-based access control (RBAC) concepts"
+  ],
+  "tags": ["IAM", "authentication", "MFA", "RBAC", "access control"]
+}

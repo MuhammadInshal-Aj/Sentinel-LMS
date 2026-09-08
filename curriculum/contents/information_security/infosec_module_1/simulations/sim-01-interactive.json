@@ -1,0 +1,31 @@
+{
+  "id": "infosec-m01-sim01",
+  "title": "Attacker vs Defender Mindset",
+  "description": "Experience the asymmetry between attackers and defenders.",
+  "tokens": 5,
+  "scenario": "You are the sole security officer for a small company. A critical threat has been detected and you have 30 minutes before the attacker pivots. You can fully secure only ONE asset before they get in.",
+  "assets": ["Employee credentials (passwords & access keys)", "Customer database (names, emails, payment info)", "Internal file server (source code, contracts, IP)"],
+  "constraints": ["Limited budget", "Limited time", "You can only secure ONE asset immediately"],
+  "question": "Which asset do you prioritize protecting RIGHT NOW?",
+  "insight": "Security is not about securing everything. It is about securing what matters most first — and being prepared to fail gracefully on the rest.",
+  "choices": [
+    {
+      "id": "A",
+      "text": "Employee Credentials",
+      "isPreferred": true,
+      "feedback": "Strong reasoning. Credentials are the master key — if attackers get them, every other asset is compromised too. Credential theft enables lateral movement, privilege escalation, and persistent access. Defenders who prioritize identity first limit the blast radius of any breach."
+    },
+    {
+      "id": "B",
+      "text": "Customer Database",
+      "isPreferred": false,
+      "feedback": "Defensible choice. Customer data is high-value, legally sensitive, and often the target of financially motivated attacks. A breach here carries regulatory consequences (GDPR, PCI-DSS). However, without securing credentials first, attackers can still access the database through compromised accounts."
+    },
+    {
+      "id": "C",
+      "text": "Internal File Server",
+      "isPreferred": false,
+      "feedback": "Reasonable under certain contexts. Protecting intellectual property and source code can be critical if your company's competitive advantage lives there. However, source code is often less urgently exploitable in 30 minutes than credentials or customer data."
+    }
+  ]
+}

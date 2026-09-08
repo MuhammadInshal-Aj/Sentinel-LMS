@@ -125,6 +125,45 @@ const Auth = {
     },
 
     /**
+     * Attempt to refresh the access token using the stored refresh token.
+     * Uses Supabase Auth REST API directly.
+     * @returns {Promise<boolean>} True if refresh succeeded
+     */
+    async refreshSession() {
+        const refreshToken = this.getRefreshToken();
+        if (!refreshToken) return false;
+
+        const supabaseUrl = window.CONFIG?.SUPABASE_URL;
+        const supabaseKey = window.CONFIG?.SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseKey) return false;
+
+        try {
+            const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': supabaseKey
+                },
+                body: JSON.stringify({ refresh_token: refreshToken })
+            });
+
+            if (!response.ok) return false;
+
+            const data = await response.json();
+            if (data.access_token && data.refresh_token) {
+                this.storage.setItem(this.TOKEN_KEY, data.access_token);
+                this.storage.setItem(this.REFRESH_KEY, data.refresh_token);
+                console.log('[Auth] Session refreshed successfully');
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.warn('[Auth] Token refresh failed:', err.message);
+            return false;
+        }
+    },
+
+    /**
      * Make authenticated API request
      * @param {string} endpoint - API endpoint (e.g., '/api/user/courses')
      * @param {object} options - Fetch options (method, body, etc.)
@@ -154,13 +193,23 @@ const Auth = {
         };
 
         try {
-            const response = await fetch(`${window.API_URL}${endpoint}`, mergedOptions);
+            let response = await fetch(`${window.API_URL}${endpoint}`, mergedOptions);
 
-            // Handle unauthorized (token expired or invalid)
+            // On 401, try to refresh the token once before giving up
             if (response.status === 401) {
-                this.clearAuth();
-                window.location.href = 'login.html';
-                throw new Error('Session expired. Please login again.');
+                const refreshed = await this.refreshSession();
+                if (refreshed) {
+                    // Retry the request with the new token
+                    mergedOptions.headers['Authorization'] = `Bearer ${this.getToken()}`;
+                    response = await fetch(`${window.API_URL}${endpoint}`, mergedOptions);
+                }
+
+                // If still 401 after refresh attempt, redirect to login
+                if (response.status === 401) {
+                    this.clearAuth();
+                    window.location.href = 'login.html';
+                    throw new Error('Session expired. Please login again.');
+                }
             }
 
             return response;
@@ -181,10 +230,39 @@ const Auth = {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({ error: 'Request failed' }));
-            throw new Error(error.error || `HTTP ${response.status}`);
+            throw new Error(this.getUserFriendlyApiError(error.error || `HTTP ${response.status}`));
         }
 
         return await response.json();
+    },
+
+    /**
+     * Normalize low-level API errors into clear user-facing messages.
+     * @param {string} message
+     * @returns {string}
+     */
+    getUserFriendlyApiError(message) {
+        const text = String(message || '').trim();
+        const rpcMatch = text.match(/Database function '([^']+)' is missing/i);
+
+        if (rpcMatch) {
+            return `Platform setup required: missing database function ${rpcMatch[1]}. Please ask the admin to run the Supabase SQL setup.`;
+        }
+
+        if (text.includes('AI not configured')) {
+            const apiUrl = window.API_URL || window.CONFIG?.API_URL || 'http://localhost:3000';
+            return `AI mentor is unavailable on ${apiUrl}. Verify GROQ_API_KEY in backend/.env for the running backend instance, then restart backend.`;
+        }
+
+        if (text.toLowerCase().includes('rate-limited')) {
+            return 'AI mentor is temporarily rate-limited. Please try again in about a minute.';
+        }
+
+        if (text.toLowerCase().includes('ai key rejected')) {
+            return 'AI mentor key was rejected by Groq. Recheck GROQ_API_KEY in backend/.env and restart backend.';
+        }
+
+        return text || 'Request failed';
     },
 
     /**

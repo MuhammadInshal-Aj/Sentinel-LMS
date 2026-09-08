@@ -1,18 +1,51 @@
+
+# === Node and environment files ===
 node_modules/
 .env
 .env.*
 !.env.example
+
+# === Claude/AI agent artifacts ===
+.claude/
+
+# === Logs and temp files ===
 logs/
+*.log
 .temp/
 tmp/
-infra/
-design/
+
+# === Dependency lock files (optional, keep if you want reproducible installs) ===
+backend/package-lock.json
+frontend/package-lock.json
+
+# === Build and coverage outputs ===
 coverage/
 dist/
 build/
-*.log
-*.tmp
+
+# === System/IDE files ===
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+# === Project-specific folders (uncomment if you want to ignore) ===
+#infra/
+#design/
+
+# === Ignore binaries, fonts, and large assets ===
+*.ttf
+*.otf
+*.woff
+*.woff2
+
+# === Ignore OS-specific files ===
+ehthumbs.db
+Desktop.ini
+
+# === Ignore backup/swap files ===
+*~
+*.swp
+*.swo
+*.bak
+

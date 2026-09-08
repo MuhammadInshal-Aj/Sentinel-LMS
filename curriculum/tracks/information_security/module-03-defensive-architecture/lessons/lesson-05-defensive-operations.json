@@ -1,0 +1,14 @@
+{
+  "id": "infosec-m03-l05",
+  "title": "Defensive Security Operations",
+  "order": 5,
+  "type": "theory",
+  "difficulty": "intermediate",
+  "estimated_time": 15,
+  "objectives": [
+    "Understand the role of a Security Operations Center (SOC)",
+    "Explain threat hunting and proactive defense",
+    "Describe vulnerability management lifecycle"
+  ],
+  "tags": ["SOC", "threat hunting", "vulnerability management", "operations"]
+}

@@ -4,10 +4,11 @@
   "lessonId": "infosec-m01-l02",
   "tokens": 75,
   "flag": "FLAG{cia-all-violated-sentinel}",
-  "description": "A hospital has suffered a major security incident. Your job: examine the digital evidence using Bash commands, identify which pillars of the CIA Triad were violated, and decode the hidden flag.",
+  "context": "You are a SOC analyst called in to investigate a critical security breach at Meridian General Hospital. Use Linux shell commands to examine the digital evidence and identify which pillars of the CIA Triad were violated. Type each command and press Enter.",
+  "description": "A hospital has suffered a major security incident. Your job: examine the digital evidence using shell commands, identify which pillars of the CIA Triad were violated, and decode the hidden flag.",
   "language": "bash",
-  "hint": "The CIA Triad is Confidentiality, Integrity, and Availability. Use cat to read files, grep to search for keywords, and ls to list files. The flag is base64-encoded \u2014 run: base64 -d hidden_flag.b64",
-  "starterCode": "#!/bin/bash\n# ============================================\n# SENTINEL SECURITY LAB: CIA Crime Scene\n# Meridian General Hospital \u2014 Breach Investigation\n# ============================================\n# Available files:\n#   breach_report.txt  - Incident summary\n#   access_logs.txt    - Server access logs\n#   db_changes.log     - Database change records\n#   availability.log   - System uptime data\n#   hidden_flag.b64    - Encoded flag (find it!)\n#\n# Start your investigation. Run this script,\n# then add commands below to explore each file.\n# ============================================\necho \"=== INVESTIGATION STARTED ===\"\nls",
+  "hint": "The CIA Triad is Confidentiality, Integrity, and Availability. Type commands one at a time and press Enter: use 'ls' to list files, 'cat filename' to read a file, 'grep keyword filename' to search. For the final task type: base64 -d hidden_flag.b64",
+  "starterCode": "#!/bin/bash\n# ============================================\n# SENTINEL SECURITY LAB: CIA Crime Scene\n# Meridian General Hospital \u2014 Breach Investigation\n# ============================================\n# Evidence files available:\n#   breach_report.txt  - Incident summary\n#   access_logs.txt    - Server access logs\n#   db_changes.log     - Database change records\n#   availability.log   - System uptime data\n#   hidden_flag.b64    - Encoded flag\n#\n# Start with: ls\n# Then work through each task using the commands shown.\n# ============================================\necho \"=== INVESTIGATION STARTED ===\"\nls",
   "additionalFiles": [
     {
       "name": "breach_report.txt",
@@ -32,39 +33,39 @@
   ],
   "tasks": [
     {
-      "id": "t1",
-      "title": "Survey the crime scene",
-      "desc": "Run <code>ls</code> to list all evidence files available in the lab environment.",
-      "verifyKeyword": "breach_report.txt"
+      "id": "t0",
+      "title": "Start the investigation",
+      "desc": "Type: <code>ls</code> \u2014 lists all evidence files in the lab environment. (This runs automatically when the lab loads.)",
+      "verifyKeyword": "INVESTIGATION STARTED"
     },
     {
-      "id": "t2",
+      "id": "t1",
       "title": "Read the incident report",
-      "desc": "Run <code>cat breach_report.txt</code> to read the full incident summary.",
+      "desc": "Type: <code>cat breach_report.txt</code> \u2014 reads the full incident summary. How many patient records were stolen?",
       "verifyKeyword": "47,823"
     },
     {
-      "id": "t3",
+      "id": "t2",
       "title": "Find the exfiltration event",
-      "desc": "Run <code>grep -i \"exfil\" access_logs.txt</code> to locate the data theft in the server logs.",
+      "desc": "Type: <code>grep -i \"exfil\" access_logs.txt</code> \u2014 searches the server logs for the data theft event. This proves Confidentiality was violated.",
       "verifyKeyword": "EXFILTRATION"
     },
     {
-      "id": "t4",
+      "id": "t3",
       "title": "Confirm the integrity violation",
-      "desc": "Run <code>grep \"INTEGRITY\" db_changes.log</code> to confirm unauthorized database tampering.",
+      "desc": "Type: <code>grep \"INTEGRITY\" db_changes.log</code> \u2014 confirms unauthorized database tampering. This proves Integrity was violated.",
       "verifyKeyword": "INTEGRITY VIOLATION"
     },
     {
-      "id": "t5",
+      "id": "t4",
       "title": "Measure the system downtime",
-      "desc": "Run <code>grep \"DOWNTIME\" availability.log</code> to find the total outage duration.",
+      "desc": "Type: <code>grep \"DOWNTIME\" availability.log</code> \u2014 reveals the total outage duration. This proves Availability was violated.",
       "verifyKeyword": "8 hours"
     },
     {
-      "id": "t6",
+      "id": "t5",
       "title": "Decode the hidden flag",
-      "desc": "Run <code>base64 -d hidden_flag.b64</code> to decode and reveal the lab flag.",
+      "desc": "Type: <code>base64 -d hidden_flag.b64</code> \u2014 decodes and reveals your lab flag. Copy the FLAG{...} and submit it above.",
       "verifyKeyword": "FLAG{"
     }
   ]

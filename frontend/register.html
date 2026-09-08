@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel-LMS | Enlistment</title>
+    <title>Sentinel-LMS | New Enlistment</title>
     <link rel="icon" type="image/svg+xml" href="../assets/sentinel-mark.svg">
     <link rel="shortcut icon" href="../assets/sentinel-mark.svg">
     <script src="config.js"></script>
@@ -20,185 +20,572 @@
     <link rel="stylesheet" href="styles/auth.css">
     <script src="toast.js"></script>
 
-    <!-- Register-specific overrides -->
     <style>
-        body {
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+        html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; }
 
-        /* Register header: slightly larger title */
-        .auth-header h2 { font-size: 1.4rem; }
+        /* allow right panel to scroll on very short screens */
+        @media (max-height: 700px) {
+            html, body { overflow: visible; }
+            .auth-layout { height: auto; min-height: 100vh; }
+            .auth-panel-right { overflow-y: auto; min-height: 100vh; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="cyber-bg">
-        <div class="grid"></div>
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-    </div>
+<div class="auth-layout">
 
-    <nav class="auth-nav">
-        <a href="landing.html" class="logo">
-            <img class="logo-mark" src="../assets/sentinel-mark.svg" alt="Sentinel LMS logo">
-            SENTINEL<span>LMS</span>
-        </a>
-        <ul class="nav-links">
-            <li><a href="landing.html">Home</a></li>
-            <li><a href="#">Tracks</a></li>
-            <li><a href="#">Support</a></li>
-        </ul>
-        <button class="btn-auth" style="margin: 0; width: auto; padding: 0.6rem 1.5rem; font-size: 0.75rem;" onclick="location.href='login.html'">LOGIN</button>
-    </nav>
+    <!-- ══════════════════════════════════════
+         LEFT PANEL — Branding & Hex Canvas
+    ══════════════════════════════════════ -->
+    <div class="auth-panel-left">
+        <canvas id="authCanvas"></canvas>
+        <div class="panel-overlay"></div>
+        <div class="panel-scan"></div>
 
-    <div class="auth-container">
-        <div class="auth-card wide">
-            
-            <div class="card-nav">
-                <div class="nav-dot" onclick="window.history.back()" title="Go Back">
-                    <i data-lucide="chevron-left" size="18"></i>
-                </div>
-                <div class="nav-dot" onclick="window.history.forward()" title="Go Forward">
-                    <i data-lucide="chevron-right" size="18"></i>
-                </div>
-            </div>
-
-            <div class="auth-header">
-                <h2>New Enlistment</h2>
-                <p>Create your secure profile to begin training</p>
-            </div>
-
-            <form id="registerForm">
-                <div class="auth-name-row">
-                    <div class="auth-input-group">
-                        <label>First Name</label>
-                        <div class="auth-field">
-                            <i data-lucide="user" size="18"></i>
-                            <input type="text" name="firstName" id="firstName" placeholder="First name" required>
-                        </div>
-                    </div>
-
-                    <div class="auth-input-group">
-                        <label>Last Name</label>
-                        <div class="auth-field">
-                            <i data-lucide="user-check" size="18"></i>
-                            <input type="text" name="lastName" id="lastName" placeholder="Last name" required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="auth-input-group">
-                    <label>Terminal Email</label>
-                    <div class="auth-field">
-                        <i data-lucide="mail" size="18"></i>
-                        <input type="email" name="email" id="regEmail" placeholder="agent@sentinel-lms.io" required>
-                    </div>
-                </div>
-
-                <div class="auth-input-group">
-                    <label>Establish Access Key</label>
-                    <div class="auth-field">
-                        <i data-lucide="shield-check" size="18"></i>
-                        <input type="password" name="password" id="regPassword" placeholder="Min. 8 characters" required>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-auth" id="registerBtn">
-                    <span id="btnText">Request Clearance</span>
-                    <div class="spinner hidden" id="spinner"></div>
-                </button>
-            </form>
-
-            <p class="auth-footer">
-                Already have access? <a href="login.html">Sign in here</a>
+        <!-- Center branding -->
+        <div class="panel-center">
+            <a href="landing.html" class="panel-logo">
+                <img src="../assets/sentinel-mark.svg" alt="Sentinel LMS">
+                <div class="panel-logo-text">SENTINEL<span>LMS</span></div>
+            </a>
+            <p class="panel-tagline">TRAIN &nbsp;·&nbsp; HACK &nbsp;·&nbsp; DEFEND</p>
+            <div class="panel-divider"></div>
+            <p class="panel-mission">
+                Join thousands of security professionals.
+                Build <strong>real-world skills</strong> through guided labs
+                and <strong>AI-adaptive</strong> challenges.
             </p>
+            <div class="panel-features">
+                <div class="panel-feature">
+                    <i data-lucide="shield" size="13"></i>
+                    Structured learning tracks
+                </div>
+                <div class="panel-feature">
+                    <i data-lucide="terminal" size="13"></i>
+                    Live sandboxed terminals
+                </div>
+                <div class="panel-feature">
+                    <i data-lucide="zap" size="13"></i>
+                    Earn tokens &amp; certificates
+                </div>
+            </div>
+        </div>
+
+        <!-- System status -->
+        <div class="system-status">
+            <div class="status-row">
+                <div class="status-dot"></div>
+                ACTIVE AGENTS:&nbsp;<span class="status-value" id="activeAgents">—</span>
+            </div>
+            <div class="status-row">
+                <div class="status-dot"></div>
+                THREATS NEUTRALIZED:&nbsp;<span class="status-value" id="threatsNeutralized">—</span>
+            </div>
+            <div class="status-row">
+                <div class="status-dot"></div>
+                SYSTEM STATUS:&nbsp;<span class="status-value">ONLINE</span>
+            </div>
+        </div>
+
+        <!-- Security badge -->
+        <div class="panel-badge">
+            <i data-lucide="lock" size="11"></i>
+            TLS 1.3 &nbsp;|&nbsp; AES-256 ENCRYPTED
         </div>
     </div>
 
+
+    <!-- ══════════════════════════════════════
+         RIGHT PANEL — Register Form
+    ══════════════════════════════════════ -->
+    <div class="auth-panel-right">
+
+        <a href="landing.html" class="back-home">
+            <i data-lucide="arrow-left" size="13"></i>
+            BACK TO HOME
+        </a>
+
+        <div class="auth-form-wrap">
+
+            <div class="auth-header">
+                <h2>NEW ENLISTMENT</h2>
+                <p>Establish your secure profile to begin operations.</p>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step-item">
+                    <div class="step-dot active" id="dot1">01</div>
+                    <span class="step-label active-label" id="label1">IDENTITY</span>
+                </div>
+                <div class="step-connector" id="stepConnector"></div>
+                <div class="step-item">
+                    <div class="step-dot" id="dot2">02</div>
+                    <span class="step-label" id="label2">CREDENTIALS</span>
+                </div>
+            </div>
+
+            <!-- Shared form element — submit handled per-step in JS -->
+            <form id="registerForm" novalidate>
+
+                <!-- ─── STEP 1: IDENTITY ─── -->
+                <div class="step-panel active" id="step1">
+                    <div class="auth-name-row">
+                        <div class="auth-input-group">
+                            <label for="firstName">First Name</label>
+                            <div class="auth-field" id="firstNameField">
+                                <i data-lucide="user" size="15"></i>
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    id="firstName"
+                                    placeholder="First name"
+                                    autocomplete="given-name"
+                                    required
+                                >
+                            </div>
+                            <div class="field-error" id="firstNameError"></div>
+                        </div>
+
+                        <div class="auth-input-group">
+                            <label for="lastName">Last Name</label>
+                            <div class="auth-field" id="lastNameField">
+                                <i data-lucide="user-check" size="15"></i>
+                                <input
+                                    type="text"
+                                    name="lastName"
+                                    id="lastName"
+                                    placeholder="Last name"
+                                    autocomplete="family-name"
+                                    required
+                                >
+                            </div>
+                            <div class="field-error" id="lastNameError"></div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-auth" id="nextBtn">
+                        PROCEED <i data-lucide="arrow-right" size="14" style="margin-left:4px"></i>
+                    </button>
+                </div>
+
+                <!-- ─── STEP 2: CREDENTIALS ─── -->
+                <div class="step-panel" id="step2">
+
+                    <button type="button" class="step-back" id="backBtn">
+                        <i data-lucide="arrow-left" size="13"></i>
+                        BACK TO IDENTITY
+                    </button>
+
+                    <div class="auth-input-group">
+                        <label for="regEmail">Terminal Email</label>
+                        <div class="auth-field" id="emailField">
+                            <i data-lucide="mail" size="15"></i>
+                            <input
+                                type="email"
+                                name="email"
+                                id="regEmail"
+                                placeholder="agent@sentinel-lms.io"
+                                autocomplete="email"
+                                required
+                            >
+                        </div>
+                        <div class="field-error" id="emailError"></div>
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="regPassword">Establish Access Key</label>
+                        <div class="auth-field" id="regPasswordField">
+                            <i data-lucide="shield-check" size="15"></i>
+                            <input
+                                type="password"
+                                name="password"
+                                id="regPassword"
+                                placeholder="Min. 8 characters"
+                                autocomplete="new-password"
+                                required
+                            >
+                            <button type="button" class="input-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                                <i data-lucide="eye" size="15" id="regEyeIcon"></i>
+                            </button>
+                        </div>
+
+                        <!-- Password strength meter -->
+                        <div class="strength-wrap" id="strengthWrap" style="display:none;">
+                            <div class="strength-bar" id="strengthBar" data-level="0">
+                                <div class="strength-segment"></div>
+                                <div class="strength-segment"></div>
+                                <div class="strength-segment"></div>
+                                <div class="strength-segment"></div>
+                            </div>
+                            <span class="strength-label" id="strengthLabel"></span>
+                        </div>
+
+                        <div class="field-error" id="regPasswordError"></div>
+                    </div>
+
+                    <button type="submit" class="btn-auth" id="registerBtn">
+                        <span id="btnText">REQUEST CLEARANCE</span>
+                        <div class="spinner hidden" id="spinner"></div>
+                    </button>
+                </div>
+
+            </form>
+
+            <p class="auth-footer">
+                Already cleared? <a href="login.html">Sign in here</a>
+            </p>
+
+        </div><!-- /.auth-form-wrap -->
+    </div><!-- /.auth-panel-right -->
+
+</div><!-- /.auth-layout -->
+
+
 <script>
-    lucide.createIcons();
+/* ═══════════════════════════════════════════════════
+   ICONS
+═══════════════════════════════════════════════════ */
+lucide.createIcons();
 
-    const registerForm = document.getElementById('registerForm');
-    const submitBtn = document.getElementById('registerBtn');
-    const btnText = document.getElementById('btnText');
-    const spinner = document.getElementById('spinner');
 
-    const firstNameInput = document.getElementById('firstName');
-    const lastNameInput = document.getElementById('lastName');
-    const emailInput = document.getElementById('regEmail');
-    const passwordInput = document.getElementById('regPassword');
+/* ═══════════════════════════════════════════════════
+   HEX STREAM CANVAS (left panel background)
+═══════════════════════════════════════════════════ */
+(function initHexCanvas() {
+    const canvas = document.getElementById('authCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const HEX = '0123456789ABCDEF';
+    const COL_W = 18;
+    let cols, drops;
 
-    // Prevent forward navigation without proper registration completion
-    window.history.replaceState(null, '', window.location.href);
-
-    function updateSystemStatus(message, isSuccess) {
-        if (isSuccess) {
-            Toast.success(message, 3500);
-        } else {
-            Toast.error(message, 3500);
-        }
-        
-        // Keep status box for backward compatibility with CSS styling
-        // statusBox.textContent = `> ${message}`;
-        // statusBox.className = `status-box ${isSuccess ? 'success' : 'error'}`;
-        // statusBox.classList.remove('hidden');
+    function resize() {
+        canvas.width  = canvas.offsetWidth  || canvas.parentElement.offsetWidth;
+        canvas.height = canvas.offsetHeight || canvas.parentElement.offsetHeight;
+        cols  = Math.floor(canvas.width / COL_W);
+        drops = Array.from({ length: cols }, () => Math.floor(Math.random() * -50));
     }
 
-    function setLoadingState(isLoading) {
-        submitBtn.disabled = isLoading;
-        firstNameInput.disabled = isLoading;
-        lastNameInput.disabled = isLoading;
-        emailInput.disabled = isLoading;
-        passwordInput.disabled = isLoading;
+    resize();
+    window.addEventListener('resize', resize);
 
-        if (isLoading) {
-            btnText.textContent = "VERIFYING IDENTITY";
-            spinner.classList.remove('hidden');
-            submitBtn.classList.add('loading');
-        } else {
-            btnText.textContent = "Request Clearance";
-            spinner.classList.add('hidden');
-            submitBtn.classList.remove('loading');
-        }
+    setInterval(() => {
+        ctx.fillStyle = 'rgba(4, 4, 8, 0.06)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '13px "JetBrains Mono", monospace';
+
+        drops.forEach((y, i) => {
+            const char  = HEX[Math.floor(Math.random() * 16)];
+            const alpha = Math.random() * 0.55 + 0.2;
+            ctx.fillStyle = `rgba(0, 242, 255, ${alpha})`;
+            ctx.fillText(char, i * COL_W, y * 16);
+            if (y * 16 > canvas.height && Math.random() > 0.972) drops[i] = 0;
+            drops[i]++;
+        });
+    }, 55);
+})();
+
+
+/* ═══════════════════════════════════════════════════
+   COSMETIC LIVE COUNTERS
+═══════════════════════════════════════════════════ */
+(function initCounters() {
+    let agents  = 1200 + Math.floor(Math.random() * 80);
+    let threats = 38000 + Math.floor(Math.random() * 600);
+    const agentsEl  = document.getElementById('activeAgents');
+    const threatsEl = document.getElementById('threatsNeutralized');
+    if (!agentsEl) return;
+    agentsEl.textContent  = agents.toLocaleString();
+    threatsEl.textContent = threats.toLocaleString();
+    setInterval(() => {
+        agents  += Math.floor(Math.random() * 3) - 1;
+        threats += Math.floor(Math.random() * 4) + 1;
+        agentsEl.textContent  = agents.toLocaleString();
+        threatsEl.textContent = threats.toLocaleString();
+    }, 3200 + Math.random() * 1800);
+})();
+
+
+/* ═══════════════════════════════════════════════════
+   DOM REFERENCES
+═══════════════════════════════════════════════════ */
+const registerForm    = document.getElementById('registerForm');
+const registerBtn     = document.getElementById('registerBtn');
+const btnText         = document.getElementById('btnText');
+const spinner         = document.getElementById('spinner');
+
+// Step 1
+const firstNameInput  = document.getElementById('firstName');
+const lastNameInput   = document.getElementById('lastName');
+const firstNameField  = document.getElementById('firstNameField');
+const lastNameField   = document.getElementById('lastNameField');
+const firstNameError  = document.getElementById('firstNameError');
+const lastNameError   = document.getElementById('lastNameError');
+
+// Step 2
+const emailInput      = document.getElementById('regEmail');
+const passwordInput   = document.getElementById('regPassword');
+const emailField      = document.getElementById('emailField');
+const regPasswordField = document.getElementById('regPasswordField');
+const emailError      = document.getElementById('emailError');
+const regPasswordError = document.getElementById('regPasswordError');
+const togglePassword  = document.getElementById('togglePassword');
+const strengthBar     = document.getElementById('strengthBar');
+const strengthLabel   = document.getElementById('strengthLabel');
+const strengthWrap    = document.getElementById('strengthWrap');
+
+// Step UI
+const step1El        = document.getElementById('step1');
+const step2El        = document.getElementById('step2');
+const nextBtn        = document.getElementById('nextBtn');
+const backBtn        = document.getElementById('backBtn');
+const dot1           = document.getElementById('dot1');
+const dot2           = document.getElementById('dot2');
+const label1         = document.getElementById('label1');
+const label2         = document.getElementById('label2');
+const stepConnector  = document.getElementById('stepConnector');
+
+// Prevent forward nav without completion
+window.history.replaceState(null, '', window.location.href);
+
+
+/* ═══════════════════════════════════════════════════
+   VALIDATION HELPERS
+═══════════════════════════════════════════════════ */
+function showError(field, errorEl, message) {
+    field.classList.remove('is-valid');
+    field.classList.add('is-error');
+    errorEl.textContent = '⚠ ' + message;
+    errorEl.classList.add('visible');
+}
+
+function showValid(field, errorEl) {
+    field.classList.remove('is-error');
+    field.classList.add('is-valid');
+    errorEl.classList.remove('visible');
+}
+
+function validateName(input, field, errorEl, label) {
+    const val = input.value.trim();
+    if (!val) {
+        showError(field, errorEl, `${label} is required.`);
+        return false;
     }
+    if (val.length < 2) {
+        showError(field, errorEl, `${label} must be at least 2 characters.`);
+        return false;
+    }
+    showValid(field, errorEl);
+    return true;
+}
 
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+function validateEmail() {
+    const val = emailInput.value.trim();
+    if (!val) {
+        showError(emailField, emailError, 'Email address is required.');
+        return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+        showError(emailField, emailError, 'Enter a valid email address.');
+        return false;
+    }
+    showValid(emailField, emailError);
+    return true;
+}
 
-        setLoadingState(true);
+function validatePassword() {
+    const val = passwordInput.value;
+    if (!val) {
+        showError(regPasswordField, regPasswordError, 'Access key is required.');
+        return false;
+    }
+    if (val.length < 8) {
+        showError(regPasswordField, regPasswordError, 'Key must be at least 8 characters.');
+        return false;
+    }
+    showValid(regPasswordField, regPasswordError);
+    return true;
+}
 
-        const firstName = firstNameInput.value.trim();
-        const lastName = lastNameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
+// Touch-tracking per field (only show errors after first interaction)
+const touched = { firstName: false, lastName: false, email: false, password: false };
 
-        try {
-            await Api.register(firstName, lastName, email, password);
+firstNameInput.addEventListener('blur',  () => { touched.firstName = true; validateName(firstNameInput, firstNameField, firstNameError, 'First name'); });
+firstNameInput.addEventListener('input', () => { if (touched.firstName) validateName(firstNameInput, firstNameField, firstNameError, 'First name'); });
 
-            updateSystemStatus("ENLISTMENT SUCCESSFUL. INITIALIZING CLEARANCE...", true);
-            
-            // Replace history state to prevent going back to register.html
-            window.history.replaceState({registered: true}, '', window.location.href);
-            
-            setTimeout(() => {
-                // Use location.replace to prevent back navigation
-                window.location.replace('login.html');
-            }, 2000);
-        } catch (err) {
-            setLoadingState(false);
-            if (err instanceof TypeError) {
-                updateSystemStatus("CRITICAL: SENTINEL SERVER OFFLINE", false);
-            } else {
-                updateSystemStatus(`ACCESS DENIED: ${err.message}`, false);
-            }
-            btnText.textContent = "RETRY ENLISTMENT";
+lastNameInput.addEventListener('blur',   () => { touched.lastName = true; validateName(lastNameInput, lastNameField, lastNameError, 'Last name'); });
+lastNameInput.addEventListener('input',  () => { if (touched.lastName) validateName(lastNameInput, lastNameField, lastNameError, 'Last name'); });
+
+emailInput.addEventListener('blur',  () => { touched.email = true; validateEmail(); });
+emailInput.addEventListener('input', () => { if (touched.email) validateEmail(); });
+
+passwordInput.addEventListener('blur',  () => { touched.password = true; validatePassword(); });
+passwordInput.addEventListener('input', () => {
+    if (touched.password) validatePassword();
+    updateStrength(passwordInput.value);
+});
+
+
+/* ═══════════════════════════════════════════════════
+   PASSWORD STRENGTH METER
+═══════════════════════════════════════════════════ */
+const STRENGTH_LABELS = ['', 'WEAK', 'FAIR', 'STRONG', 'VERY STRONG'];
+
+function calcStrength(val) {
+    if (!val) return 0;
+    let score = 0;
+    if (val.length >= 6)  score = 1;
+    if (val.length >= 8)  score = 2;
+    if (val.length >= 8  && /[0-9]/.test(val) && /[^a-zA-Z0-9]/.test(val)) score = 3;
+    if (val.length >= 10 && /[A-Z]/.test(val)  && /[0-9]/.test(val) && /[^a-zA-Z0-9]/.test(val)) score = 4;
+    return score;
+}
+
+function updateStrength(val) {
+    if (!val) {
+        strengthWrap.style.display = 'none';
+        strengthBar.dataset.level = '0';
+        return;
+    }
+    strengthWrap.style.display = 'flex';
+    const level = calcStrength(val);
+    strengthBar.dataset.level    = level;
+    strengthLabel.dataset.level  = level;
+    strengthLabel.textContent    = STRENGTH_LABELS[level] || '';
+}
+
+// Show strength bar when user starts typing, even before blur
+passwordInput.addEventListener('input', () => {
+    updateStrength(passwordInput.value);
+});
+
+
+/* ═══════════════════════════════════════════════════
+   SHOW / HIDE PASSWORD TOGGLE
+═══════════════════════════════════════════════════ */
+let passwordVisible = false;
+togglePassword.addEventListener('click', () => {
+    passwordVisible = !passwordVisible;
+    passwordInput.type = passwordVisible ? 'text' : 'password';
+    const icon = togglePassword.querySelector('i');
+    icon.setAttribute('data-lucide', passwordVisible ? 'eye-off' : 'eye');
+    lucide.createIcons({ nodes: [icon] });
+});
+
+
+/* ═══════════════════════════════════════════════════
+   MULTI-STEP NAVIGATION
+═══════════════════════════════════════════════════ */
+nextBtn.addEventListener('click', () => {
+    // Validate both name fields
+    touched.firstName = true;
+    touched.lastName  = true;
+    const fnOk = validateName(firstNameInput, firstNameField, firstNameError, 'First name');
+    const lnOk = validateName(lastNameInput, lastNameField, lastNameError, 'Last name');
+    if (!fnOk || !lnOk) return;
+
+    // Animate step 1 out, then step 2 in
+    step1El.classList.add('exiting');
+    setTimeout(() => {
+        step1El.classList.remove('active', 'exiting');
+        step2El.classList.add('active');
+        // Update step indicator
+        dot1.classList.remove('active');
+        dot1.classList.add('done');
+        dot1.innerHTML = '<i data-lucide="check" size="14"></i>';
+        dot2.classList.add('active');
+        label1.classList.remove('active-label');
+        label1.classList.add('done-label');
+        label2.classList.add('active-label');
+        stepConnector.classList.add('done');
+        lucide.createIcons();
+    }, 230);
+});
+
+backBtn.addEventListener('click', () => {
+    step2El.classList.add('exiting');
+    setTimeout(() => {
+        step2El.classList.remove('active', 'exiting');
+        step1El.classList.add('active');
+        // Restore step indicator
+        dot1.classList.remove('done');
+        dot1.classList.add('active');
+        dot1.textContent = '01';
+        dot2.classList.remove('active');
+        label1.classList.remove('done-label');
+        label1.classList.add('active-label');
+        label2.classList.remove('active-label');
+        stepConnector.classList.remove('done');
+    }, 230);
+});
+
+
+/* ═══════════════════════════════════════════════════
+   LOADING STATE
+═══════════════════════════════════════════════════ */
+function setLoadingState(isLoading) {
+    registerBtn.disabled    = isLoading;
+    firstNameInput.disabled = isLoading;
+    lastNameInput.disabled  = isLoading;
+    emailInput.disabled     = isLoading;
+    passwordInput.disabled  = isLoading;
+    togglePassword.disabled = isLoading;
+
+    if (isLoading) {
+        btnText.textContent = 'VERIFYING IDENTITY';
+        spinner.classList.remove('hidden');
+        registerBtn.classList.add('loading');
+    } else {
+        btnText.textContent = 'REQUEST CLEARANCE';
+        spinner.classList.add('hidden');
+        registerBtn.classList.remove('loading');
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   FORM SUBMISSION
+═══════════════════════════════════════════════════ */
+registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Force-validate step 2 fields
+    touched.email    = true;
+    touched.password = true;
+    const emailOk = validateEmail();
+    const pwOk    = validatePassword();
+    if (!emailOk || !pwOk) return;
+
+    setLoadingState(true);
+
+    const firstName = firstNameInput.value.trim();
+    const lastName  = lastNameInput.value.trim();
+    const email     = emailInput.value.trim();
+    const password  = passwordInput.value;
+
+    try {
+        await Api.register(firstName, lastName, email, password);
+
+        Toast.success('ENLISTMENT SUCCESSFUL. INITIALIZING CLEARANCE...', 3500);
+        window.history.replaceState({ registered: true }, '', window.location.href);
+
+        setTimeout(() => {
+            window.location.replace('login.html');
+        }, 2000);
+
+    } catch (err) {
+        setLoadingState(false);
+        console.error('Register error:', err);
+        if (err instanceof TypeError) {
+            Toast.error('CRITICAL: SENTINEL SERVER OFFLINE', 3500);
+        } else {
+            Toast.error(`ACCESS DENIED: ${err.message}`, 3500);
         }
-    });
+        btnText.textContent = 'RETRY ENLISTMENT';
+    }
+});
 </script>
-
 </body>
 </html>
-

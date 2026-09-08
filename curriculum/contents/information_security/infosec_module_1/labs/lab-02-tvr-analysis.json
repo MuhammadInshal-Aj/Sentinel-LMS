@@ -4,6 +4,7 @@
   "lessonId": "infosec-m01-l03",
   "tokens": 75,
   "flag": "FLAG{tvr-risk-identified-sentinel}",
+  "context": "You are a risk analyst. Use the command line to read intelligence files and calculate which asset is most at risk. Type each command below and press Enter.",
   "description": "Meridian Hospital's security team has handed you their asset inventory, threat intelligence, and vulnerability scan results. Apply the Risk = Likelihood \u00d7 Impact formula to identify the most critical risk, then decode the hidden flag.",
   "language": "bash",
   "hint": "Risk = Likelihood \u00d7 Impact. Use cat and grep to read files. Use Bash arithmetic: echo $((4 * 5)) to compute risk scores. Check risk_guide.txt for scoring details. The flag is base64-encoded.",
@@ -34,37 +35,37 @@
     {
       "id": "t1",
       "title": "Survey available intelligence files",
-      "desc": "Run <code>ls</code> to list all files in the analysis environment.",
+      "desc": "Type: <code>ls</code> — lists all files in this investigation environment.",
       "verifyKeyword": "threat_intel.txt"
     },
     {
       "id": "t2",
       "title": "Identify HIGH-likelihood threats",
-      "desc": "Run <code>cat threat_intel.txt | grep \"HIGH\"</code> to find the most likely threats.",
-      "verifyKeyword": "RANSOMWARE"
+      "desc": "Type: <code>grep \"Likelihood_Score: 4\" threat_intel.txt</code> — this finds threats with the highest likelihood score.",
+      "verifyKeyword": "Likelihood_Score: 4"
     },
     {
       "id": "t3",
       "title": "Find known CVE vulnerabilities",
-      "desc": "Run <code>cat vulnerability_scan.txt | grep \"CVE\"</code> to list all CVE findings.",
+      "desc": "Type: <code>grep \"CVE\" vulnerability_scan.txt</code> — lists all known CVE findings from the scan.",
       "verifyKeyword": "CVE-"
     },
     {
       "id": "t4",
       "title": "Calculate the top risk score",
-      "desc": "Apply Risk = Likelihood \u00d7 Impact for RANSOMWARE vs Patient Database. Run: <code>echo \"RISK_SCORE: $((4 * 5))\"</code>",
-      "verifyKeyword": "RISK_SCORE"
+      "desc": "Apply Risk = Likelihood \u00d7 Impact for RANSOMWARE vs Patient Database. Type: <code>echo \"RISK_SCORE: $((4 * 5))\"</code>",
+      "verifyKeyword": "RISK_SCORE:"
     },
     {
       "id": "t5",
       "title": "Flag the critical asset",
-      "desc": "Identify the highest-risk asset and run: <code>echo \"CRITICAL: Patient Database\"</code>",
-      "verifyKeyword": "CRITICAL"
+      "desc": "Identify the highest-risk asset and type: <code>echo \"CRITICAL: Patient Database\"</code>",
+      "verifyKeyword": "CRITICAL: Patient Database"
     },
     {
       "id": "t6",
       "title": "Decode the hidden flag",
-      "desc": "Run <code>base64 -d hidden_flag.b64</code> to decode and reveal the lab flag.",
+      "desc": "Type: <code>base64 -d hidden_flag.b64</code> — decodes and reveals your lab flag. Copy it and submit above.",
       "verifyKeyword": "FLAG{"
     }
   ]

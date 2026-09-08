@@ -7,6 +7,37 @@
  * Depends on: config.js (CONFIG), auth.js (Auth)
  */
 
+async function requestPublicApi(endpoint, options = {}) {
+    const baseUrl = String(CONFIG.API_URL || '').replace(/\/+$/, '');
+
+    if (!baseUrl || baseUrl.includes('your-production-domain.com')) {
+        throw new Error('The backend API URL is not configured for this deployment. Update CONFIG.API_URL in config.js.');
+    }
+
+    const response = await fetch(`${baseUrl}${endpoint}`, options);
+    const responseText = await response.text();
+    let data = {};
+
+    if (responseText) {
+        try {
+            data = JSON.parse(responseText);
+        } catch (_) {
+            if (!response.ok) {
+                throw new Error(`Server returned HTTP ${response.status} instead of a valid API response.`);
+            }
+            throw new Error('Server returned an invalid API response.');
+        }
+    }
+
+    if (!response.ok) {
+        const error = new Error(data.error || `HTTP ${response.status}`);
+        error.status = response.status;
+        throw error;
+    }
+
+    return data;
+}
+
 const Api = {
 
     // ─── Public Endpoints ────────────────────────────────────────────────────
@@ -18,14 +49,11 @@ const Api = {
      * @returns {Promise<{session: object, user: object}>}
      */
     async login(email, password) {
-        const response = await fetch(`${CONFIG.API_URL}/api/login`, {
+        return requestPublicApi('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
-        return data;
     },
 
     /**
@@ -37,14 +65,11 @@ const Api = {
      * @returns {Promise<object>}
      */
     async register(firstName, lastName, email, password) {
-        const response = await fetch(`${CONFIG.API_URL}/api/register`, {
+        return requestPublicApi('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password })
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
-        return data;
     },
 
     // ─── Authenticated Endpoints ──────────────────────────────────────────────

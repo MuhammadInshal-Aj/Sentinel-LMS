@@ -542,6 +542,190 @@
 
         /* Hide lab selector tabs when launched from course */
         .labs-selector.hidden { display: none; }
+
+        /* ── LAB CONTEXT BOX ─────────────────────────── */
+        .lab-context {
+            margin-bottom: 1.2rem;
+            padding: 0.8rem 1rem;
+            background: rgba(0,242,255,0.03);
+            border: 1px solid rgba(0,242,255,0.1);
+            border-left: 2px solid var(--accent);
+            border-radius: 0 6px 6px 0;
+            font-size: 0.8rem;
+            color: #a0b8cc;
+            line-height: 1.6;
+        }
+        .lab-context-label {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            opacity: 0.7;
+            text-transform: uppercase;
+            margin-bottom: 0.35rem;
+        }
+
+        /* ── LABS HUB (landing view) ─────────────────── */
+        .labs-hub {
+            flex: 1;
+            padding: 2rem 2.5rem;
+            overflow-y: auto;
+        }
+        .hub-header { margin-bottom: 2.5rem; }
+        .hub-header h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+        .hub-header p { font-size: 0.85rem; color: var(--text-muted); }
+        .hub-module-section { margin-bottom: 2.5rem; }
+        .hub-module-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent);
+            opacity: 0.6;
+            text-transform: uppercase;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid rgba(0,242,255,0.08);
+            margin-bottom: 1rem;
+        }
+        .hub-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .hub-lab-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .hub-lab-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,242,255,0.04), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .hub-lab-card:hover { border-color: rgba(0,242,255,0.3); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .hub-lab-card:hover::before { opacity: 1; }
+        .hub-lab-card.completed { border-color: rgba(0,255,157,0.25); background: rgba(0,255,157,0.02); }
+        .hub-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        .hub-card-badges { display: flex; gap: 0.4rem; align-items: center; }
+        .hub-lang-tag {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: var(--accent);
+            letter-spacing: 0.5px;
+        }
+        .hub-lang-tag.python { background: #3b7dd8; color: #fff; }
+        .hub-lang-tag.bash   { background: var(--accent); color: #000; }
+        .hub-diff-tag {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+        .hub-diff-tag.easy   { background: rgba(0,255,157,0.1); color: var(--success); border: 1px solid rgba(0,255,157,0.2); }
+        .hub-diff-tag.medium { background: rgba(255,189,46,0.1); color: var(--warning); border: 1px solid rgba(255,189,46,0.2); }
+        .hub-diff-tag.hard   { background: rgba(255,77,77,0.1);  color: var(--danger);  border: 1px solid rgba(255,77,77,0.2); }
+        .hub-card-complete-badge {
+            font-size: 0.65rem;
+            color: var(--success);
+            font-family: var(--font-mono);
+            display: none;
+        }
+        .hub-lab-card.completed .hub-card-complete-badge { display: block; }
+        .hub-card-title {
+            font-family: var(--font-display);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #e8e8e8;
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.5px;
+        }
+        .hub-card-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1rem; }
+        .hub-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .hub-token-reward {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: rgba(255,189,46,0.7);
+        }
+        .hub-launch-btn {
+            padding: 0.35rem 0.9rem;
+            background: rgba(0,242,255,0.08);
+            border: 1px solid rgba(0,242,255,0.25);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .hub-launch-btn:hover { background: rgba(0,242,255,0.18); box-shadow: 0 0 10px rgba(0,242,255,0.15); }
+        .hub-lab-card.completed .hub-launch-btn { border-color: rgba(0,255,157,0.3); color: var(--success); background: rgba(0,255,157,0.06); }
+
+        /* Exploration sandbox section */
+        .hub-sandbox-section { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); }
+        .hub-sandbox-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+        .hub-sandbox-tag {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: rgba(168,85,247,0.1);
+            border: 1px solid rgba(168,85,247,0.25);
+            color: #a855f7;
+            letter-spacing: 0.5px;
+        }
+        .hub-sandbox-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #a855f7;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        /* ── TERMINAL MODE TOGGLE ────────────────────── */
+        .labs-split.hub-mode .labs-split { display: none; }
+        .mode-indicator {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: rgba(0,242,255,0.35);
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink { 0%, 100% { opacity: 0.7; } 50% { opacity: 0; } }
     </style>
 </head>
 <body>
@@ -599,16 +783,82 @@
             <span style="font-size:0.8rem; color:var(--text-muted)">Powered by Piston API · Sandboxed Execution</span>
         </div>
 
-        <!-- LAB SELECTOR TABS -->
-        <div class="labs-selector">
+        <!-- HUB LANDING VIEW (shown when no ?id= param) -->
+        <div class="labs-hub" id="labsHub" style="display:none">
+            <div class="hub-header">
+                <h2>LABS & CTFs</h2>
+                <p>Hands-on security labs tied to your coursework. Complete all tasks in the terminal, decode your flag, and submit it to earn tokens.</p>
+            </div>
+            <!-- Course labs by module — rendered by JS -->
+            <div id="hubModules"></div>
+
+            <!-- Exploration sandbox -->
+            <div class="hub-sandbox-section">
+                <div class="hub-sandbox-header">
+                    <span class="hub-sandbox-tag">SANDBOX</span>
+                    <span class="hub-sandbox-label">Exploration Labs</span>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem">Free-practice labs — no tokens, no flag required. Just explore.</p>
+                <div class="hub-cards">
+                    <div class="hub-lab-card" onclick="enterSandboxLab('hash-intro')">
+                        <div class="hub-card-top">
+                            <div class="hub-card-badges">
+                                <span class="hub-lang-tag python">python</span>
+                                <span class="hub-diff-tag easy">easy</span>
+                            </div>
+                        </div>
+                        <div class="hub-card-title">Hash Basics</div>
+                        <div class="hub-card-desc">Learn SHA-256 hashing, determinism, and the avalanche effect in Python.</div>
+                        <div class="hub-card-footer">
+                            <span class="hub-token-reward">Free Practice</span>
+                            <button class="hub-launch-btn">Open →</button>
+                        </div>
+                    </div>
+                    <div class="hub-lab-card" onclick="enterSandboxLab('file-inspect')">
+                        <div class="hub-card-top">
+                            <div class="hub-card-badges">
+                                <span class="hub-lang-tag python">python</span>
+                                <span class="hub-diff-tag easy">easy</span>
+                            </div>
+                        </div>
+                        <div class="hub-card-title">File Inspection</div>
+                        <div class="hub-card-desc">Parse and filter file-like data — a core skill for log analysis and forensics.</div>
+                        <div class="hub-card-footer">
+                            <span class="hub-token-reward">Free Practice</span>
+                            <button class="hub-launch-btn">Open →</button>
+                        </div>
+                    </div>
+                    <div class="hub-lab-card" onclick="enterSandboxLab('password-audit')">
+                        <div class="hub-card-top">
+                            <div class="hub-card-badges">
+                                <span class="hub-lang-tag python">python</span>
+                                <span class="hub-diff-tag medium">medium</span>
+                            </div>
+                        </div>
+                        <div class="hub-card-title">Password Strength Audit</div>
+                        <div class="hub-card-desc">Build a password policy checker and understand what attackers exploit first.</div>
+                        <div class="hub-card-footer">
+                            <span class="hub-token-reward">Free Practice</span>
+                            <button class="hub-launch-btn">Open →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAB SELECTOR TABS (sandbox mode only) -->
+        <div class="labs-selector" id="labSelector" style="display:none">
             <button class="lab-tab active" onclick="selectLab('hash-intro')" id="tab-hash-intro">
-                <span class="difficulty-dot easy"></span> Lab 01 · Hash Basics
+                <span class="difficulty-dot easy"></span> Hash Basics
             </button>
             <button class="lab-tab" onclick="selectLab('file-inspect')" id="tab-file-inspect">
-                <span class="difficulty-dot easy"></span> Lab 02 · File Inspection
+                <span class="difficulty-dot easy"></span> File Inspection
             </button>
             <button class="lab-tab" onclick="selectLab('password-audit')" id="tab-password-audit">
-                <span class="difficulty-dot medium"></span> Lab 03 · Password Audit
+                <span class="difficulty-dot medium"></span> Password Audit
+            </button>
+            <button class="lab-tab" onclick="showHub()" style="margin-left:auto">
+                <i data-lucide="grid" size="13"></i> All Labs
             </button>
         </div>
 
@@ -623,6 +873,11 @@
                     <div class="lab-desc" id="lab-desc">Learn how cryptographic hash functions work.</div>
                 </div>
                 <div class="instructions-body">
+                    <!-- Scenario context (shown for course labs) -->
+                    <div class="lab-context" id="labContext" style="display:none">
+                        <div class="lab-context-label">Scenario</div>
+                        <div id="labContextText"></div>
+                    </div>
                     <div class="task-list" id="taskList">
                         <!-- Tasks rendered by JS -->
                     </div>
@@ -663,10 +918,11 @@
                         <span class="terminal-label" id="terminal-label">sentinel-lab ~ python3</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:1rem;">
-                        <div class="lang-selector">
+                        <div class="lang-selector" id="langSelector">
                             <button class="lang-btn" id="lang-bash" onclick="setLang('bash')">bash</button>
                             <button class="lang-btn active" id="lang-python" onclick="setLang('python')">python3</button>
                         </div>
+                        <span class="mode-indicator" id="modeIndicator"></span>
                         <button class="clear-btn" onclick="clearTerminal()">clear</button>
                     </div>
                 </div>
@@ -684,11 +940,20 @@
                     <div class="output-line system">[ Select a lab or type code below and press Run ]</div>
                 </div>
 
-                <!-- MULTI-LINE CODE EDITOR -->
+                <!-- CLI INTERACTIVE INPUT (bash labs) -->
+                <div class="terminal-input-area" id="cliInputArea" style="display:none">
+                    <span class="terminal-prompt">sentinel-lab ~$</span>
+                    <input class="terminal-input" id="cliInput" type="text"
+                           placeholder="type a command and press Enter…"
+                           autocomplete="off" spellcheck="false" />
+                    <button class="terminal-run-btn" id="cliRunBtn">↵ Enter</button>
+                </div>
+
+                <!-- SCRIPT EDITOR (python labs) -->
                 <textarea class="code-editor-area" id="codeEditor" placeholder="# Write your code here and click Run...
 # Example: print('Hello, Security World!')" spellcheck="false"></textarea>
 
-                <div class="editor-toolbar">
+                <div class="editor-toolbar" id="editorToolbar">
                     <span class="editor-mode-label" id="editorModeLabel">python3 · sandbox</span>
                     <button class="run-code-btn" id="runBtn" onclick="runCode()">
                         <i data-lucide="play" size="15"></i> Run
@@ -866,15 +1131,72 @@ for pwd in test_passwords:
             }
         };
 
+        // ── COURSE LAB METADATA (for hub display) ────
+        const COURSE_LABS = [
+            {
+                id: 'infosec-m01-lab01-cia',
+                title: 'Digital Crime Scene \u2014 CIA Breakdown',
+                desc: 'Investigate a hospital security breach using shell commands. Identify which CIA Triad pillars were violated.',
+                module: 'Module 1 \u00b7 Security Mindset & Core Principles',
+                moduleOrder: 1,
+                language: 'bash',
+                difficulty: 'easy',
+                tokens: 75,
+            },
+            {
+                id: 'infosec-m01-lab01',
+                title: 'Risk Score Calculator',
+                desc: 'Apply the Risk = Likelihood \u00d7 Impact formula. Write Python to score hospital assets and identify the critical one.',
+                module: 'Module 1 \u00b7 Security Mindset & Core Principles',
+                moduleOrder: 1,
+                language: 'python',
+                difficulty: 'easy',
+                tokens: 50,
+            },
+            {
+                id: 'infosec-m01-lab02-tvr',
+                title: 'Threat / Vulnerability / Risk Analysis',
+                desc: 'Analyze CISA threat intelligence and CVE scan data to calculate which hospital asset faces the highest risk.',
+                module: 'Module 1 \u00b7 Security Mindset & Core Principles',
+                moduleOrder: 1,
+                language: 'bash',
+                difficulty: 'medium',
+                tokens: 75,
+            },
+            {
+                id: 'infosec-m02-lab01',
+                title: 'Password Policy Audit \u2014 NIST SP 800-63B',
+                desc: 'Audit hospital staff passwords against NIST standards. Find breached credentials and calculate the exposure rate.',
+                module: 'Module 2 \u00b7 Risk Management',
+                moduleOrder: 2,
+                language: 'python',
+                difficulty: 'easy',
+                tokens: 75,
+            },
+            {
+                id: 'infosec-m03-lab01',
+                title: 'Firewall Rule Audit',
+                desc: 'Audit exported firewall rules. Find misconfigured rules that expose admin ports to any IP on the internet.',
+                module: 'Module 3 \u00b7 Defensive Architecture',
+                moduleOrder: 3,
+                language: 'bash',
+                difficulty: 'medium',
+                tokens: 75,
+            },
+        ];
+
         // ── TERMINAL STATE ────────────────────────────
         const TERMINAL = {
             currentLab: 'hash-intro',
             currentLang: 'python',
-            history: [],
+            terminalMode: 'editor',   // 'cli' for bash labs, 'editor' for python
+            history: [],              // display history for up/down arrow
             historyIdx: -1,
             completedTasks: new Set(),
             allDoneShown: false,
-            courseLab: false   // true when launched via ?id= from a course page
+            courseLab: false,         // true when launched via ?id= from a course page
+            additionalFiles: [],      // lab files re-injected on each CLI command
+            commandHistory: [],       // accumulated bash commands for session-state persistence
         };
 
         // Piston language version cache
@@ -886,7 +1208,7 @@ for pwd in test_passwords:
             Navigation.initProfilePopup();
             loadUserProfile();
 
-            // Keyboard: Enter in single-line mode (we use code editor, but handle Enter in terminal input if needed)
+            // Ctrl+Enter in script editor runs code
             document.getElementById('codeEditor').addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                     e.preventDefault();
@@ -894,14 +1216,46 @@ for pwd in test_passwords:
                 }
             });
 
+            // CLI input: Enter runs command, Up/Down arrow for history
+            const cliInput = document.getElementById('cliInput');
+            cliInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    runCliCommand();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (TERMINAL.history.length > 0) {
+                        TERMINAL.historyIdx = Math.min(TERMINAL.historyIdx + 1, TERMINAL.history.length - 1);
+                        cliInput.value = TERMINAL.history[TERMINAL.historyIdx];
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (TERMINAL.historyIdx > 0) {
+                        TERMINAL.historyIdx--;
+                        cliInput.value = TERMINAL.history[TERMINAL.historyIdx];
+                    } else {
+                        TERMINAL.historyIdx = -1;
+                        cliInput.value = '';
+                    }
+                } else if (e.key === 'l' && e.ctrlKey) {
+                    e.preventDefault();
+                    clearTerminal();
+                }
+            });
+            document.getElementById('cliRunBtn').addEventListener('click', runCliCommand);
+
             // Check if launched from a course (e.g. labs.html?id=infosec-m01-lab01)
             const urlLabId = new URLSearchParams(window.location.search).get('id');
             if (urlLabId) {
                 TERMINAL.courseLab = true;
-                document.querySelector('.labs-selector').classList.add('hidden');
+                // Hide hub, hide sandbox tabs, show split terminal view
+                document.getElementById('labsHub').style.display = 'none';
+                document.getElementById('labSelector').style.display = 'none';
+                document.querySelector('.labs-split').style.display = 'grid';
                 loadLabFromAPI(urlLabId);
             } else {
-                selectLab('hash-intro');
+                // Show hub landing page
+                showHub();
             }
 
             // Load Piston versions dynamically
@@ -928,6 +1282,7 @@ for pwd in test_passwords:
                     badge:           'COURSE LAB',
                     title:           lab.title,
                     desc:            lab.description,
+                    context:         lab.context || '',
                     defaultLang:     lab.language || 'python',
                     hint:            lab.hint || '',
                     starterCode:     { [lab.language || 'python']: lab.starterCode },
@@ -936,9 +1291,11 @@ for pwd in test_passwords:
                     additionalFiles: lab.additionalFiles || []
                 };
 
-                TERMINAL.currentLab   = labId;
+                TERMINAL.currentLab     = labId;
                 TERMINAL.completedTasks = new Set();
-                TERMINAL.allDoneShown = false;
+                TERMINAL.allDoneShown   = false;
+                TERMINAL.additionalFiles = lab.additionalFiles || [];
+                TERMINAL.commandHistory  = [];
 
                 const l = LABS[labId];
                 document.getElementById('lab-badge').textContent = l.badge;
@@ -947,13 +1304,34 @@ for pwd in test_passwords:
                 document.getElementById('labHint').textContent   = l.hint;
                 document.getElementById('labHint').classList.remove('visible');
 
+                // Show scenario context box if present
+                const ctxEl = document.getElementById('labContext');
+                const ctxTxt = document.getElementById('labContextText');
+                if (l.context) {
+                    ctxTxt.textContent = l.context;
+                    ctxEl.style.display = 'block';
+                } else {
+                    ctxEl.style.display = 'none';
+                }
+
                 renderTasks(l);
-                setLang(l.defaultLang);
+                switchTerminalMode(l.defaultLang === 'bash' ? 'cli' : 'editor');
                 clearTerminal(false);
-                appendLine('prompt', `┌──(sentinel㉿kali)-[~/labs/${labId}]`);
-                appendLine('prompt', `└─$ `);
-                appendLine('system', `[ Lab: ${l.title} ]`);
-                appendLine('system', `[ Language: ${l.defaultLang} · Ctrl+Enter to run ]`);
+                appendLine('system', `─────────────────────────────────────────────────`);
+                appendLine('prompt', `  ${l.title}`);
+                appendLine('system', `─────────────────────────────────────────────────`);
+
+                if (l.defaultLang === 'bash') {
+                    // Auto-run the starter code to set up initial terminal state
+                    appendLine('system', '[ Running lab setup... ]');
+                    await pistonExecute(l.starterCode['bash'] || 'ls', l.additionalFiles, 'bash');
+                } else {
+                    // Load starter code into script editor
+                    if (l.starterCode['python']) {
+                        document.getElementById('codeEditor').value = l.starterCode['python'];
+                    }
+                    appendLine('system', `[ python3 · Write your code in the editor below, then click Run ]`);
+                }
                 appendLine('system', `─────────────────────────────────────────────────`);
                 lucide.createIcons();
             } catch (err) {
@@ -961,14 +1339,199 @@ for pwd in test_passwords:
             }
         }
 
-        // ── LAB SELECTION ─────────────────────────────
+        // ── HUB VIEW ──────────────────────────────────
+        function showHub() {
+            document.getElementById('labsHub').style.display = 'block';
+            document.getElementById('labSelector').style.display = 'none';
+            document.querySelector('.labs-split').style.display = 'none';
+            document.getElementById('labContext').style.display = 'none';
+            renderHub();
+            lucide.createIcons();
+        }
+
+        function renderHub() {
+            const container = document.getElementById('hubModules');
+            // Group labs by module
+            const modules = {};
+            COURSE_LABS.forEach(lab => {
+                if (!modules[lab.module]) modules[lab.module] = { order: lab.moduleOrder, labs: [] };
+                modules[lab.module].labs.push(lab);
+            });
+
+            // Get completed lab IDs from localStorage (persisted)
+            const completedSet = new Set(JSON.parse(localStorage.getItem('sentinel_completed_labs') || '[]'));
+
+            let html = '';
+            Object.entries(modules)
+                .sort((a, b) => a[1].order - b[1].order)
+                .forEach(([moduleName, { labs }]) => {
+                    html += `<div class="hub-module-section">
+                        <div class="hub-module-label">${moduleName}</div>
+                        <div class="hub-cards">`;
+                    labs.forEach(lab => {
+                        const done = completedSet.has(lab.id);
+                        html += `
+                        <div class="hub-lab-card ${done ? 'completed' : ''}" onclick="window.location.href='labs.html?id=${lab.id}'">
+                            <div class="hub-card-top">
+                                <div class="hub-card-badges">
+                                    <span class="hub-lang-tag ${lab.language}">${lab.language}</span>
+                                    <span class="hub-diff-tag ${lab.difficulty}">${lab.difficulty}</span>
+                                </div>
+                                <span class="hub-card-complete-badge">\u2713 Done</span>
+                            </div>
+                            <div class="hub-card-title">${lab.title}</div>
+                            <div class="hub-card-desc">${lab.desc}</div>
+                            <div class="hub-card-footer">
+                                <span class="hub-token-reward">\u26a1 ${lab.tokens} tokens</span>
+                                <button class="hub-launch-btn">${done ? 'Revisit \u2192' : 'Launch Lab \u2192'}</button>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                });
+            container.innerHTML = html;
+        }
+
+        function enterSandboxLab(labId) {
+            // Show the split terminal view with sandbox tabs
+            document.getElementById('labsHub').style.display = 'none';
+            document.getElementById('labSelector').style.display = 'flex';
+            document.querySelector('.labs-split').style.display = 'grid';
+            selectLab(labId);
+        }
+
+        // ── TERMINAL MODE SWITCHING ────────────────────
+        function switchTerminalMode(mode) {
+            TERMINAL.terminalMode = mode;
+            const cliArea    = document.getElementById('cliInputArea');
+            const codeEditor = document.getElementById('codeEditor');
+            const editorBar  = document.getElementById('editorToolbar');
+            const langSel    = document.getElementById('langSelector');
+            const modeLbl    = document.getElementById('modeIndicator');
+
+            if (mode === 'cli') {
+                cliArea.style.display    = 'flex';
+                codeEditor.style.display = 'none';
+                editorBar.style.display  = 'none';
+                langSel.style.display    = 'none';
+                modeLbl.textContent      = 'interactive bash';
+                document.getElementById('terminal-label').textContent = 'sentinel-lab ~ bash';
+                // Focus CLI input after brief delay
+                setTimeout(() => document.getElementById('cliInput').focus(), 200);
+            } else {
+                cliArea.style.display    = 'none';
+                codeEditor.style.display = 'block';
+                editorBar.style.display  = 'flex';
+                langSel.style.display    = 'flex';
+                modeLbl.textContent      = '';
+            }
+        }
+
+        // ── INTERACTIVE CLI EXECUTION ─────────────────
+        async function runCliCommand() {
+            const input = document.getElementById('cliInput');
+            const command = input.value.trim();
+            if (!command) return;
+
+            const btn = document.getElementById('cliRunBtn');
+            btn.disabled = true;
+            input.value = '';
+            TERMINAL.historyIdx = -1;
+
+            // Add to display history (up/down arrow)
+            TERMINAL.history.unshift(command);
+            if (TERMINAL.history.length > 50) TERMINAL.history.pop();
+
+            // Handle terminal built-ins locally — no Piston round-trip needed
+            if (['clear', 'cls', 'reset', 'exit', 'quit'].includes(command)) {
+                clearTerminal();
+                btn.disabled = false;
+                input.focus();
+                return;
+            }
+
+            appendLine('prompt', `\u276f ${command}`);
+
+            const lab = LABS[TERMINAL.currentLab];
+            const files = (lab && lab.additionalFiles) ? lab.additionalFiles : [];
+
+            // Build cumulative script so shell state (cd, variables) persists
+            const script = buildCumulativeScript(command);
+            await pistonExecute(script, files, 'bash');
+
+            // Track command for state persistence (keep last 30 to avoid timeout)
+            TERMINAL.commandHistory.push(command);
+            if (TERMINAL.commandHistory.length > 30) TERMINAL.commandHistory.shift();
+
+            btn.disabled = false;
+            input.focus();
+            scrollTerminalToBottom();
+        }
+
+        // Build a bash script that silently replays all previous commands to restore
+        // shell state (working directory, env vars), then runs the new command.
+        // This makes 'cd', 'export', variable assignments persist across inputs.
+        function buildCumulativeScript(newCommand) {
+            const prev = TERMINAL.commandHistory;
+            if (prev.length === 0) return newCommand;
+
+            // Wrap previous commands in a group-redirect so their output is hidden
+            // but side-effects (cd, exports) still apply to the current shell process
+            const replayLines = prev.map(cmd => `  ${cmd}`).join('\n');
+            return `{\n${replayLines}\n} >/dev/null 2>&1\n\n${newCommand}`;
+        }
+
+        // ── PISTON EXECUTE (shared by CLI and script modes) ──
+        async function pistonExecute(code, extraFiles, lang) {
+            try {
+                const langId  = lang === 'python' ? 'python' : 'bash';
+                const version = LANG_VERSIONS[lang === 'python' ? 'python' : 'bash'] || '*';
+
+                const response = await fetch(`${PISTON_API}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        language: langId,
+                        version:  version,
+                        files: [
+                            { name: lang === 'python' ? 'main.py' : 'main.sh', content: code },
+                            ...(extraFiles || [])
+                        ],
+                        stdin: '',
+                        args: [],
+                        compile_timeout: 10000,
+                        run_timeout: 8000
+                    })
+                });
+
+                const result = await response.json();
+                const stdout = result.run?.stdout || '';
+                const stderr = result.run?.stderr || '';
+
+                if (stdout) stdout.split('\n').forEach(line => { if (line) appendLine('stdout', line); });
+                if (stderr) stderr.split('\n').forEach(line => { if (line) appendLine('stderr', line); });
+                if (!stdout && !stderr) appendLine('system', '(no output)');
+
+                checkTaskCompletion(stdout);
+                scrollTerminalToBottom();
+                return stdout;
+            } catch (err) {
+                appendLine('stderr', `Execution error: ${err.message}`);
+                appendLine('system', 'Tip: Check your internet connection or try again in a moment.');
+                return '';
+            }
+        }
+
+        // ── LAB SELECTION (sandbox labs) ──────────────
         function selectLab(labId) {
             const lab = LABS[labId];
             if (!lab) return;
 
-            TERMINAL.currentLab   = labId;
+            TERMINAL.currentLab     = labId;
             TERMINAL.completedTasks = new Set();
-            TERMINAL.allDoneShown = false;
+            TERMINAL.allDoneShown   = false;
+            TERMINAL.additionalFiles = [];
+            TERMINAL.commandHistory  = [];
 
             // Update tab styles
             document.querySelectorAll('.lab-tab').forEach(t => t.classList.remove('active'));
@@ -978,20 +1541,22 @@ for pwd in test_passwords:
             // Update instructions
             document.getElementById('lab-badge').textContent = lab.badge;
             document.getElementById('lab-title').textContent = lab.title;
-            document.getElementById('lab-desc').textContent = lab.desc;
-            document.getElementById('labHint').textContent = lab.hint;
+            document.getElementById('lab-desc').textContent  = lab.desc;
+            document.getElementById('labHint').textContent   = lab.hint;
             document.getElementById('labHint').classList.remove('visible');
+            document.getElementById('labContext').style.display = 'none';
 
             // Render tasks
             renderTasks(lab);
 
-            // Set default language
+            // Sandbox labs always use editor mode (python by default)
+            switchTerminalMode('editor');
             setLang(lab.defaultLang);
 
             // Clear terminal
             clearTerminal(false);
-            appendLine('system', `[ Lab: ${lab.title} loaded ]`);
-            appendLine('system', `[ Language: ${TERMINAL.currentLang} · Ctrl+Enter to run ]`);
+            appendLine('system', `[ Lab: ${lab.title} ]`);
+            appendLine('system', `[ python3 · Write code in the editor below, then Ctrl+Enter to run ]`);
         }
 
         function renderTasks(lab) {
@@ -1038,7 +1603,7 @@ for pwd in test_passwords:
             }
         }
 
-        // ── CODE EXECUTION (PISTON API) ──────────────
+        // ── CODE EXECUTION (script editor mode) ──────
         async function runCode() {
             const code = document.getElementById('codeEditor').value.trim();
             if (!code) return;
@@ -1048,64 +1613,18 @@ for pwd in test_passwords:
             btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite" size="15"></i> Running...';
             lucide.createIcons();
 
+            const lang = TERMINAL.currentLang;
             const currentLab = LABS[TERMINAL.currentLab];
+            const extraFiles = (currentLab && currentLab.additionalFiles) ? currentLab.additionalFiles : [];
             const labIdForPrompt = currentLab ? currentLab.id : 'lab';
-            appendLine('prompt', `┌──(sentinel㉿kali)-[~/labs/${labIdForPrompt}]`);
-            appendLine('prompt', `└─$ ${code.split('\n')[0]}${code.split('\n').length > 1 ? ' ...' : ''}`);
 
-            try {
-                const lang = TERMINAL.currentLang;
-                const langId = lang === 'python' ? 'python' : 'bash';
-                const version = LANG_VERSIONS[lang] || '*';
+            appendLine('prompt', `\u276f python3 ${labIdForPrompt}`);
+            await pistonExecute(code, extraFiles, lang);
 
-                const lab = LABS[TERMINAL.currentLab];
-                const extraFiles = (lab && lab.additionalFiles) ? lab.additionalFiles : [];
-
-                const response = await fetch(`${PISTON_API}/execute`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        language: langId,
-                        version: version,
-                        files: [
-                            { name: lang === 'python' ? 'main.py' : 'main.sh', content: code },
-                            ...extraFiles
-                        ],
-                        stdin: '',
-                        args: [],
-                        compile_timeout: 10000,
-                        run_timeout: 5000
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.run?.stdout) {
-                    result.run.stdout.split('\n').forEach(line => {
-                        if (line) appendLine('stdout', line);
-                    });
-                }
-                if (result.run?.stderr) {
-                    result.run.stderr.split('\n').forEach(line => {
-                        if (line) appendLine('stderr', line);
-                    });
-                }
-                if (!result.run?.stdout && !result.run?.stderr) {
-                    appendLine('system', '(no output)');
-                }
-
-                // Check task completion based on output keywords
-                checkTaskCompletion(result.run?.stdout || '');
-
-            } catch (err) {
-                appendLine('stderr', `Execution error: ${err.message}`);
-                appendLine('system', 'Tip: Check your internet connection or try again in a moment.');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="play" size="15"></i> Run';
-                lucide.createIcons();
-                scrollTerminalToBottom();
-            }
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="play" size="15"></i> Run';
+            lucide.createIcons();
+            scrollTerminalToBottom();
         }
 
         function checkTaskCompletion(output) {
@@ -1170,8 +1689,14 @@ for pwd in test_passwords:
                     document.getElementById('flagInput').disabled = true;
                     btn.style.display = 'none';
                     document.getElementById('returnBtn').style.display = 'block';
-                    appendLine('success', `🏁 Flag accepted! +${result.tokensEarned} tokens earned.`);
+                    appendLine('success', `\u{1F3C1} Flag accepted! +${result.tokensEarned} tokens earned.`);
                     if (result.tokensEarned > 0) Toast.success(`+${result.tokensEarned} tokens!`);
+                    // Persist lab completion to localStorage for hub display
+                    try {
+                        const done = new Set(JSON.parse(localStorage.getItem('sentinel_completed_labs') || '[]'));
+                        done.add(labId);
+                        localStorage.setItem('sentinel_completed_labs', JSON.stringify([...done]));
+                    } catch (_) {}
                 } else {
                     feedback.innerHTML = `<span class="flag-err">✗ ${result.message || 'Incorrect flag. Try again.'}</span>`;
                     btn.disabled = false;
@@ -1194,14 +1719,10 @@ for pwd in test_passwords:
             }
         }
 
-        // Allow Enter key on flag input
+        // Allow Enter key on flag input (wired in main DOMContentLoaded above)
         document.addEventListener('DOMContentLoaded', () => {
             const flagInput = document.getElementById('flagInput');
-            if (flagInput) {
-                flagInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') submitFlag();
-                });
-            }
+            if (flagInput) flagInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitFlag(); });
         });
 
         // ── TERMINAL HELPERS ──────────────────────────
@@ -1221,8 +1742,10 @@ for pwd in test_passwords:
         function clearTerminal(addHeader = true) {
             const output = document.getElementById('terminalOutput');
             output.innerHTML = '';
+            TERMINAL.commandHistory = [];  // reset bash session state
             if (addHeader) {
-                appendLine('system', '[ Terminal cleared ]');
+                appendLine('system', '[ Terminal cleared \u2014 session state reset ]');
+                appendLine('system', '[ Lab files are still available. Type commands below. ]');
             }
         }
 

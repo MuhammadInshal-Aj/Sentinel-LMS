@@ -54,9 +54,14 @@ const CHECKPOINT_MAP = {
 };
 
 const LAB_CONTENT_MAP = {
+    // Module 01 — Security Mindset
     'infosec-m01-lab01':     path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/labs/lab-01-risk-analyzer.json'),
     'infosec-m01-lab01-cia': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/labs/lab-01-cia-crime-scene.json'),
     'infosec-m01-lab02-tvr': path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_1/labs/lab-02-tvr-analysis.json'),
+    // Module 02 — Risk Management
+    'infosec-m02-lab01':     path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_2/labs/lab-01-password-policy.json'),
+    // Module 03 — Defensive Architecture
+    'infosec-m03-lab01':     path.join(CURRICULUM_ROOT, 'contents/information_security/infosec_module_3/labs/lab-01-firewall-audit.json'),
 };
 
 const LESSON_META_MAP = {
@@ -254,6 +259,38 @@ function isMissingRpcFunctionError(error) {
     );
 }
 
+function isSupabaseUnavailableError(error) {
+    if (!error) return false;
+
+    const status = Number(error.status || error.statusCode || 0);
+    const code = String(error.code || error.cause?.code || '').toUpperCase();
+    const message = `${error.message || ''} ${error.details || ''}`.toLowerCase();
+
+    return (
+        status >= 500 ||
+        ['ECONNREFUSED', 'ECONNRESET', 'EHOSTUNREACH', 'ENETUNREACH', 'ETIMEDOUT'].includes(code) ||
+        message.includes('project is paused') ||
+        message.includes('project has been paused') ||
+        message.includes('requested instance is paused') ||
+        message.includes('failed to fetch') ||
+        message.includes('fetch failed') ||
+        message.includes('network error') ||
+        message.includes('service unavailable')
+    );
+}
+
+function sendAuthError(res, error, fallbackStatus, fallbackMessage) {
+    if (isSupabaseUnavailableError(error)) {
+        return res.status(503).json({
+            error: 'Authentication service is temporarily unavailable. If the Supabase project was paused, resume it, wait for it to finish starting, and try again.'
+        });
+    }
+
+    return res.status(fallbackStatus).json({
+        error: error.message || fallbackMessage
+    });
+}
+
 async function callRpc(rpcName, params, { expectTruthy = false } = {}) {
     const { data, error } = await supabase.rpc(rpcName, params);
 
@@ -313,6 +350,39 @@ app.get('/', (req, res) => {
         status: 'Sentinel Backend: Online',
         timestamp: new Date().toISOString()
     });
+});
+
+// Readiness check: confirms the API can actually reach Supabase, without
+// exposing credentials or database contents.
+app.get('/api/health', async (req, res) => {
+    const startedAt = Date.now();
+
+    try {
+        const { error } = await supabase
+            .from('tracks')
+            .select('id')
+            .limit(1);
+
+        if (error) throw error;
+
+        return res.json({
+            status: 'ready',
+            api: 'online',
+            supabase: 'online',
+            responseTimeMs: Date.now() - startedAt,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Supabase health check failed:', describeDbError(error));
+        return res.status(503).json({
+            status: 'degraded',
+            api: 'online',
+            supabase: 'unavailable',
+            error: 'The API is running but cannot reach Supabase.',
+            responseTimeMs: Date.now() - startedAt,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // ===== AUTHENTICATION MIDDLEWARE =====
@@ -380,9 +450,7 @@ app.post('/api/register', async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(400).json({ 
-            error: error.message || 'Registration failed' 
-        });
+        return sendAuthError(res, error, 400, 'Registration failed');
     }
 });
 
@@ -418,7 +486,12 @@ app.post('/api/login', async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(401).json({ error: "Authorization Failed: " + error.message });
+        const loginError = new Error(`Authorization Failed: ${error.message || 'Login failed'}`);
+        loginError.status = error.status;
+        loginError.statusCode = error.statusCode;
+        loginError.code = error.code;
+        loginError.cause = error.cause;
+        return sendAuthError(res, loginError, 401, 'Authorization failed');
     }
 });
 

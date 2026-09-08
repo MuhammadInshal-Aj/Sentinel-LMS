@@ -32,8 +32,6 @@
            JetBrains Mono for authenticity.
            ============================================================ */
 
-        * { cursor: none !important; }
-
         /* ===== PARTICLE NETWORK CANVAS ===== */
         #particle-canvas {
             position: fixed;
@@ -57,38 +55,6 @@
                 rgba(0, 0, 0, 0.025) 2px,
                 rgba(0, 0, 0, 0.025) 4px
             );
-        }
-
-        /* ===== CUSTOM CURSOR ===== */
-        .cursor-dot {
-            position: fixed;
-            width: 6px; height: 6px;
-            background: #00f2ff;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 99999;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 8px #00f2ff, 0 0 16px rgba(0,242,255,0.4);
-            transition: width 0.2s, height 0.2s;
-        }
-        .cursor-ring {
-            position: fixed;
-            width: 28px; height: 28px;
-            border: 1px solid rgba(0, 242, 255, 0.45);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 99998;
-            transform: translate(-50%, -50%);
-            transition: border-color 0.2s, transform 0.15s;
-        }
-        .cursor-dot.hovered {
-            width: 10px; height: 10px;
-            background: #fff;
-            box-shadow: 0 0 12px #fff;
-        }
-        .cursor-ring.hovered {
-            transform: translate(-50%, -50%) scale(2.2);
-            border-color: rgba(0, 242, 255, 0.7);
         }
 
         /* ===== SIDEBAR OVERRIDES ===== */
@@ -1379,9 +1345,6 @@
     <!-- Scroll progress indicator -->
     <div class="scroll-progress" id="scrollProgress"></div>
 
-    <!-- Custom cursor -->
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-ring" id="cursor-ring"></div>
 
     <!-- Particle network canvas -->
     <canvas id="particle-canvas"></canvas>
@@ -2040,37 +2003,6 @@
             setTimeout(typeWriter, deleting ? 38 : 62);
         }
         typeWriter();
-
-
-        /* ============================================================
-           CUSTOM CURSOR
-           ============================================================ */
-        const dot  = document.getElementById('cursor-dot');
-        const ring = document.getElementById('cursor-ring');
-        let mx = 0, my = 0, rx = 0, ry = 0;
-
-        document.addEventListener('mousemove', e => {
-            mx = e.clientX;
-            my = e.clientY;
-            dot.style.left = mx + 'px';
-            dot.style.top  = my + 'px';
-            document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
-            document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
-        });
-
-        (function animRing() {
-            rx += (mx - rx) * 0.11;
-            ry += (my - ry) * 0.11;
-            ring.style.left = rx + 'px';
-            ring.style.top  = ry + 'px';
-            requestAnimationFrame(animRing);
-        })();
-
-        const hoverables = 'a, button, .card-container, .nav-link, .value-card, .info-card, .stat-card, .practice-step, .hiw-step';
-        document.querySelectorAll(hoverables).forEach(el => {
-            el.addEventListener('mouseenter', () => { dot.classList.add('hovered'); ring.classList.add('hovered'); });
-            el.addEventListener('mouseleave', () => { dot.classList.remove('hovered'); ring.classList.remove('hovered'); });
-        });
 
 
         /* ============================================================

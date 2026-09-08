@@ -4,22 +4,29 @@
   "lessonId": "infosec-m01-l03",
   "tokens": 50,
   "flag": "FLAG{sentinel-risk-9f2e}",
-  "description": "Apply the risk equation from Lesson 3. Write Python code to calculate risk scores (Risk = Likelihood × Impact) for a set of assets, then identify the highest-risk asset. Complete both tasks — the flag will print when your solution is correct.",
+  "context": "You are a security analyst at Meridian General Hospital. Apply the Risk = Likelihood \u00d7 Impact formula to score three critical assets, then decode your flag to confirm the analysis.",
+  "description": "Apply the risk equation from Lesson 3. Write Python code to calculate risk scores (Risk = Likelihood \u00d7 Impact) for a set of hospital assets, identify the highest-risk asset, then decode your lab flag.",
   "language": "python",
-  "hint": "Risk = Likelihood × Impact — both values on a scale of 1–5. Use a for-loop to iterate the assets list, compute each score, and print in the required format. Use Python's max() with a key= argument to find the highest-risk asset.",
-  "starterCode": "# ── Risk Score Calculator ─────────────────────────────────\n# Lesson 3: Threats, Vulnerabilities, and Risk\n# Formula:  Risk = Likelihood × Impact  (each scored 1–5)\n\nassets = [\n    {\"name\": \"Customer Database\", \"likelihood\": 4, \"impact\": 5},\n    {\"name\": \"Web Server\",         \"likelihood\": 3, \"impact\": 3},\n    {\"name\": \"Internal Wiki\",       \"likelihood\": 2, \"impact\": 2},\n]\n\n# ── TODO 1 ────────────────────────────────────────────────\n# Calculate the risk score for each asset and print:\n#   \"[ASSET NAME]: Risk = [SCORE]\"\n\n\n# ── TODO 2 ────────────────────────────────────────────────\n# Find the highest-risk asset and print exactly:\n#   \"CRITICAL: [ASSET NAME] is the highest risk\"\n\n\n# ── When both TODOs produce the correct output, your flag appears:\nprint(\"FLAG{sentinel-risk-9f2e}\")\n",
+  "hint": "Risk = Likelihood \u00d7 Impact — both values are on a scale of 1\u20135. Use a for-loop to iterate the assets list, compute each score, and print in the required format. Use Python\u2019s max() with a key= argument to find the highest-risk asset. For TODO 3, call base64.b64decode(flag_encoded).decode() to reveal the flag.",
+  "starterCode": "# \u2500\u2500 Risk Score Calculator \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Lesson 3: Threats, Vulnerabilities, and Risk\n# Formula:  Risk = Likelihood \u00d7 Impact  (each scored 1\u20135)\n\nassets = [\n    {\"name\": \"Customer Database\", \"likelihood\": 4, \"impact\": 5},\n    {\"name\": \"Web Server\",         \"likelihood\": 3, \"impact\": 3},\n    {\"name\": \"Internal Wiki\",       \"likelihood\": 2, \"impact\": 2},\n]\n\n# \u2500\u2500 TODO 1: Calculate risk scores \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# For each asset, print: \"[ASSET NAME]: Risk = [SCORE]\"\n# Example output:  Customer Database: Risk = 20\nfor asset in assets:\n    pass  # Replace 'pass' with your risk calculation\n\n\n# \u2500\u2500 TODO 2: Find the highest-risk asset \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Print exactly: \"CRITICAL: [ASSET NAME] is the highest risk\"\n# Hint: use max(assets, key=lambda a: a['likelihood'] * a['impact'])\n\n\n# \u2500\u2500 TODO 3: Decode your flag \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Once TODO 1 and TODO 2 produce the correct output,\n# decode the flag below and submit it on the course page.\nimport base64\nflag_encoded = b'RkxBR3tzZW50aW5lbC1yaXNrLTlmMmV9'\n# TODO: Print the decoded flag.\n# Hint: print(base64.b64decode(flag_encoded).decode())\n",
   "tasks": [
     {
       "id": "t1",
-      "title": "Calculate risk scores",
-      "desc": "Print each asset's risk score in the format: <code>[ASSET NAME]: Risk = [SCORE]</code>",
+      "title": "Calculate all risk scores",
+      "desc": "Complete TODO 1. Print each asset\u2019s risk score: <code>[ASSET NAME]: Risk = [SCORE]</code>",
       "verifyKeyword": "Risk ="
     },
     {
       "id": "t2",
       "title": "Identify the critical asset",
-      "desc": "Print the highest-risk asset as: <code>CRITICAL: [ASSET NAME] is the highest risk</code>",
-      "verifyKeyword": "CRITICAL"
+      "desc": "Complete TODO 2. Print: <code>CRITICAL: [ASSET NAME] is the highest risk</code>",
+      "verifyKeyword": "CRITICAL:"
+    },
+    {
+      "id": "t3",
+      "title": "Decode your flag",
+      "desc": "Complete TODO 3. Call <code>print(base64.b64decode(flag_encoded).decode())</code> to reveal the flag, then submit it above.",
+      "verifyKeyword": "FLAG{"
     }
   ]
 }

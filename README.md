@@ -1,393 +1,194 @@
-# 🏆 MY COURSES - REVISED FOR ACTUAL DATABASE SCHEMA
+# Sentinel LMS
 
-## 🎯 WHAT CHANGED
+![Sentinel LMS](assets/sentinel-mark.svg)
 
-Your original database schema uses:
-- **Level field**: `foundation`, `intermediate`, `advanced` (not "category")
-- **Table structure**: Requires JOINs across multiple tables
-- **Progress tracking**: Calculated from `user_lesson_progress` and `user_track_enrollments`
+Sentinel LMS is a security-focused learning management system for teaching information security through structured courses, progress tracking, and interactive simulations. It combines a cyber-inspired interface with a practical learning workflow: create an account, enroll in a track, complete lessons, earn tokens, and monitor progress from a personal dashboard.
 
-I've **completely revised** the integration to match your **actual Supabase schema**.
+> **Project status:** Active development. The current repository includes the landing, authentication, dashboard, course catalog, and Information Security course experience.
 
----
+## Contents
 
-## 📦 FILES IN THIS PACKAGE
+- [Highlights](#highlights)
+- [Pages and UI/UX](#pages-and-uiux)
+- [Technology](#technology)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+- [Cloning into your own organization](#cloning-into-your-own-organization)
+- [Configuration](#configuration)
+- [API overview](#api-overview)
+- [Security notes](#security-notes)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-### ✅ REVISED Files (USE THESE):
-1. **my-courses-enhanced-REVISED.js** - Matches your DB schema exactly
-2. **my-courses-enhanced-REVISED.css** - Updated styling (same as before)
-3. **HTML_STRUCTURE_UPDATE.md** - How to update your HTML
-4. **README-REVISED.md** - This file
+## Highlights
 
-### ❌ OLD Files (IGNORE):
-- ~~my-courses-enhanced.js~~ (used wrong field names)
-- ~~README-INTEGRATION.md~~ (outdated instructions)
+- Dark, high-contrast cyber-security visual language with cyan accents.
+- Responsive shared layout, navigation, typography, icons, cards, progress widgets, and toast notifications.
+- Supabase-backed registration and login flows.
+- Authenticated dashboard with progress circles, course status, token balance, and learning streak UI.
+- Course catalog grouped by foundation, intermediate, and advanced levels.
+- Information Security track with modules, lessons, simulations, checkpoints, enrollment, unlocking, and progress interactions.
+- Express API with Supabase authentication and track, module, lesson, enrollment, and progress endpoints.
+- Curriculum content stored as structured JSON and Markdown so it can grow independently from the UI.
 
----
+## Pages and UI/UX
 
-## 🚀 INSTALLATION (CORRECTED)
+| Page | File | Experience |
+| --- | --- | --- |
+| Public landing page | [`frontend/landing.html`](frontend/landing.html) | Product introduction, course highlights, mission/about content, contact area, and calls to action. |
+| Login | [`frontend/login.html`](frontend/login.html) | Focused “System Access” form with cyber background, validation feedback, loading state, and secure redirect into the dashboard. |
+| Registration | [`frontend/register.html`](frontend/register.html) | Guided “New Enlistment” form for name, email, and password creation. |
+| Learner dashboard and courses | [`frontend/index.html`](frontend/index.html) | Authenticated sidebar experience with progress rings, streak widget, token balance, course cards, and “My Courses” views. |
+| Information Security course | [`frontend/infoSec.html`](frontend/infoSec.html) | Course header, outcomes, curriculum modules, lesson rows, simulations, checkpoints, enrollment state, and module unlocking. |
 
-### Step 1: Update Your HTML Structure
+The UI uses shared styles in [`frontend/Styles/`](frontend/Styles/) and shared browser modules for API calls, authentication, navigation, and notifications. The visual system uses Space Grotesk and JetBrains Mono, Lucide icons, glass-like dark surfaces, subtle borders, hover elevation, progress indicators, and keyboard/focus states.
 
-In `index.html`, find the My Courses section and update it:
+## Technology
 
-**CHANGE THIS:**
-```html
-<section class="course-category" id="fundamentals-section">
-    <div class="category-header">
-        <h2 class="category-title">Fundamentals</h2>
-        <span class="category-badge" id="fundamentals-count">0 courses</span>
-    </div>
-    <div class="course-grid" id="fundamentals-grid">
+- **Frontend:** HTML5, CSS3, and browser JavaScript
+- **Backend:** Node.js, Express 5, CORS, dotenv, and bcrypt
+- **Data and authentication:** Supabase
+- **Curriculum:** JSON track definitions and Markdown lesson/simulation content
+- **External UI resources:** Google Fonts and Lucide Icons
+
+## Project structure
+
+```text
+.
+├── assets/                 # Branding assets
+├── backend/
+│   ├── src/app.js          # Express routes and Supabase integration
+│   ├── src/server.js       # HTTP server entry point
+│   └── package.json        # Backend dependencies
+├── config/                 # Configuration documentation/placeholders
+├── content/                # Content documentation/placeholders
+├── curriculum/
+│   ├── tracks/             # Track, module, lesson, and simulation metadata
+│   └── contents/           # Markdown learning content
+├── docs/                   # Documentation index
+├── frontend/
+│   ├── *.html              # User-facing pages
+│   ├── *.js                # Frontend modules
+│   └── Styles/             # Shared CSS
+├── labs/                   # Lab documentation/placeholders
+├── scripts/                # Script documentation/placeholders
+├── tests/                  # Test documentation/placeholders
+├── tools/                  # Tooling documentation/placeholders
+├── LICENSE
+└── README.md
 ```
 
-**TO THIS:**
-```html
-<section class="course-category" id="foundation-section">
-    <div class="category-header">
-        <h2 class="category-title">Foundation</h2>
-        <span class="category-badge" id="foundation-count">0 courses</span>
-    </div>
-    <div class="course-grid" id="foundation-grid">
-```
+## Getting started
 
-**AND ADD:** (Advanced courses section)
-```html
-<!-- Advanced Courses -->
-<section class="course-category" id="advanced-section">
-    <div class="category-header">
-        <h2 class="category-title">Advanced</h2>
-        <span class="category-badge" id="advanced-count">0 courses</span>
-    </div>
-    <div class="course-grid" id="advanced-grid">
-        <!-- Advanced courses will be rendered here -->
-    </div>
-</section>
-```
+### Prerequisites
 
-### Step 2: Add JavaScript Files
+- Node.js 18 or newer and npm
+- A Supabase project
+- A local static-file server for the frontend
 
-Copy these to your `/frontend/` directory:
-- `config.js` (you have this)
-- `auth.js` (you have this)
-- `my-courses-enhanced-REVISED.js` ← NEW
+### 1. Clone the repository
 
-Then add to `index.html` before `</body>`:
-
-```html
-    <!-- Core Utilities -->
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
-    
-    <!-- Enhanced My Courses (REVISED) -->
-    <script src="my-courses-enhanced-REVISED.js"></script>
-</body>
-```
-
-### Step 3: Update CSS
-
-In your `<style>` section, find:
-```css
-/* MY COURSES SECTION STYLES */
-```
-
-Delete everything in that section and paste the contents of `my-courses-enhanced-REVISED.css`.
-
-### Step 4: Remove Old My Courses JavaScript
-
-In your `<script>` section, find and **DELETE**:
-```javascript
-// === MY COURSES FUNCTIONALITY ===
-const coursesData = { ... }
-// ... everything until the next section
-```
-
-The new `my-courses-enhanced-REVISED.js` handles everything!
-
----
-
-## 📊 BACKEND API REQUIREMENTS
-
-Your backend `/api/user/courses` endpoint **MUST** return data in this exact format:
-
-```json
-{
-  "myCourses": [
-    {
-      "id": "infosec",
-      "title": "Information Security",
-      "slug": "information-security",
-      "level": "foundation",
-      "description": "Core principles of information security",
-      "cover_image": "/assets/courses/infosec.jpg",
-      
-      "status": "in-progress",
-      "overall_progress_percentage": 35,
-      
-      "lessons_completed": 7,
-      "total_lessons": 20,
-      "tokens_earned": 280,
-      
-      "next_lesson": {
-        "id": "infosec-m01-l03",
-        "title": "Threats, Vulnerabilities, and Risk",
-        "module_title": "Security Mindset & Core Principles"
-      }
-    }
-  ],
-  "tokenBalance": 280
-}
-```
-
-### SQL Query for Backend
-
-Here's the query your backend should use:
-
-```sql
--- Get enrolled courses with progress
-SELECT 
-  t.id,
-  t.title,
-  t.slug,
-  t.level,
-  t.description,
-  t.meta->>'cover_image' as cover_image,
-  
-  ute.status,
-  ute.overall_progress_percentage,
-  
-  -- Count completed lessons
-  (SELECT COUNT(*) 
-   FROM user_lesson_progress ulp
-   JOIN lessons l ON ulp.lesson_id = l.id
-   JOIN modules m ON l.module_id = m.id
-   WHERE ulp.user_id = $1 
-     AND ulp.status = 'completed' 
-     AND m.track_id = t.id) as lessons_completed,
-  
-  -- Count total required lessons
-  (SELECT COUNT(*) 
-   FROM lessons l
-   JOIN modules m ON l.module_id = m.id
-   WHERE m.track_id = t.id 
-     AND l.is_required = true) as total_lessons,
-  
-  -- Sum tokens earned
-  (SELECT COALESCE(SUM(ulp.tokens_earned), 0) 
-   FROM user_lesson_progress ulp
-   JOIN lessons l ON ulp.lesson_id = l.id
-   JOIN modules m ON l.module_id = m.id
-   WHERE ulp.user_id = $1 
-     AND m.track_id = t.id) as tokens_earned,
-  
-  -- Get next lesson details
-  nl.id as next_lesson_id,
-  nl.title as next_lesson_title,
-  nm.title as next_module_title
-  
-FROM tracks t
-JOIN user_track_enrollments ute ON t.id = ute.track_id
-LEFT JOIN lessons nl ON nl.id = ute.current_lesson_id
-LEFT JOIN modules nm ON nl.module_id = nm.id
-WHERE ute.user_id = $1
-  AND t.is_published = true
-ORDER BY ute.enrolled_at DESC;
-```
-
-Then format it as JSON:
-
-```javascript
-app.get('/api/user/courses', authenticateToken, async (req, res) => {
-    const userId = req.user.id;
-    
-    try {
-        // Get courses
-        const { data: courses, error: coursesError } = await supabase
-            .rpc('get_user_courses', { p_user_id: userId });
-        
-        // Get token balance
-        const { data: tokens, error: tokensError } = await supabase
-            .from('user_tokens')
-            .select('tokens_available')
-            .eq('user_id', userId)
-            .single();
-        
-        const myCourses = courses.map(course => ({
-            id: course.id,
-            title: course.title,
-            slug: course.slug,
-            level: course.level,
-            description: course.description,
-            cover_image: course.cover_image || `/assets/courses/${course.slug}.jpg`,
-            
-            status: course.status || 'not-started',
-            overall_progress_percentage: course.overall_progress_percentage || 0,
-            
-            lessons_completed: course.lessons_completed || 0,
-            total_lessons: course.total_lessons || 0,
-            tokens_earned: course.tokens_earned || 0,
-            
-            next_lesson: course.next_lesson_id ? {
-                id: course.next_lesson_id,
-                title: course.next_lesson_title,
-                module_title: course.next_module_title
-            } : null
-        }));
-        
-        res.json({
-            myCourses,
-            tokenBalance: tokens?.tokens_available || 0
-        });
-        
-    } catch (error) {
-        console.error('Error fetching courses:', error);
-        res.status(500).json({ error: 'Failed to fetch courses' });
-    }
-});
-```
-
----
-
-## 🧪 TESTING CHECKLIST
-
-### Test 1: Database Check
-```sql
--- Should return your enrolled courses
-SELECT * FROM user_track_enrollments WHERE user_id = 'your-user-id';
-
--- Should return your token balance
-SELECT * FROM user_tokens WHERE user_id = 'your-user-id';
-```
-
-### Test 2: Backend API Check
 ```bash
-# Test the endpoint
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-     http://localhost:3000/api/user/courses
+git clone https://github.com/MuhammadInshal-Aj/Sentinel-LMS.git
+cd Sentinel-LMS
 ```
 
-Should return JSON with `myCourses` array and `tokenBalance`.
+### 2. Install backend dependencies
 
-### Test 3: Frontend Check
+```bash
+cd backend
+npm install
+```
 
-1. Login to your app
-2. Click "My Courses" in sidebar
-3. Open browser console (F12)
-4. Should see:
+### 3. Configure Supabase
+
+Create `backend/.env` and add the credentials for your Supabase project:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+PORT=3000
+```
+
+Do not commit `.env` or any secret key. The repository ignores environment files by default.
+
+### 4. Start the API
+
+From `backend/`, run:
+
+```bash
+node src/server.js
+```
+
+The API is available at `http://localhost:3000`. The root endpoint can be used as a health check.
+
+### 5. Serve the frontend
+
+Open a second terminal at the repository root and serve the `frontend` directory with any static server. For example, if `serve` is available:
+
+```bash
+npx serve frontend
+```
+
+Open the URL printed by the static server, then register or log in. The local frontend configuration points API requests at `http://localhost:3000`.
+
+## Cloning into your own organization
+
+You can copy Sentinel LMS into an organization you administer without paying a license fee.
+
+1. Sign in to GitHub and open the [Sentinel-LMS repository](https://github.com/MuhammadInshal-Aj/Sentinel-LMS).
+2. Select **Fork**, choose your organization, and confirm the fork. This preserves the upstream relationship for future updates.
+3. If your organization needs an independent repository, create a new repository under the organization and copy the project files, or mirror the fork into it.
+4. Clone the organization repository locally:
+
+   ```bash
+   git clone https://github.com/YOUR-ORGANIZATION/Sentinel-LMS.git
+   cd Sentinel-LMS
    ```
-   ✅ My Courses Enhanced (REVISED - DB Schema Compatible) loaded
-   ```
-5. Courses should appear in three sections:
-   - Foundation
-   - Intermediate
-   - Advanced
 
----
+5. Create a Supabase project for the organization and configure its database tables, authentication, and curriculum data.
+6. Create `backend/.env` with that project's URL and anonymous key, then run `npm install` inside `backend/`.
+7. Start the backend with `node src/server.js` and serve `frontend/` from a local or hosted static server.
+8. Update [`frontend/config.js`](frontend/config.js) with the organization's production API URL before deployment.
+9. Review branding, curriculum, security rules, and deployment settings, then push organization-specific changes to your repository.
+10. Keep the [`LICENSE`](LICENSE) file and copyright notice with redistributed copies, as required by the MIT license.
 
-## 🐛 COMMON ISSUES & FIXES
+## Configuration
 
-### Issue: "Failed to load courses"
+Frontend runtime settings and feature flags are centralized in [`frontend/config.js`](frontend/config.js). The backend reads `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and optionally `PORT` from `backend/.env`.
 
-**Solution 1:** Check backend is returning correct format
-```javascript
-// In browser console
-fetch('http://localhost:3000/api/user/courses', {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('sentinel_token')}` }
-})
-.then(r => r.json())
-.then(data => console.log(data));
-```
+Before production deployment:
 
-**Solution 2:** Check for CORS errors in console
+- Replace the placeholder production API URL in `frontend/config.js`.
+- Configure Supabase Row Level Security and database policies for your own project.
+- Restrict CORS to trusted frontend origins instead of allowing every origin.
+- Serve the frontend and API over HTTPS.
+- Use a production secret-management solution rather than committing environment files.
 
-**Solution 3:** Verify user is enrolled in at least one course
-```sql
-SELECT * FROM user_track_enrollments WHERE user_id = 'your-user-id';
-```
+## API overview
 
-### Issue: "Courses showing in wrong section"
+The Express service currently exposes:
 
-**Check:** Database `level` values
-```sql
-SELECT id, title, level FROM tracks;
-```
+- `GET /` - backend health check
+- `POST /api/register` - create a user account
+- `POST /api/login` - authenticate a user
+- `GET /api/tracks` - list published tracks
+- Authenticated track, module, enrollment, lesson, and progress routes in [`backend/src/app.js`](backend/src/app.js)
 
-Should be: `foundation`, `intermediate`, or `advanced` (lowercase)
+## Security notes
 
-### Issue: "Progress not updating"
+Sentinel LMS is an educational project and should be reviewed before production use. Never publish Supabase service-role keys, passwords, tokens, or private environment files. Validate authorization and database policies in the Supabase project, not only in the browser.
 
-**Check:** User lesson progress
-```sql
-SELECT * FROM user_lesson_progress WHERE user_id = 'your-user-id';
-```
+## Roadmap
 
-**Check:** Track progress calculation
-```sql
-SELECT * FROM calculate_track_progress('your-user-id', 'infosec');
-```
+- Persist all lesson and simulation progress through the backend.
+- Add more modules and courses beyond the current Information Security track.
+- Implement quizzes, exams, certificates, leaderboards, and richer simulations.
+- Add automated tests and production deployment documentation.
+- Improve mobile layouts and add lesson content views.
 
----
+## License
 
-## 🎯 WHAT'S DIFFERENT FROM ORIGINAL
+Sentinel LMS is copyright © 2026 Muhammad Inshal and is released under the [MIT License](LICENSE). The license allows anyone to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software free of charge, subject to the license conditions.
 
-| Original | Revised | Reason |
-|----------|---------|--------|
-| `category` field | `level` field | Matches DB schema |
-| `fundamentals` | `foundation` | Matches DB enum values |
-| Static stats | Calculated stats | Uses real progress data |
-| Hardcoded data | API-driven | Real backend integration |
-
----
-
-## ✅ FINAL CHECKLIST
-
-Before going live:
-
-- [ ] Updated HTML to use `foundation` instead of `fundamentals`
-- [ ] Added `advanced-section` to HTML
-- [ ] Copied `my-courses-enhanced-REVISED.js` to `/frontend/`
-- [ ] Added script tags to `index.html`
-- [ ] Updated CSS section
-- [ ] Removed old My Courses JavaScript
-- [ ] Backend returns data in correct format
-- [ ] Tested with real user account
-- [ ] Courses display in correct sections
-- [ ] Progress bars animate
-- [ ] Token counter updates
-- [ ] "Continue Learning" button works
-- [ ] No console errors
-
----
-
-## 🚀 NEXT STEPS
-
-Once My Courses is working:
-
-1. **Build infoSec.html** - Split-view lesson player
-2. **Add lesson content** - Markdown files in `/content/`
-3. **Test complete flow** - Enroll → Learn → Complete → Earn Tokens
-
----
-
-**You now have a database-accurate, production-ready My Courses section! 🎉**
-
-Any questions? Check the inline comments in `my-courses-enhanced-REVISED.js` - they explain exactly how it maps to your database schema.## Folder Structure
-
-- `backend/` API server and business logic
-- `frontend/` HTML/CSS/JS client
-- `database/` SQL schema and policies
-- `curriculum/` course design notes
-- `labs/` lab specs and drafts
-- `content/` lesson markdown and simulation JSON
-- `assets/` shared images and logos
-- `docs/` project documentation index
-- `scripts/` developer utilities
-- `tools/` local tooling helpers
-- `tests/` automated tests
-- `config/` config templates and examples
-
-Local-only (gitignored):
-- `.temp/` temporary files
-- `logs/` runtime logs
-- `infra/` local infrastructure experiments
-- `design/` local design explorations
+Third-party dependencies and external assets remain subject to their own licenses and terms.
